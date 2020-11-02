@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Buffer",""],["ERR_BUFFER_CLOSED",""],["ERR_BUFFER_FULL",""],["ERR_BUFFER_SHORT",""],["ERR_PACKET_TOO_BIG",""],["ERR_TIMEOUT",""]]});

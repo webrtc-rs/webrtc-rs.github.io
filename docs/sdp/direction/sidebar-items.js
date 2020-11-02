@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DIRECTION_INACTIVE_STR",""],["DIRECTION_RECV_ONLY_STR",""],["DIRECTION_SEND_ONLY_STR",""],["DIRECTION_SEND_RECV_STR",""],["DIRECTION_UNKNOWN_STR",""]],"enum":[["Direction",""]]});

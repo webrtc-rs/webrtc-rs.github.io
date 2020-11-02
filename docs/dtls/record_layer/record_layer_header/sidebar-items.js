@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DTLS1_0MAJOR",""],["DTLS1_0MINOR",""],["DTLS1_2MAJOR",""],["DTLS1_2MINOR",""],["MAX_SEQUENCE_NUMBER",""],["PROTOCOL_VERSION1_0",""],["PROTOCOL_VERSION1_2",""],["RECORD_LAYER_HEADER_SIZE",""],["VERSION_DTLS12",""]],"struct":[["ProtocolVersion",""],["RecordLayerHeader",""]]});
