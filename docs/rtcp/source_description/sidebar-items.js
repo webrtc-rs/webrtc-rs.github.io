@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SDESType",""]],"struct":[["SourceDescription",""],["SourceDescriptionChunk",""],["SourceDescriptionItem",""]]});

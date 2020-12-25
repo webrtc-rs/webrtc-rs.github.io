@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["COUNT_MAX",""],["FORMAT_FIR",""],["FORMAT_PLI",""],["FORMAT_REMB",""],["FORMAT_RRR",""],["FORMAT_SLI",""],["FORMAT_TCC",""],["FORMAT_TLN",""],["HEADER_LENGTH",""],["SDES_MAX_OCTET_COUNT",""],["SSRC_LENGTH",""]],"enum":[["PacketType",""]],"struct":[["Header",""]]});
