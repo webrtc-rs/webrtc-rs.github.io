@@ -43,12 +43,14 @@
 <body>
   <nav class="navbar is-dark" style="z-index:1">
     <div class="container">
-      <div class="navbar-brand"> <a class="navbar-item" href="https://webrtc.rs/"> <img src="./res/webrtc.rs.png"
-            width="28" height="28"> </a> <a class="navbar-item" href="http://github.com/webrtc-rs/webrtc">
-          <strong>Github</strong> </a>
-        <div class="navbar-burger burger" data-target="navbarExampleTransparentExample"> <span></span> <span></span>
-          <span></span> </div>
-      </div>  
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://webrtc.rs/"><img src="./res/webrtc.rs.png" width="28" height="28"></a>
+        <a class="navbar-item" href="http://github.com/webrtc-rs/webrtc"><strong>Github</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
     </div>
   </nav>
   <dev class="section">
@@ -58,61 +60,77 @@
         <div class="message-header"></div>
         <div class="message-body">
           <p>
-              <a href="https://github.com/webrtc-rs/webrtc/actions"><img
+            <a href="https://github.com/webrtc-rs/webrtc/actions"><img
                 src="https://github.com/rtcrs/webrtc/workflows/webrtc/badge.svg?branch=master"></a> <a
               href="https://codecov.io/gh/webrtc-rs/webrtc"><img
                 src="https://codecov.io/gh/webrtc-rs/webrtc/branch/master/graph/badge.svg"></a> <a
               href="https://deps.rs/repo/github/webrtc-rs/webrtc"><img
                 src="https://deps.rs/repo/github/webrtc-rs/webrtc/status.svg"></a> <a
-              href="https://crates.io/crates/webrtc-rs"><img
-                src="https://img.shields.io/crates/v/webrtc-rs.svg"></a> <a
-              href="https://docs.rs/webrtc-rs"><img
-                src="https://docs.rs/webrtc-rs/badge.svg"></a> <a
+              href="https://crates.io/crates/webrtc-rs"><img src="https://img.shields.io/crates/v/webrtc-rs.svg"></a> <a
+              href="https://docs.rs/webrtc-rs"><img src="https://docs.rs/webrtc-rs/badge.svg"></a> <a
               href="https://github.com/webrtc-rs/webrtc/blob/master/LICENSE"><img
                 src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a> <a
               href="https://discord.gg/4Ju8UHdXMs"><img
-                src="https://img.shields.io/discord/800204819540869120?logo=discord" alt="Discord"></a> <a 
-              href="https://twitter.com/WebRTCrs"><img 
-                src="https://img.shields.io/twitter/url/https/twitter.com/webrtcrs.svg?style=social&label=Follow%20%40WebRTCrs" alt="Twitter"></a> <a
-              href="https://github.com/webrtc-rs/webrtc"><img
-                src="https://img.shields.io/github/watchers/webrtc-rs/webrtc.svg?style=social&label=Watch" alt="Github Watches"></a> <a
+                src="https://img.shields.io/discord/800204819540869120?logo=discord" alt="Discord"></a> <a
+              href="https://twitter.com/WebRTCrs"><img
+                src="https://img.shields.io/twitter/url/https/twitter.com/webrtcrs.svg?style=social&label=Follow%20%40WebRTCrs"
+                alt="Twitter"></a> <a href="https://github.com/webrtc-rs/webrtc"><img
+                src="https://img.shields.io/github/watchers/webrtc-rs/webrtc.svg?style=social&label=Watch"
+                alt="Github Watches"></a> <a
               href="https://seladb.github.io/StarTrack-js/#/preload?r=webrtc-rs,webrtc"><img
-                src="https://img.shields.io/github/stars/webrtc-rs/webrtc.svg?style=social&label=Star" alt="Github Stars"></a> <a
-              href="https://github.com/webrtc-rs/webrtc"><img
-                src="https://img.shields.io/github/forks/webrtc-rs/webrtc.svg?style=social&label=Fork" alt="Github Forks"></a>
+                src="https://img.shields.io/github/stars/webrtc-rs/webrtc.svg?style=social&label=Star"
+                alt="Github Stars"></a> <a href="https://github.com/webrtc-rs/webrtc"><img
+                src="https://img.shields.io/github/forks/webrtc-rs/webrtc.svg?style=social&label=Fork"
+                alt="Github Forks"></a>
           </p>
           <br>
           <p>
-            A pure Rust implementation of WebRTC stack. Rewrite <a href="http://Pion.ly">Pion</a> WebRTC stack in Rust</p>
+            A pure Rust implementation of WebRTC stack. Rewrite <a href="http://Pion.ly">Pion</a> WebRTC stack in Rust
+          </p>
         </div>
         <div>
-            <input type="checkbox" id="sdp" name="sdp" disabled="disabled" checked="checked"> <label for="sdp">SDP</label>
-            <a href="https://crates.io/crates/webrtc-rs-sdp"><img src="https://img.shields.io/crates/v/webrtc-rs-sdp.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="rtp" name="rtp" disabled="disabled" checked="checked"> <label for="rtp">RTP</label>
-            <a href="https://crates.io/crates/webrtc-rs-rtp"><img src="https://img.shields.io/crates/v/webrtc-rs-rtp.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="rtcp" name="rtcp" disabled="disabled" checked="checked"> <label for="rtcp">RTCP</label>
-            <a href="https://crates.io/crates/webrtc-rs-rtcp"><img src="https://img.shields.io/crates/v/webrtc-rs-rtcp.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="srtp" name="srtp" disabled="disabled" checked="checked"> <label for="srtp">SRTP</label>
-            <a href="https://crates.io/crates/webrtc-rs-srtp"><img src="https://img.shields.io/crates/v/webrtc-rs-srtp.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="dtls" name="dtls" disabled="disabled" checked="checked"> <label for="dtls">DTLS</label>
-            <a href="https://crates.io/crates/webrtc-rs-dtls"><img src="https://img.shields.io/crates/v/webrtc-rs-dtls.svg"></a>
-            <br>
-            <input type="checkbox" id="stun" name="stun" disabled="disabled" checked="checked"> <label for="stun">STUN</label>
-            <a href="https://crates.io/crates/webrtc-rs-stun"><img src="https://img.shields.io/crates/v/webrtc-rs-stun.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="mdns" name="mdns" disabled="disabled" checked="checked"> <label for="mdns">mDNS</label>
-            <a href="https://crates.io/crates/webrtc-rs-mdns"><img src="https://img.shields.io/crates/v/webrtc-rs-mdns.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="turn" name="turn" disabled="disabled" checked="checked"> <label for="turn">TURN</label>
-            <a href="https://crates.io/crates/webrtc-rs-turn"><img src="https://img.shields.io/crates/v/webrtc-rs-turn.svg"></a>
-            &nbsp;
-            <input type="checkbox" id="ice" name="ice" disabled="disabled"> <label for="ice">ICE</label>
-            <a href="https://crates.io/crates/webrtc-rs-ice"><img src="https://img.shields.io/crates/v/webrtc-rs-ice.svg"></a>
-            <br>
+          <input type="checkbox" id="sdp" name="sdp" disabled="disabled" checked="checked"> <label for="sdp">SDP</label>
+          <a href="https://crates.io/crates/webrtc-rs-sdp"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-sdp.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="rtp" name="rtp" disabled="disabled" checked="checked"> <label for="rtp">RTP</label>
+          <a href="https://crates.io/crates/webrtc-rs-rtp"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-rtp.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="rtcp" name="rtcp" disabled="disabled" checked="checked"> <label
+            for="rtcp">RTCP</label>
+          <a href="https://crates.io/crates/webrtc-rs-rtcp"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-rtcp.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="srtp" name="srtp" disabled="disabled" checked="checked"> <label
+            for="srtp">SRTP</label>
+          <a href="https://crates.io/crates/webrtc-rs-srtp"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-srtp.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="dtls" name="dtls" disabled="disabled" checked="checked"> <label
+            for="dtls">DTLS</label>
+          <a href="https://crates.io/crates/webrtc-rs-dtls"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-dtls.svg"></a>
+          <br>
+          <input type="checkbox" id="stun" name="stun" disabled="disabled" checked="checked"> <label
+            for="stun">STUN</label>
+          <a href="https://crates.io/crates/webrtc-rs-stun"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-stun.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="mdns" name="mdns" disabled="disabled" checked="checked"> <label
+            for="mdns">mDNS</label>
+          <a href="https://crates.io/crates/webrtc-rs-mdns"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-mdns.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="turn" name="turn" disabled="disabled" checked="checked"> <label
+            for="turn">TURN</label>
+          <a href="https://crates.io/crates/webrtc-rs-turn"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-turn.svg"></a>
+          &nbsp;
+          <input type="checkbox" id="ice" name="ice" disabled="disabled"> <label for="ice">ICE</label>
+          <a href="https://crates.io/crates/webrtc-rs-ice"><img
+              src="https://img.shields.io/crates/v/webrtc-rs-ice.svg"></a>
+          <br>
         </div>
         <p><br></p>
         <img src="./res/webrtc_stack.png">
@@ -123,9 +141,9 @@
     <div class="container">
       <hr style="background-color:#dbdbdb;height:1px">
       <div style="float:right">
-          <span class="tag is-info is-rounded">
-              <b>Contact Us:&nbsp;&nbsp;</b><img src="./res/at-sign.png" width="128">
-          </span>
+        <span class="tag is-info is-rounded">
+          <b>Contact Us:&nbsp;&nbsp;</b><img src="./res/at-sign.png" width="128">
+        </span>
       </div>
     </div>
   </footer>
