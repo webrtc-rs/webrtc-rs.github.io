@@ -96,15 +96,43 @@
             Async-friendly and Sans-IO WebRTC and SFU implementations in Rust
           </p>
           <hr>
+          <div style="max-width: 900px; margin: 0 auto 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; text-align: center;">
+              <div style="padding: 0rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">⚡</div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">Async-Friendly</h4>
+                <p style="margin: 0; color: #666; font-size: 0.9rem; line-height: 1.5;">Built with async/await for non-blocking I/O and high concurrency</p>
+              </div>
+              <div style="padding: 0rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎯</div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">Sans-IO</h4>
+                <p style="margin: 0; color: #666; font-size: 0.9rem; line-height: 1.5;">Protocol logic decoupled from I/O for easy testing and portability</p>
+              </div>
+              <div style="padding: 0rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📦</div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">Full-Stack</h4>
+                <p style="margin: 0; color: #666; font-size: 0.9rem; line-height: 1.5;">Full ecosystem from low-level RTC protocols to SFU infrastructure</p>
+              </div>
+              <div style="padding: 0rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔒</div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">Type-Safe</h4>
+                <p style="margin: 0; color: #666; font-size: 0.9rem; line-height: 1.5;">Leverage Rust's type system for memory safety and zero-cost abstractions</p>
+              </div>
+            </div>
+          </div>
+          <hr>
           <img src="./res/party-popper-emoji-left.png">
           <input type="checkbox" id="webrtc" name="webrtc" disabled="disabled" checked="checked"> <label for="webrtc">WebRTC</label>
           <a href="https://crates.io/crates/webrtc"><img src="https://img.shields.io/crates/v/webrtc.svg"></a>
-		  &nbsp;
-		  <input type="checkbox" id="rtc" name="rtc" disabled="disabled"> <label for="rtc">RTC</label>
+		      &nbsp;
+		      <input type="checkbox" id="rtc" name="rtc" disabled="disabled"> <label for="rtc">RTC</label>
           <a href="https://crates.io/crates/rtc"><img src="https://img.shields.io/crates/v/rtc.svg"></a>
-		  &nbsp;
-		  <input type="checkbox" id="sfu" name="sfu" disabled="disabled" checked="checked"> <label for="sfu">SFU</label>
+		      &nbsp;
+		      <input type="checkbox" id="sfu" name="sfu" disabled="disabled" checked="checked"> <label for="sfu">SFU</label>
           <a href="https://crates.io/crates/sfu"><img src="https://img.shields.io/crates/v/sfu.svg"></a>
+		      &nbsp;
+		      <input type="checkbox" id="sansio" name="sansio" disabled="disabled" checked="checked"> <label for="sansio">SansIO</label>
+          <a href="https://crates.io/crates/sansio"><img src="https://img.shields.io/crates/v/sansio.svg"></a>
           <img src="./res/party-popper-emoji-right.png">
           <br>
           <input type="checkbox" id="media" name="media" disabled="disabled" checked="checked"> <label for="media">Media</label>
