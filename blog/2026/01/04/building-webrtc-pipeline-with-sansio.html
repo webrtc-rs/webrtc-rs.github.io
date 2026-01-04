@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Building WebRTC's Pipeline with sansio::Protocol: A Transport-Agnostic Approach">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    .blog-content em {
+      font-style: italic;
+    }
+  </style>
+  <title>Building WebRTC's Pipeline with sansio::Protocol | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../../index.html"><strong>🏠 Home &nbsp;&nbsp; </strong></a>
+          <a class="navbar-item" href="../../../index.html"><strong>📝 Blog &nbsp;&nbsp; </strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Building WebRTC's Pipeline with <code>sansio::Protocol</code>: A Transport-Agnostic Approach</h1>
+            <div class="blog-meta">January 4, 2026</div>
+
+            <h2>Introduction</h2>
+
+            <p>WebRTC is not a single protocol but a <em>stack</em> of tightly interrelated protocols: ICE for connectivity, DTLS for security, SCTP for reliable data channels, and SRTP for media transport. Each layer has its own state machine, timers, retransmission logic, and failure modes. Traditionally, these protocols are implemented alongside socket I/O and async runtimes, leading to deeply intertwined code that is difficult to test, reason about, or adapt to new transports.</p>
+
+            <p>This article explores an alternative approach: building WebRTC as a <strong>pure protocol pipeline</strong> using the <em>sans-I/O</em> pattern. By separating protocol logic from all I/O concerns, we can model WebRTC as a sequence of composable handlers, each acting as a deterministic state machine. The result is a transport-agnostic, testable, and extensible WebRTC implementation.</p>
+
+            <p>The design is built on the <code>sansio::Protocol</code> trait from <a href="https://github.com/webrtc-rs/sansio"><code>webrtc-rs/sansio</code></a>, and the concrete pipeline implementation lives in the WebRTC peer connection handlers under <a href="https://github.com/webrtc-rs/rtc/tree/master/rtc/src/peer_connection/handler"><code>webrtc-rs/rtc/src/peer_connection/handler</code></a>.</p>
+
+            <hr>
+
+            <h2>The Sans-I/O Model</h2>
+
+            <p>A <em>sans-I/O</em> protocol does not perform any input/output operations. Instead, it:</p>
+
+            <ul>
+              <li><strong>Consumes inputs</strong> (messages, events, timestamps)</li>
+              <li><strong>Mutates internal state</strong></li>
+              <li><strong>Emits outputs</strong> that the runtime may choose to send, schedule, or drop</li>
+            </ul>
+
+            <p>All side effects are explicit and observable.</p>
+
+            <p>This separation gives us three key properties:</p>
+
+            <ul>
+              <li><strong>Determinism</strong> – protocol logic is pure and replayable</li>
+              <li><strong>Testability</strong> – no sockets, timers, or async runtimes required</li>
+              <li><strong>Transport independence</strong> – UDP, TCP, QUIC, or in-memory buffers all work</li>
+            </ul>
+
+            <hr>
+
+            <h2>The <code>sansio::Protocol</code> Trait</h2>
+
+            <p>At the core of this approach is the <code>sansio::Protocol</code> trait:</p>
+
+            <pre><code class="language-rust">trait Protocol&lt;Rin, Rout, Eout&gt; {
+    type Rout;
+    type Wout;
+    type Eout;
+    type Error;
+    type Time;
+
+    fn handle_read(&mut self, msg: Rin) -> Result&lt;(), Self::Error&gt;;
+    fn poll_read(&mut self) -> Option&lt;Self::Rout&gt;;
+
+    fn handle_write(&mut self, msg: Rout) -> Result&lt;(), Self::Error&gt;;
+    fn poll_write(&mut self) -> Option&lt;Self::Wout&gt;;
+
+    fn handle_event(&mut self, evt: Eout) -> Result&lt;(), Self::Error&gt;;
+    fn poll_event(&mut self) -> Option&lt;Self::Eout&gt;;
+
+    fn handle_timeout(&mut self, now: Self::Time) -> Result&lt;(), Self::Error&gt;;
+    fn poll_timeout(&mut self) -> Option&lt;Self::Time&gt;;
+
+    fn close(&mut self) -> Result&lt;(), Self::Error&gt;;
+}</code></pre>
+
+            <p>Each protocol handler is a <strong>state machine</strong> with a uniform interface. It does not block, does not allocate sockets, and does not depend on an async runtime. Instead, it transforms messages and queues outputs for the next layer in the pipeline.</p>
+
+            <hr>
+
+            <h2>A Pipeline, Not a Call Stack</h2>
+
+            <p>WebRTC is naturally layered, which makes it an excellent fit for a pipeline model.</p>
+
+            <p>Think of the stack as two conveyor belts:</p>
+
+            <ul>
+              <li><strong>Read path</strong>: bytes → validated, decrypted, structured messages</li>
+              <li><strong>Write path</strong>: structured messages → encrypted bytes</li>
+            </ul>
+
+            <h3>Read Path</h3>
+
+            <pre><code>Raw Bytes → Demuxer → ICE → DTLS → SCTP → DataChannel → SRTP → Interceptor → Endpoint → Application</code></pre>
+
+            <h3>Write Path</h3>
+
+            <pre><code>Application → Endpoint → Interceptor → SRTP → DataChannel → SCTP → DTLS → ICE → Demuxer → Raw Bytes</code></pre>
+
+            <p>Each handler has <strong>exactly one responsibility</strong> and never calls another handler directly.</p>
+
+            <hr>
+
+            <h2>Handler Breakdown</h2>
+
+            <h3>1. Demuxer Handler</h3>
+
+            <p>The Demuxer is the entry point for all incoming packets. Following RFC 7983, it inspects the first byte to classify packets as STUN, DTLS, or RTP/RTCP.</p>
+
+            <pre><code class="language-rust">fn match_dtls(b: &[u8]) -> bool {
+    match_range(20, 63, b)
+}
+
+fn match_srtp(b: &[u8]) -> bool {
+    match_range(128, 191, b)
+}</code></pre>
+
+            <p>On read, it transforms <code>Raw</code> bytes into categorized messages:</p>
+
+            <ul>
+              <li><code>[20..63]</code> → <code>DTLSMessage::Raw</code></li>
+              <li><code>[128..191]</code> → <code>RTPMessage::Raw</code></li>
+              <li>Everything else → <code>STUNMessage::Raw</code></li>
+            </ul>
+
+            <p>On write, it simply unwraps all protocol messages back to raw bytes.</p>
+
+            <p>This handler is intentionally <strong>stateless</strong>. Given the same input bytes, it always produces the same classification, making it ideal for fuzzing and offline testing.</p>
+
+            <hr>
+
+            <h3>2. ICE Handler</h3>
+
+            <p>The ICE handler manages connectivity establishment using STUN.</p>
+
+            <p>Before candidate nomination, it actively consumes STUN messages and drives the ICE agent. After a candidate pair is selected, the handler undergoes a <strong>phase transition</strong> and becomes a transparent transport adaptor, forwarding all non-STUN traffic unchanged.</p>
+
+            <p>All address selection and connectivity checks are encapsulated within this handler, keeping transport concerns isolated from higher protocol layers.</p>
+
+            <hr>
+
+            <h3>3. DTLS Handler</h3>
+
+            <p>The DTLS handler provides authentication, encryption, and key agreement.</p>
+
+            <p>On the read path, it processes DTLS records and advances the handshake state machine. When the handshake completes, keying material is exported using the TLS exporter and transformed into SRTP contexts.</p>
+
+            <pre><code class="language-rust">fn handle_read(&mut self, msg: TaggedRTCMessageInternal) -> Result&lt;()&gt; {
+    if let RTCMessageInternal::Dtls(DTLSMessage::Raw(dtls_message)) = msg.message {
+        //...
+        EndpointEvent::HandshakeComplete => {
+            let (local_srtp_context, remote_srtp_context) =
+                DtlsHandler::update_srtp_contexts(state, replay_protection)?;
+            self.ctx.event_outs.push_back(
+                RTCEventInternal::DTLSHandshakeComplete(peer_addr, Some(local_srtp_context), Some(remote_srtp_context))
+            );
+        }
+        //...
+    }
+    Ok(())
+}</code></pre>
+
+            <p>Until this event occurs, the SRTP handler remains inactive. DTLS therefore forms a strict dependency boundary in the pipeline.</p>
+
+            <hr>
+
+            <h3>4. SCTP Handler</h3>
+
+            <p>The SCTP handler implements reliable and unordered delivery for data channels.</p>
+
+            <p>It manages:</p>
+
+            <ul>
+              <li>SCTP <strong>associations</strong> (roughly equivalent to connections)</li>
+              <li>Multiple <strong>streams</strong> per association</li>
+              <li>Flow control and retransmissions</li>
+              <li>DCEP (Data Channel Establishment Protocol)</li>
+            </ul>
+
+            <p>WebRTC data channels map directly to SCTP streams, not to separate connections.</p>
+
+            <hr>
+
+            <h3>5. DataChannel Handler</h3>
+
+            <p>The DataChannel handler introduces WebRTC-specific semantics.</p>
+
+            <p>It maps SCTP streams to WebRTC data channels, handles open and close negotiation, and interprets messages based on their PPI (Payload Protocol Identifier).</p>
+
+            <p>Below this layer, messages are generic framed bytes. Above it, messages have meaning: text vs binary payloads, lifecycle events, and application-level semantics.</p>
+
+            <hr>
+
+            <h3>6. SRTP Handler</h3>
+
+            <p>The SRTP handler encrypts and decrypts RTP and RTCP packets using keys derived from DTLS.</p>
+
+            <pre><code class="language-rust">let mut decrypted = context.decrypt_rtp(&message)?;
+let rtp_packet = rtp::Packet::unmarshal(&mut decrypted)?;</code></pre>
+
+            <p>Replay protection, rollover counters, and packet authentication are fully encapsulated within this handler. Because it is sans-I/O, packet reordering and duplication can be tested deterministically.</p>
+
+            <hr>
+
+            <h3>7. Interceptor Handler</h3>
+
+            <p>The Interceptor handler is an intentional extension point.</p>
+
+            <p>RTCP packets terminate here, allowing future interceptors to implement:</p>
+
+            <ul>
+              <li>NACK, PLI, and FIR feedback</li>
+              <li>Congestion control algorithms</li>
+              <li>Bandwidth estimation</li>
+              <li>Statistics and observability</li>
+            </ul>
+
+            <p>This keeps experimental or policy-driven logic out of core protocol handlers.</p>
+
+            <hr>
+
+            <h3>8. Endpoint Handler</h3>
+
+            <p>The Endpoint handler bridges protocol logic and application logic.</p>
+
+            <p>It maps SSRCs to tracks, emits <code>OnTrack</code> and <code>OnDataChannel</code> events, and routes RTP packets to the correct media tracks. This is the final stage where protocol messages become application-visible events.</p>
+
+            <hr>
+
+            <h2>Orchestrating the Pipeline</h2>
+
+            <p><code>RTCPeerConnection</code> itself implements <code>sansio::Protocol</code> and acts as the <strong>orchestrator</strong> for all handlers. Handlers never call each other directly. The macros <code>for_each_handler!</code> with <code>forward</code> and <code>reverse</code> parameters ensure messages flow through the pipeline in the correct order.</p>
+
+            <pre><code class="language-rust">for_each_handler!(forward: process_handler!(self, handler, {
+    while let Some(msg) = intermediate.pop_front() {
+        handler.handle_read(msg)?;
+    }
+    while let Some(msg) = handler.poll_read() {
+        intermediate.push_back(msg);
+    }
+}));</code></pre>
+
+            <p>The write path runs the same handlers in reverse order. This symmetry ensures that every transformation on the read path has a clear inverse on the write path.</p>
+
+            <hr>
+
+            <h2>Benefits of the sansio Approach</h2>
+
+            <h3>1. <strong>Transport Agnostic</strong></h3>
+
+            <p>The same protocol handlers work with UDP, TCP, QUIC, or even in-memory buffers for testing.</p>
+
+            <h3>2. <strong>Testable</strong></h3>
+
+            <p>Each handler can be tested in isolation by feeding it messages and verifying outputs:</p>
+
+            <pre><code class="language-rust">#[test]
+fn test_demuxer() {
+    let mut ctx = DemuxerHandlerContext::default();
+    let mut demuxer = DemuxerHandler::new(&mut ctx);
+
+    // Test DTLS packet demuxing
+    let dtls_packet = vec![22, /* ... */]; // Content Type = 22 (handshake)
+    demuxer.handle_read(TaggedRTCMessageInternal {
+        message: RTCMessageInternal::Raw(BytesMut::from(&dtls_packet[..])),
+        ..
+    })?;
+
+    let output = demuxer.poll_read().unwrap();
+    assert!(matches!(output.message, RTCMessageInternal::Dtls(_)));
+}</code></pre>
+
+            <h3>3. <strong>Composable</strong></h3>
+
+            <p>Handlers can be reordered, replaced, or extended without affecting others. Want to add custom encryption? Insert a handler between DTLS and SCTP.</p>
+
+            <h3>4. <strong>Clear Separation of Concerns</strong></h3>
+
+            <p>Each handler has a single responsibility and well-defined interfaces.</p>
+
+            <h3>5. <strong>Event-Driven</strong></h3>
+
+            <p>The polling model (<code>poll_read</code>, <code>poll_write</code>, <code>poll_event</code>, <code>poll_timeout</code>) integrates naturally with async runtimes without requiring async/await in protocol logic.</p>
+
+            <h2>Message Flow Example</h2>
+
+            <p>Let's trace a data channel message from application to wire:</p>
+
+            <ul>
+              <li><strong>Application</strong> writes: <code>RTCMessage::DataChannelMessage(id, data)</code></li>
+              <li><strong>Endpoint</strong> converts to: <code>DTLSMessage::DataChannel(ApplicationMessage)</code></li>
+              <li><strong>Interceptor</strong> passes through (no-op for data channels)</li>
+              <li><strong>SRTP</strong> passes through (not RTP/RTCP)</li>
+              <li><strong>DataChannel</strong> converts to: <code>DTLSMessage::Sctp(DataChannelMessage)</code> with PPI</li>
+              <li><strong>SCTP</strong> fragments and adds headers: <code>DTLSMessage::Raw(sctp_packet)</code></li>
+              <li><strong>DTLS</strong> encrypts: <code>DTLSMessage::Raw(encrypted_packet)</code></li>
+              <li><strong>ICE</strong> adds addresses: same packet with transport context</li>
+              <li><strong>Demuxer</strong> unwraps to: <code>RTCMessageInternal::Raw(bytes)</code></li>
+              <li><strong>Transport</strong> sends <code>TaggedBytesMut</code> to network</li>
+            </ul>
+
+            <p>And on the read path, the process reverses!</p>
+
+            <hr>
+
+            <h2>Conclusion</h2>
+
+            <p>The <code>sansio::Protocol</code> trait provides an elegant foundation for building complex protocol stacks like WebRTC. By separating protocol logic from I/O, we achieve:</p>
+
+            <ul>
+              <li>Clean, testable code</li>
+              <li>Transport independence</li>
+              <li>Easy extensibility</li>
+              <li>Clear architectural boundaries</li>
+            </ul>
+
+            <p>This approach transforms WebRTC from a monolithic implementation into a composable pipeline of handlers, each focused on a specific protocol layer. Whether you're building a WebRTC implementation, a custom signaling protocol, or any layered network stack, the sansio pattern is worth considering.</p>
+
+            <p>The full implementation can be explored in the <a href="https://github.com/webrtc-rs/rtc">rtc repository</a>, demonstrating how these principles scale to production-quality WebRTC.</p>
+
+            <hr>
+
+            <p><strong>Key Takeaways:</strong></p>
+
+            <ul>
+              <li>sansio separates protocol logic from I/O operations</li>
+              <li>Each handler implements a simple, uniform interface</li>
+              <li>Messages flow through a pipeline of transformations</li>
+              <li>The architecture is testable, composable, and transport-agnostic</li>
+              <li>WebRTC's complexity becomes manageable through clear layering</li>
+            </ul>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
