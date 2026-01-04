@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing rtc 0.3.0: Sans-I/O WebRTC Stack for Rust">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+  <title>Announcing rtc 0.3.0: Sans-I/O WebRTC Stack for Rust | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../../index.html"><strong>🏠 Home &nbsp;&nbsp; </strong></a>
+          <a class="navbar-item" href="../../../index.html"><strong>📝 Blog &nbsp;&nbsp; </strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Announcing <code>rtc</code> 0.3.0: Sans-I/O WebRTC Stack for Rust 🎉</h1>
+            <div class="blog-meta">January 4, 2026</div>
+
+            <p>I'm excited to announce the first public release of <strong><a href="https://github.com/webrtc-rs/rtc">rtc</a></strong>, a pure Rust WebRTC implementation built on a <strong>sans-I/O architecture</strong>.</p>
+
+            <h2>What is Sans-I/O?</h2>
+
+            <p>Sans-I/O (without I/O) is a design pattern where the library handles all protocol logic, but <strong>you</strong> control the I/O operations. Instead of the library directly performing network reads and writes, you feed it data and it tells you what to send back.</p>
+
+            <p>Think of it like a state machine: you drive the I/O loop while the library handles WebRTC's complex protocol details (ICE, DTLS, SRTP, SCTP, SDP, etc.).</p>
+
+            <h2>Why Sans-I/O for WebRTC?</h2>
+
+            <p>The existing <a href="https://github.com/webrtc-rs/webrtc"><code>webrtc</code></a> crate (async/await based) is excellent, but it has some inherent limitations:</p>
+
+            <p><strong>Limitations of Async-Based Approach:</strong></p>
+            <ul>
+              <li>🔒 <strong>Runtime Lock-in</strong> - Tightly coupled to Tokio</li>
+              <li>🧵 <strong>Hidden Threading</strong> - Internal task spawning you can't control</li>
+              <li>🎭 <strong>Black Box I/O</strong> - Can't intercept or customize network behavior</li>
+              <li>🧪 <strong>Testing Challenges</strong> - Requires actual network for protocol tests</li>
+              <li>🔌 <strong>Integration Friction</strong> - Hard to embed in existing event loops</li>
+            </ul>
+
+            <p><strong>Benefits of Sans-I/O:</strong></p>
+            <ul>
+              <li>🚀 <strong>Runtime Independent</strong> - Works with tokio, async-std, smol, or even blocking I/O</li>
+              <li>🎯 <strong>Full Control</strong> - You control threading, scheduling, and I/O multiplexing</li>
+              <li>🧪 <strong>Testable</strong> - Protocol logic testable without real network I/O</li>
+              <li>🔌 <strong>Flexible</strong> - Easy integration with existing networking code</li>
+              <li>📊 <strong>Observable</strong> - Complete visibility into protocol state and events</li>
+              <li>⚡ <strong>Zero Copy</strong> - Efficient buffer management with <code>bytes</code> crate</li>
+            </ul>
+
+            <h2>Simple API Example</h2>
+
+            <p>The core API is straightforward - a simple event loop with six core methods:</p>
+
+            <ul>
+              <li><strong><code>poll_write()</code></strong> - Get outgoing network packets to send via UDP</li>
+              <li><strong><code>poll_event()</code></strong> - Process connection state changes and notifications</li>
+              <li><strong><code>poll_read()</code></strong> - Get incoming application messages (RTP, RTCP, data)</li>
+              <li><strong><code>poll_timeout()</code></strong> - Get next timer deadline for retransmissions/keepalives</li>
+              <li><strong><code>handle_read()</code></strong> - Feed incoming network packets into the connection</li>
+              <li><strong><code>handle_timeout()</code></strong> - Notify about timer expiration</li>
+            </ul>
+
+            <p>Additional methods for external control:</p>
+
+            <ul>
+              <li><strong><code>handle_write()</code></strong> - Queue application messages (RTP/RTCP/data) for sending</li>
+              <li><strong><code>handle_event()</code></strong> - Inject external events into the connection</li>
+            </ul>
+
+            <pre><code class="language-rust">use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::event::{RTCPeerConnectionEvent, RTCTrackEvent};
+use rtc::peer_connection::state::RTCPeerConnectionState;
+use rtc::peer_connection::message::RTCMessage;
+use rtc::peer_connection::sdp::RTCSessionDescription;
+use rtc::shared::{TaggedBytesMut, TransportContext, TransportProtocol};
+use rtc::sansio::Protocol;
+use std::time::{Duration, Instant};
+use tokio::net::UdpSocket;
+use bytes::BytesMut;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Setup peer connection
+    let config = RTCConfigurationBuilder::new().build();
+    let mut pc = RTCPeerConnection::new(config)?;
+
+    // Signaling: Create offer and set local description
+    let offer = pc.create_offer(None)?;
+    pc.set_local_description(offer.clone())?;
+
+    // TODO: Send offer.sdp to remote peer via your signaling channel
+    // signaling_channel.send_offer(&offer.sdp).await?;
+
+    // TODO: Receive answer from remote peer via your signaling channel
+    // let answer_sdp = signaling_channel.receive_answer().await?;
+    // let answer = RTCSessionDescription::answer(answer_sdp)?;
+    // pc.set_remote_description(answer)?;
+
+    // Bind UDP socket
+    let socket = UdpSocket::bind("0.0.0.0:0").await?;
+    let local_addr = socket.local_addr()?;
+    let mut buf = vec![0u8; 2000];
+
+    'EventLoop: loop {
+        // 1. Send outgoing packets
+        while let Some(msg) = pc.poll_write() {
+            socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+        }
+
+        // 2. Handle events
+        while let Some(event) = pc.poll_event() {
+            match event {
+                RTCPeerConnectionEvent::OnConnectionStateChangeEvent(state) => {
+                    println!("Connection state: {state}");
+                    if state == RTCPeerConnectionState::Failed {
+                        return Ok(());
+                    }
+                }
+                RTCPeerConnectionEvent::OnTrack(RTCTrackEvent::OnOpen(init)) => {
+                    println!("New track: {}", init.track_id);
+                }
+                _ => {}
+            }
+        }
+
+        // 3. Handle incoming messages
+        while let Some(message) = pc.poll_read() {
+            match message {
+                RTCMessage::RtpPacket(track_id, packet) => {
+                    println!("RTP packet on track {track_id}");
+                }
+                RTCMessage::DataChannelMessage(channel_id, msg) => {
+                    println!("Data channel message");
+                }
+                _ => {}
+            }
+        }
+
+        // 4. Handle timeouts
+        let timeout = pc.poll_timeout()
+            .unwrap_or(Instant::now() + Duration::from_secs(86400));
+        let delay = timeout.saturating_duration_since(Instant::now());
+
+        if delay.is_zero() {
+            pc.handle_timeout(Instant::now())?;
+            continue;
+        }
+
+        // 5. Multiplex I/O
+        tokio::select! {
+            _ = stop_rx.recv() => {
+                break 'EventLoop,
+            } 
+            _ = tokio::time::sleep(delay) => {
+                pc.handle_timeout(Instant::now())?;
+            }
+            Ok(message) = message_rx.recv() => {
+                pc.handle_write(message)?;
+            }
+            Ok(event) = event_rx.recv() => {
+                pc.handle_event(event)?;
+            }
+            Ok((n, peer_addr)) = socket.recv_from(&mut buf) => {
+                pc.handle_read(TaggedBytesMut {
+                    now: Instant::now(),
+                    transport: TransportContext {
+                        local_addr,
+                        peer_addr,
+                        ecn: None,
+                        transport_protocol: TransportProtocol::UDP,
+                    },
+                    message: BytesMut::from(&buf[..n]),
+                })?;
+            }
+        }
+    }
+
+    pc.close()?;
+
+    Ok(())
+}
+```</code></pre>
+
+            <h2>Feature Parity Status</h2>
+
+            <p>The <code>rtc</code> crate is nearly feature-complete compared to the <code>webrtc</code> crate:</p>
+
+            <p><strong>✅ Complete:</strong></p>
+            <ul>
+              <li>ICE (Interactive Connectivity Establishment)</li>
+              <li>DTLS (Datagram Transport Layer Security)</li>
+              <li>SRTP/SRTCP (Secure RTP/RTCP)</li>
+              <li>SCTP (Stream Control Transmission Protocol)</li>
+              <li>Data Channels (reliable &amp; unreliable)</li>
+              <li>RTP/RTCP (Real-time Transport Protocol)</li>
+              <li>Media Tracks (audio &amp; video)</li>
+              <li>SDP (Session Description Protocol)</li>
+              <li>Peer Connection API</li>
+              <li>Media Streams API</li>
+            </ul>
+
+            <p><strong>🚧 In Progress:</strong></p>
+            <ul>
+              <li>Simulcast support</li>
+              <li>RTCP feedback handling (interceptors)</li>
+            </ul>
+
+            <h2>Architecture Highlights</h2>
+
+            <ul>
+              <li><strong>14+ workspace crates</strong> - Modular design (rtc-ice, rtc-dtls, rtc-srtp, etc.)</li>
+              <li><strong>Type Safe</strong> - Pure safe Rust implementation</li>
+              <li><strong>Comprehensive docs</strong> - 215+ passing doc tests</li>
+              <li><strong>W3C compliant</strong> - Follows WebRTC and Media Capture specs</li>
+              <li><strong>RFC compliant</strong> - Implements ICE, DTLS, SRTP, SCTP standards</li>
+            </ul>
+
+            <h2>Use Cases</h2>
+
+            <p>Sans-I/O architecture shines when you need:</p>
+
+            <ul>
+              <li><strong>Custom networking</strong> - Non-standard transports, custom protocols</li>
+              <li><strong>Embedded systems</strong> - No runtime overhead, precise control</li>
+              <li><strong>Game engines</strong> - Integration with existing game loops</li>
+              <li><strong>High performance</strong> - Fine-tuned I/O scheduling and batching</li>
+              <li><strong>Testing infrastructure</strong> - Deterministic protocol testing</li>
+              <li><strong>Special environments</strong> - WebAssembly, no_std (future), embedded</li>
+            </ul>
+
+            <h2>Getting Started</h2>
+
+            <pre><code class="language-toml">[dependencies]
+rtc = "0.3.0"</code></pre>
+
+            <p>Check out the <a href="https://docs.rs/rtc">documentation</a> and <a href="https://github.com/webrtc-rs/rtc/tree/master/examples">examples</a> to get started!</p>
+
+            <h2>Relationship with <code>webrtc</code> Crate</h2>
+
+            <p>The <code>rtc</code> (sans-I/O) and <code>webrtc</code> (async) crates are <strong>complementary, not competitive</strong>:</p>
+
+            <ul>
+              <li><strong>Use <code>webrtc</code></strong> if you want async/await, Tokio integration, and quick start</li>
+              <li><strong>Use <code>rtc</code></strong> if you need runtime independence, custom I/O, or maximum control</li>
+            </ul>
+
+            <p>Both are actively maintained by the WebRTC.rs project and share the same underlying protocol implementations where possible.</p>
+
+            <h2>Future Plans</h2>
+
+            <ul>
+              <li>Complete simulcast support</li>
+              <li>RTCP interceptor framework</li>
+              <li>Performance optimizations</li>
+              <li>More examples and documentation</li>
+              <li>Potential <code>no_std</code> support for embedded systems</li>
+            </ul>
+
+            <h2>Links</h2>
+
+            <ul>
+              <li><strong>GitHub</strong>: <a href="https://github.com/webrtc-rs/rtc">https://github.com/webrtc-rs/rtc</a></li>
+              <li><strong>Crate</strong>: <a href="https://crates.io/crates/rtc">https://crates.io/crates/rtc</a></li>
+              <li><strong>Docs</strong>: <a href="https://docs.rs/rtc">https://docs.rs/rtc</a></li>
+              <li><strong>Discord</strong>: <a href="https://discord.gg/4Ju8UHdXMs">https://discord.gg/4Ju8UHdXMs</a></li>
+            </ul>
+
+            <p>Feedback, questions, and contributions are welcome! 🦀</p>
+
+            <hr>
+
+            <p><em>This release represents months of work redesigning WebRTC for maximum flexibility. Special thanks to all contributors and the WebRTC-rs community!</em></p>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
