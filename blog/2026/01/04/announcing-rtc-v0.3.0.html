@@ -80,6 +80,24 @@
       color: #777;
       font-size: 0.9rem;
       margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
   </style>
   <title>Announcing rtc 0.3.0: Sans-I/O WebRTC Stack for Rust | WebRTC.rs</title>
@@ -113,7 +131,10 @@
         <div class="message-body">
           <div class="blog-content">
             <h1>Announcing <code>rtc</code> 0.3.0: Sans-I/O WebRTC Stack for Rust 🎉</h1>
-            <div class="blog-meta">January 4, 2026</div>
+            <div class="blog-meta">
+              <span>January 4, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/04/announcing-rtc-v0.3.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
 
             <p>I'm excited to announce the first public release of <strong><a href="https://github.com/webrtc-rs/rtc">rtc</a></strong>, a pure Rust WebRTC implementation built on a <strong>sans-I/O architecture</strong>.</p>
 

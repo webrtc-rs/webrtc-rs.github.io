@@ -88,6 +88,24 @@
       color: #777;
       font-size: 0.9rem;
       margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
 
     .blog-content em {
@@ -125,7 +143,10 @@
         <div class="message-body">
           <div class="blog-content">
             <h1>Building WebRTC's Pipeline with <code>sansio::Protocol</code>: A Transport-Agnostic Approach</h1>
-            <div class="blog-meta">January 4, 2026</div>
+            <div class="blog-meta">
+              <span>January 4, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/04/building-webrtc-pipeline-with-sansio.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
 
             <h2>Introduction</h2>
 

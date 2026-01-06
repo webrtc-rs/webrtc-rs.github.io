@@ -96,6 +96,24 @@
       color: #777;
       font-size: 0.9rem;
       margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
   </style>
   <title>Announcing rtc 0.5.0: Simulcast Support and API Refinements | WebRTC.rs</title>
@@ -128,9 +146,14 @@
       <article class="message is-success">
         <div class="message-body">
           <div class="blog-content">
-            <div class="blog-meta">January 6, 2026</div>
+            
 
 <h1>Announcing <code>rtc</code> 0.5.0: Simulcast Support and API Refinements 🎉</h1>
+<div class="blog-meta">
+  <span>January 6, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/05/announcing-rtc-v0.5.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+            
 <p>I'm excited to announce <strong><code>rtc</code> 0.5.0</strong>, a major release that brings <strong>simulcast support</strong>, API improvements, and enhanced documentation to our sans-I/O WebRTC implementation.</p>
 <h2>What's New in 0.5.0</h2>
 <h3>Simulcast Support 📹</h3>
