@@ -1,6 +1,6 @@
 # Announcing `rtc` 0.3.0: Sans-I/O WebRTC Stack for Rust 🎉
 
-I'm excited to announce the first public release of **[rtc](https://github.com/webrtc-rs/rtc)**, a pure Rust WebRTC implementation built on a **sans-I/O architecture**.
+We're excited to announce the first public release of **[rtc](https://github.com/webrtc-rs/rtc)**, a pure Rust WebRTC implementation built on a **sans-I/O architecture**.
 
 ## What is Sans-I/O?
 

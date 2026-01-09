@@ -1,6 +1,6 @@
 # Announcing `rtc` 0.5.0: Simulcast Support and API Refinements 🎉
 
-I'm excited to announce **`rtc` 0.5.0**, a major release that brings **simulcast support**, API improvements, and enhanced documentation to our sans-I/O WebRTC implementation.
+We're excited to announce **`rtc` 0.5.0**, a major release that brings **simulcast support**, API improvements, and enhanced documentation to our sans-I/O WebRTC implementation.
 
 ## What's New in 0.5.0
 

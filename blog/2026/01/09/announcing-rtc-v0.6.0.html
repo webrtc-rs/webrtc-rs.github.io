@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing rtc 0.6.0: Interceptor Framework Complete">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing rtc 0.6.0: Interceptor Framework Complete | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../../index.html"><strong>🏠 Home &nbsp;&nbsp; </strong></a>
+          <a class="navbar-item" href="../../../index.html"><strong>📝 Blog &nbsp;&nbsp; </strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            
+
+<h1>Announcing <code>rtc</code> 0.6.0: Interceptor Framework Complete 🎊</h1>
+<div class="blog-meta">
+  <span>January 9, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/09/announcing-rtc-v0.6.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+            
+<p>We're thrilled to announce <strong><code>rtc</code> 0.6.0</strong>, a major milestone release that completes the <strong>Interceptor framework</strong> for our sans-I/O WebRTC implementation. 
+This release achieves interceptor feature parity with the async-based <code>webrtc</code> crate, bringing RTCP feedback mechanisms for adaptive streaming, packet loss recovery, and congestion control.
+The simulcast example now achieves highest quality streaming from browsers thanks to proper RTCP feedback!</p>
+<h2>What's New in 0.6.0</h2>
+<h3>Complete Interceptor Framework 🚀</h3>
+<p>The headline feature is the <strong>completion of the rtc-interceptor crate</strong>, providing a comprehensive suite of RTP/RTCP processing interceptors. Built on the <code>sansio::Protocol</code> pattern, interceptors form a composable pipeline for packet processing, statistics collection, and quality control.</p>
+<p><strong>Available Interceptors:</strong></p>
+<h4>RTCP Reports</h4>
+<ul>
+<li><strong><code>SenderReportInterceptor</code></strong> - Generates RTCP Sender Reports (SR) for local streams</li>
+<li><strong><code>ReceiverReportInterceptor</code></strong> - Generates RTCP Receiver Reports (RR) with reception statistics</li>
+</ul>
+<h4>NACK (Negative Acknowledgement)</h4>
+<ul>
+<li><strong><code>NackGeneratorInterceptor</code></strong> - Detects packet loss and requests retransmissions (RFC 4585)</li>
+<li><strong><code>NackResponderInterceptor</code></strong> - Buffers sent packets and handles retransmission requests</li>
+</ul>
+<h4>TWCC (Transport Wide Congestion Control)</h4>
+<ul>
+<li><strong><code>TwccSenderInterceptor</code></strong> - Adds transport-wide sequence numbers to outgoing RTP packets</li>
+<li><strong><code>TwccReceiverInterceptor</code></strong> - Tracks packet arrival times and generates TransportLayerCC feedback</li>
+</ul>
+<p><strong>Key capabilities:</strong></p>
+<ul>
+<li>Automatic packet loss detection and recovery via NACK</li>
+<li>Real-time quality statistics (packet loss, jitter, RTT)</li>
+<li>Bandwidth estimation feedback via TWCC</li>
+<li>Composable interceptor chains via <code>Registry</code></li>
+<li>Stream binding for both local (sender) and remote (receiver) streams</li>
+</ul>
+<p><strong>Example use cases:</strong></p>
+<ul>
+<li>Adaptive bitrate streaming with TWCC feedback</li>
+<li>Reliable media delivery with NACK retransmissions</li>
+<li>Network quality monitoring with RTCP reports</li>
+<li>Simulcast layer selection based on bandwidth estimates</li>
+</ul>
+<h3>Enhanced Media Examples 📹</h3>
+<p>All media examples now use <code>register_default_interceptors()</code> to enable RTCP feedback:</p>
+<ul>
+<li><code>broadcast</code> - Multi-party media distribution with quality reports</li>
+<li><code>play-from-disk-*</code> - File playback with adaptive retransmission</li>
+<li><code>reflect</code> - Media relay with transport-wide feedback</li>
+<li><code>rtp-forwarder</code> - RTP bridging with loss recovery</li>
+<li><code>simulcast</code> - <strong>Multi-resolution streaming with full RTCP feedback</strong></li>
+<li><code>save-to-disk-*</code> - Recording with quality monitoring</li>
+<li><code>swap-tracks</code> - Dynamic track switching with seamless feedback</li>
+</ul>
+<p><strong>Simulcast Breakthrough:</strong> The simulcast example now achieves <strong>highest quality streaming</strong> from browsers thanks to proper RTCP feedback. Browsers receive Receiver Reports and TWCC feedback, enabling them to optimize sending bitrate and quality layer selection.</p>
+<h3>Generic Interceptor Support 🔧</h3>
+<p><code>RTCPeerConnection</code> now supports generic interceptor types:</p>
+<pre><code class="language-rust">
+// Before (v0.5.x)
+let config = RTCConfigurationBuilder::new().build();
+let pc = RTCPeerConnection::new(config)?;
+
+// After (v0.6.0) - with interceptors
+let mut media_engine = MediaEngine::default();
+let registry = Registry::new();
+let registry = register_default_interceptors(registry, &amp;mut media_engine)?;
+
+let config = RTCConfigurationBuilder::new()
+    .with_media_engine(media_engine)
+    .with_interceptor_registry(registry)
+    .build();
+
+let pc = RTCPeerConnection::new(config)?;
+</code></pre>
+<p>The generic <code>RTCPeerConnection&lt;I&gt;</code> allows full type safety while maintaining zero-cost abstractions. The default <code>NoopInterceptor</code> ensures existing code continues working without changes.</p>
+<hr>
+<h2>API Changes</h2>
+<p>This release includes breaking changes to support the interceptor framework:</p>
+<h3>RTCConfiguration Generic Parameter</h3>
+<p><code>RTCConfiguration</code> is now generic over the interceptor type:</p>
+<pre><code class="language-rust">
+// Default (no interceptors)
+RTCConfiguration&lt;NoopInterceptor&gt;
+
+// With custom interceptor chain
+RTCConfiguration&lt;impl Interceptor&gt;
+</code></pre>
+<h3>RTCConfigurationBuilder Methods</h3>
+<p>New builder methods for configuring interceptors:</p>
+<pre><code class="language-rust">
+pub fn with_interceptor_registry&lt;P&gt;(
+    self, 
+    registry: Registry&lt;P&gt;
+) -&gt; RTCConfigurationBuilder&lt;P&gt;
+where
+    P: Interceptor
+</code></pre>
+<h3>New Types</h3>
+<ul>
+<li><strong><code>interceptor::Registry</code></strong> - Builder for composing interceptor chains</li>
+<li><strong><code>interceptor::StreamInfo</code></strong> - Stream metadata (SSRC, codec, RTCP feedback, extensions)</li>
+<li><strong><code>interceptor::Packet</code></strong> - RTP or RTCP packet enum for interceptor processing</li>
+<li><strong><code>interceptor::TaggedPacket</code></strong> - Packet with transport context</li>
+</ul>
+<hr>
+<h2>Interceptor Framework Design</h2>
+<h3>Sans-I/O Architecture</h3>
+<p>Interceptors follow the same <code>sansio::Protocol</code> pattern as the rest of the stack:</p>
+<pre><code class="language-rust">
+pub trait Interceptor:
+    sansio::Protocol<
+        TaggedPacket,
+        TaggedPacket,
+        (),
+        Rout = TaggedPacket,
+        Wout = TaggedPacket,
+        Eout = (),
+        Time = Instant,
+        Error = shared::error::Error,
+    > + Sized
+{
+    // Stream lifecycle
+    fn bind_local_stream(&mut self, info: &StreamInfo);
+    fn unbind_local_stream(&mut self, info: &StreamInfo);
+    fn bind_remote_stream(&mut self, info: &StreamInfo);
+    fn unbind_remote_stream(&mut self, info: &StreamInfo);
+}
+
+</code></pre>
+<h3>Composable Chains</h3>
+<p>Interceptors wrap each other, forming a processing chain:</p>
+<pre><code class="language-rust">
+let chain = Registry::new()
+    .with(SenderReportBuilder::new()
+        .with_interval(Duration::from_secs(1))
+        .build())
+    .with(ReceiverReportBuilder::new()
+        .with_interval(Duration::from_secs(1))
+        .build())
+    .with(NackGeneratorBuilder::new()
+        .with_size(512)
+        .with_interval(Duration::from_millis(100))
+        .build())
+    .with(NackResponderBuilder::new()
+        .with_size(1024)
+        .build())
+    .with(TwccSenderBuilder::new().build())
+    .with(TwccReceiverBuilder::new()
+        .with_interval(Duration::from_millis(100))
+        .build())
+    .build();
+</code></pre>
+<h3>No Direction Concept</h3>
+<p>Unlike PeerConnection handlers which reverse order between read/write, interceptors process all operations in the <strong>same structural order</strong> (outer → inner):</p>
+<pre><code class="language-text">
+handle_read:    A → B → C → NoopInterceptor
+handle_write:   A → B → C → NoopInterceptor
+poll_read:      A ← B ← C ← NoopInterceptor
+poll_write:     A ← B ← C ← NoopInterceptor
+</code></pre>
+<p>This symmetric design simplifies reasoning about packet flow.</p>
+<hr>
+<h2>Quick Start: Default Interceptors</h2>
+<p>For most applications, use <code>register_default_interceptors()</code>:</p>
+<pre><code class="language-rust">
+use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::configuration::interceptor_registry::register_default_interceptors;
+use rtc::peer_connection::configuration::media_engine::MediaEngine;
+use interceptor::Registry;
+
+// Setup interceptors
+let mut media_engine = MediaEngine::default();
+let registry = Registry::new();
+let registry = register_default_interceptors(registry, &amp;mut media_engine)?;
+
+// Create peer connection
+let config = RTCConfigurationBuilder::new()
+    .with_media_engine(media_engine)
+    .with_interceptor_registry(registry)
+    .build();
+
+let pc = RTCPeerConnection::new(config)?;
+</code></pre>
+<p>This enables:</p>
+<ul>
+<li>✅ NACK for packet loss recovery (video only)</li>
+<li>✅ RTCP Sender and Receiver Reports</li>
+<li>✅ Simulcast header extensions</li>
+<li>✅ TWCC receiver for congestion feedback</li>
+</ul>
+<hr>
+<h2>Migration Guide</h2>
+<h3>Updating Peer Connection Creation</h3>
+<pre><code class="language-rust">
+// Old code (v0.5.x)
+use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+
+let config = RTCConfigurationBuilder::new().build();
+let pc = RTCPeerConnection::new(config)?;
+
+// New code (v0.6.0) - with default interceptors
+use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::configuration::interceptor_registry::register_default_interceptors;
+use rtc::peer_connection::configuration::media_engine::MediaEngine;
+use interceptor::Registry;
+
+let mut media_engine = MediaEngine::default();
+let registry = Registry::new();
+let registry = register_default_interceptors(registry, &amp;mut media_engine)?;
+
+let config = RTCConfigurationBuilder::new()
+    .with_media_engine(media_engine)
+    .with_interceptor_registry(registry)
+    .build();
+
+let pc = RTCPeerConnection::new(config)?;
+</code></pre>
+<h3>Keeping Existing Behavior (No Interceptors)</h3>
+<p>If you don't need interceptors, your code continues working without changes:</p>
+<pre><code class="language-rust">
+// This still works - uses NoopInterceptor by default
+let config = RTCConfigurationBuilder::new().build();
+let pc = RTCPeerConnection::new(config)?;
+</code></pre>
+<h3>Custom Interceptor Configuration</h3>
+<p>For fine-grained control, configure individual interceptors:</p>
+<pre><code class="language-rust">
+use rtc::peer_connection::configuration::interceptor_registry::*;
+
+// Only NACK (no TWCC or reports)
+let registry = configure_nack(registry, &amp;mut media_engine);
+
+// Or only TWCC
+let registry = configure_twcc(registry, &amp;mut media_engine)?;
+
+// Or only RTCP reports
+let registry = configure_rtcp_reports(registry);
+</code></pre>
+<hr>
+<h2>Performance Improvements</h2>
+<h3>Eliminated SystemTime::now() Calls</h3>
+<p>All <code>SystemTime::now()</code> calls have been removed from the <code>sansio::Protocol</code> hot path (issue #16). Time is now provided explicitly via <code>handle_timeout(now: Instant)</code>:</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>✅ Fully deterministic protocol behavior</li>
+<li>✅ Simplified unit testing with controlled time</li>
+<li>✅ Better performance (no syscalls in packet processing)</li>
+<li>✅ More idiomatic sans-I/O design</li>
+</ul>
+<h3>New Time Abstractions</h3>
+<p>Added <code>shared::time::SystemInstant</code> for time conversions between unix and ntp time.</p>
+<hr>
+<h2>Testing & Validation</h2>
+<h3>Comprehensive Test Coverage</h3>
+<ul>
+<li><strong>Unit tests</strong> - All interceptors have extensive unit test coverage</li>
+<li><strong>Integration tests</strong> - Full interceptor chain tests in <code>rtc-interceptor/tests/</code></li>
+<li><strong>Interop tests</strong> - Browser interoperability tests in <code>rtc/tests/</code>
+<ul>
+<li><code>interceptor_rtcp_reports_interop.rs</code> - SR/RR validation</li>
+<li><code>simulcast_*_interop.rs</code> - Simulcast with RTCP feedback</li>
+<li>All media examples validated with real browsers</li>
+</ul>
+</li>
+</ul>
+<h3>Real-World Validation</h3>
+<p>The simulcast example demonstrates the real-world impact:</p>
+<p><strong>Before v0.6.0:</strong> Browsers send lowest quality due to lack of RTCP feedback<br>
+<strong>After v0.6.0:</strong> Browsers send highest quality, optimizing based on RR and TWCC feedback</p>
+<hr>
+<h2>What's Next: Interceptor Deep Dive 📝</h2>
+<p>A detailed technical blog post is coming soon to explore:</p>
+<ul>
+<li>Interceptor framework architecture and design principles</li>
+<li>How interceptors integrate with the sans-I/O pipeline</li>
+<li>Implementation details of NACK, RTCP reports, and TWCC</li>
+<li>Custom interceptor development guide</li>
+<li>Performance characteristics and optimization techniques</li>
+</ul>
+<p>Stay tuned for the deep dive into the interceptor framework!</p>
+<hr>
+<h2>Getting Started</h2>
+<h3>Installation</h3>
+<pre><code class="language-toml">
+[dependencies]
+rtc = &quot;0.6.0&quot;
+</code></pre>
+<h3>Quick Example</h3>
+<pre><code class="language-rust">
+use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::configuration::interceptor_registry::register_default_interceptors;
+use rtc::peer_connection::configuration::media_engine::MediaEngine;
+use rtc::sansio::Protocol;
+use interceptor::Registry;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    // Setup with interceptors
+    let mut media_engine = MediaEngine::default();
+    let registry = Registry::new();
+    let registry = register_default_interceptors(registry, &amp;mut media_engine)?;
+    
+    let config = RTCConfigurationBuilder::new()
+        .with_media_engine(media_engine)
+        .with_interceptor_registry(registry)
+        .build();
+    
+    let mut pc = RTCPeerConnection::new(config)?;
+
+    // Create and set local description
+    let offer = pc.create_offer(None)?;
+    pc.set_local_description(offer)?;
+
+    // Sans-I/O event loop
+    loop {
+        while let Some(msg) = pc.poll_write() {
+            // Send to network (includes RTCP reports, NACK, TWCC feedback)
+        }
+        
+        while let Some(event) = pc.poll_event() {
+            // Handle state changes
+        }
+        
+        while let Some(message) = pc.poll_read() {
+            // Process application messages (RTP/RTCP/DataChannel)
+        }
+        
+        // Handle I/O and timeouts
+        // ...
+    }
+}
+</code></pre>
+<p>Check out the <a href="https://github.com/webrtc-rs/rtc/tree/master/examples">examples directory</a> for complete working code, especially the <a href="https://github.com/webrtc-rs/rtc/tree/master/examples/examples/simulcast">simulcast example</a>!</p>
+<hr>
+<h2>Feature Parity Update</h2>
+<p>Progress toward full feature parity with the <code>webrtc</code> crate:</p>
+<p>✅ <strong>Complete:</strong></p>
+<ul>
+<li>ICE, DTLS, SRTP/SRTCP, SCTP</li>
+<li>Data Channels (reliable & unreliable)</li>
+<li>RTP/RTCP, Media Tracks, SDP</li>
+<li>Peer Connection API</li>
+<li>Simulcast</li>
+<li><strong>RTCP Interceptors</strong> ← New in 0.6.0!
+<ul>
+<li>NACK (packet loss recovery)</li>
+<li>Sender/Receiver Reports</li>
+<li>TWCC (congestion control feedback)</li>
+</ul>
+</li>
+</ul>
+<p>🎯 <strong>Future Work:</strong></p>
+<ul>
+<li>Advanced bandwidth estimation algorithms</li>
+<li>Custom QoS policies</li>
+<li>Performance analytics and observability</li>
+</ul>
+<hr>
+<h2>Links</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Crate</strong>: https://crates.io/crates/rtc</li>
+<li><strong>Docs</strong>: https://docs.rs/rtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Examples</strong>: https://github.com/webrtc-rs/rtc/tree/master/examples</li>
+</ul>
+<hr>
+<h2>Full Changelog</h2>
+<h3>Added</h3>
+<ul>
+<li>✨ Complete <code>rtc-interceptor</code> crate with NACK, RTCP Reports, and TWCC</li>
+<li>✨ <code>SenderReportInterceptor</code> and <code>ReceiverReportInterceptor</code> for RTCP SR/RR</li>
+<li>✨ <code>NackGeneratorInterceptor</code> and <code>NackResponderInterceptor</code> for packet loss recovery</li>
+<li>✨ <code>TwccSenderInterceptor</code> and <code>TwccReceiverInterceptor</code> for congestion control</li>
+<li>✨ <code>Registry</code> builder for composing interceptor chains</li>
+<li>✨ <code>register_default_interceptors()</code> convenience function</li>
+<li>✨ <code>configure_nack()</code>, <code>configure_rtcp_reports()</code>, <code>configure_twcc()</code> helpers</li>
+<li>✨ <code>StreamInfo</code> type for stream metadata and capabilities</li>
+<li>✨ <code>Packet</code> and <code>TaggedPacket</code> types for interceptor processing</li>
+<li>✨ <code>shared::time::SystemInstant</code> for time conversions</li>
+<li>✨ Stream binding APIs: <code>bind_local_stream()</code>, <code>unbind_local_stream()</code>, <code>bind_remote_stream()</code>, <code>unbind_remote_stream()</code></li>
+<li>✨ Comprehensive integration tests for interceptors</li>
+<li>✨ Browser interop tests for RTCP feedback</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>💥 <code>RTCConfiguration&lt;I&gt;</code> - Now generic over interceptor type</li>
+<li>💥 <code>RTCConfigurationBuilder::with_interceptor_registry()</code> - Configure interceptor chain</li>
+<li>💥 All <code>sansio::Protocol</code> implementations - Removed <code>SystemTime::now()</code> calls (issue #16)</li>
+<li>🔄 All media examples - Now use <code>register_default_interceptors()</code></li>
+<li>🔄 Simulcast example - Now achieves highest quality with RTCP feedback</li>
+</ul>
+<h3>Improved</h3>
+<ul>
+<li>📚 Extensive inline documentation for interceptor framework</li>
+<li>📚 README updates in <code>rtc-interceptor</code> subdirectories (NACK, TWCC, Reports)</li>
+<li>📚 API documentation with practical examples</li>
+<li>🏗️ More idiomatic sans-I/O design (time is passed explicitly)</li>
+<li>🏗️ Better performance (eliminated syscalls in hot path)</li>
+<li>🏗️ Fully deterministic protocol behavior for testing</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>🐛 Sender/Receiver Report calculation bugs</li>
+<li>🐛 TWCC sequence number handling</li>
+<li>🐛 NACK retransmission timing</li>
+<li>🐛 Stream lifecycle management</li>
+</ul>
+<hr>
+<h2>Commits</h2>
+<p>This release includes <strong>39 commits</strong> with major contributions to interceptor functionality, testing, and documentation. Key highlights:</p>
+<ul>
+<li>Complete NACK interceptor implementation (generator + responder)</li>
+<li>Complete TWCC interceptor implementation (sender + receiver + recorder)</li>
+<li>RTCP Reports interceptors with accurate statistics</li>
+<li>Integration with all media examples</li>
+<li>Comprehensive test coverage (unit + integration + interop)</li>
+<li>Performance improvements (eliminated <code>SystemTime::now()</code>)</li>
+<li>Stream binding lifecycle management</li>
+<li>Generic interceptor support in <code>RTCPeerConnection</code></li>
+</ul>
+<hr>
+<h2>Relationship with <code>webrtc</code> Crate</h2>
+<p>As stated in previous announcements, <code>rtc</code> (sans-I/O) and <code>webrtc</code> (async) are <strong>complementary</strong>:</p>
+<ul>
+<li><strong>Use <code>webrtc</code></strong> for quick start with Tokio and async/await</li>
+<li><strong>Use <code>rtc</code></strong> for runtime independence, custom I/O, or maximum control</li>
+</ul>
+<p>Both crates are actively maintained and share protocol implementations where possible. The interceptor framework has been greatly improved in <code>rtc</code> due to the architectural advantages of the sans-I/O design for testing and composability.</p>
+<hr>
+<p><em>Thanks to everyone who contributed feedback, bug reports, and feature requests! Special thanks to the WebRTC-rs community for making this release possible.</em> 🦀</p>
+<p>Feedback and contributions welcome on <a href="https://github.com/webrtc-rs/rtc">GitHub</a>!</p>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
