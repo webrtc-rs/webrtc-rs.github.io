@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interceptor Design Principle: Composable RTP/RTCP Processing with sansio::Protocol">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .blog-content em {
+      font-style: italic;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content th,
+    .blog-content td {
+      border: 1px solid #dbdbdb;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+
+    .blog-content th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+  </style>
+  <title>Interceptor Design Principle: Composable RTP/RTCP Processing | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../../index.html"><strong>🏠 Home &nbsp;&nbsp; </strong></a>
+          <a class="navbar-item" href="../../../index.html"><strong>📝 Blog &nbsp;&nbsp; </strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Interceptor Design Principle: Composable RTP/RTCP Processing with <code>sansio::Protocol</code></h1>
+            <div class="blog-meta">
+              <span>January 9, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/09/interceptor-design-principle-sansio.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+            <h2>Introduction</h2>
+
+            <p>In the <a href="../04/building-webrtc-pipeline-with-sansio.html">previous article</a>, we explored how WebRTC can be modeled as a <strong>pure protocol pipeline</strong> using the sans-I/O pattern. Each protocol layer—ICE, DTLS, SCTP, SRTP—became a composable handler implementing the <code>sansio::Protocol</code> trait. This article continues that journey by examining a critical component of <code>RTC</code>: the <strong>Interceptor</strong>.</p>
+
+            <p>Interceptors sit between the SRTP layer and the application endpoint, processing RTP and RTCP packets to implement features like:</p>
+
+            <ul>
+              <li><strong>NACK</strong> (Negative Acknowledgement, RFC 4585) for packet loss recovery</li>
+              <li><strong>RTX</strong> (Retransmission, RFC 4588) for packet retransmission</li>
+              <li><strong>TWCC</strong> (Transport-Wide Congestion Control) for bandwidth estimation</li>
+              <li><strong>RTCP Reports</strong> (Sender/Receiver Reports, RFC 3550) for quality metrics</li>
+              <li>Custom feedback or experimental extensions</li>
+            </ul>
+
+            <p>The challenge is designing an interceptor framework that is both <strong>composable</strong> and <strong>efficient</strong>. The original async-based interceptor in <a href="https://github.com/webrtc-rs/webrtc/tree/master/interceptor">webrtc-rs/webrtc</a> served its purpose but had architectural limitations that became apparent as the project evolved.</p>
+
+            <p>This article explains the re-design of the interceptor framework using the <code>sansio::Protocol</code> trait and generic composition, as implemented in <a href="https://github.com/webrtc-rs/rtc/tree/master/rtc-interceptor">rtc-interceptor</a>.</p>
+
+            <h3>Prerequisites</h3>
+
+            <p>This article builds on concepts introduced in:</p>
+
+            <ul>
+              <li><strong><a href="../04/building-webrtc-pipeline-with-sansio.html">Building WebRTC's Pipeline with <code>sansio::Protocol</code></a></strong> — Covers the <code>sansio::Protocol</code> trait, the polling model (<code>handle_*</code>/<code>poll_*</code> methods), and how WebRTC's protocol layers are composed as a pipeline.</li>
+            </ul>
+
+            <p>Familiarity with the following is helpful but not required:</p>
+
+            <ul>
+              <li>RTP/RTCP packet structure and SSRC identifiers</li>
+              <li>RTCP feedback mechanisms (NACK, Sender/Receiver Reports)</li>
+              <li>Rust generics and trait bounds</li>
+            </ul>
+
+            <hr>
+
+            <h2>The Old Async-Based Interceptor</h2>
+
+            <p>Before diving into the new design, let's examine the original async-based interceptor architecture to understand its limitations.</p>
+
+            <h3>Architecture Overview</h3>
+
+            <p>The old interceptor used a <strong>wrapper/decorator chain pattern</strong> with async traits:</p>
+
+            <pre><code class="language-rust">#[async_trait]
+pub trait Interceptor: Send + Sync {
+    async fn bind_rtcp_reader(
+        &amp;self,
+        reader: Arc&lt;dyn RTCPReader + Send + Sync&gt;,
+    ) -&gt; Arc&lt;dyn RTCPReader + Send + Sync&gt;;
+
+    async fn bind_rtcp_writer(
+        &amp;self,
+        writer: Arc&lt;dyn RTCPWriter + Send + Sync&gt;,
+    ) -&gt; Arc&lt;dyn RTCPWriter + Send + Sync&gt;;
+
+    async fn bind_local_stream(
+        &amp;self,
+        info: &amp;StreamInfo,
+        writer: Arc&lt;dyn RTPWriter + Send + Sync&gt;,
+    ) -&gt; Arc&lt;dyn RTPWriter + Send + Sync&gt;;
+
+    async fn bind_remote_stream(
+        &amp;self,
+        info: &amp;StreamInfo,
+        reader: Arc&lt;dyn RTPReader + Send + Sync&gt;,
+    ) -&gt; Arc&lt;dyn RTPReader + Send + Sync&gt;;
+
+    async fn close(&amp;self) -&gt; Result&lt;()&gt;;
+}</code></pre>
+
+            <p>Each interceptor wrapped readers and writers during a one-time binding phase. The chain was built by sequential wrapping:</p>
+
+            <pre><code>Original Reader/Writer
+    ↓ wrapped by
+Interceptor A
+    ↓ wrapped by
+Interceptor B
+    ↓
+Application Code</code></pre>
+
+            <h3>Limitations</h3>
+
+            <h4>1. Async-Trait Overhead</h4>
+
+            <p>The <code>#[async_trait]</code> macro converts every method call to <code>Pin&lt;Box&lt;dyn Future&gt;&gt;</code>, adding runtime allocation overhead:</p>
+
+            <pre><code class="language-rust">// What async-trait generates internally
+fn bind_rtcp_reader&lt;'a&gt;(
+    &amp;'a self,
+    reader: Arc&lt;dyn RTCPReader + Send + Sync&gt;,
+) -&gt; Pin&lt;Box&lt;dyn Future&lt;Output = Arc&lt;dyn RTCPReader + Send + Sync&gt;&gt; + Send + 'a&gt;&gt;</code></pre>
+
+            <p>While this overhead is acceptable for one-time binding operations, it permeates the entire design philosophy.</p>
+
+            <h4>2. Background Task Spawning</h4>
+
+            <p>Features like NACK generation and RTCP report transmission required spawning background tasks with <code>tokio::spawn</code>:</p>
+
+            <pre><code class="language-rust">async fn bind_rtcp_writer(
+    &amp;self,
+    writer: Arc&lt;dyn RTCPWriter + Send + Sync&gt;,
+) -&gt; Arc&lt;dyn RTCPWriter + Send + Sync&gt; {
+    let internal = Arc::clone(&amp;self.internal);
+    let writer2 = Arc::clone(&amp;writer);
+
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(internal.interval);
+        loop {
+            tokio::select! {
+                _ = ticker.tick() =&gt; {
+                    // Generate and send reports
+                    let nacks = internal.generate_nacks().await;
+                    for nack in nacks {
+                        writer2.write(&amp;[Box::new(nack)], &amp;Attributes::new()).await;
+                    }
+                }
+                _ = close_rx.recv() =&gt; return,
+            }
+        }
+    });
+
+    writer
+}</code></pre>
+
+            <p>This creates several problems:</p>
+
+            <ul>
+              <li><strong>Runtime dependency</strong>: Requires tokio or async-std at the protocol layer</li>
+              <li><strong>Cancellation safety</strong>: <code>tokio::select!</code> branches may not be cancel-safe</li>
+              <li><strong>Shutdown coordination</strong>: Requires channels and WaitGroups for cleanup</li>
+              <li><strong>Testing complexity</strong>: Unit tests must spin up async runtimes</li>
+            </ul>
+
+            <h4>3. Shared Mutable State via Mutex</h4>
+
+            <p>Per-stream state was managed with <code>Mutex&lt;HashMap&lt;u32, Arc&lt;Stream&gt;&gt;&gt;</code>:</p>
+
+            <pre><code class="language-rust">struct GeneratorInternal {
+    streams: Mutex&lt;HashMap&lt;u32, Arc&lt;GeneratorStream&gt;&gt;&gt;,
+    close_rx: Mutex&lt;Option&lt;mpsc::Receiver&lt;()&gt;&gt;&gt;,
+}</code></pre>
+
+            <p>Every periodic poll required acquiring the async lock, and the common workaround was to clone all Arc pointers under the lock, then process outside:</p>
+
+            <pre><code class="language-rust">let streams: Vec&lt;Arc&lt;Stream&gt;&gt; = {
+    let m = internal.streams.lock().await;
+    m.values().cloned().collect()
+};
+for stream in streams {
+    stream.generate_report(now).await;
+}</code></pre>
+
+            <h4>4. Type Erasure and Dynamic Dispatch</h4>
+
+            <p>The <code>Arc&lt;dyn RTCPReader&gt;</code> pattern erases type information at every layer:</p>
+
+            <pre><code class="language-rust">async fn read(&amp;self, buf: &amp;mut [u8], a: &amp;Attributes)
+    -&gt; Result&lt;(Vec&lt;Box&lt;dyn rtcp::Packet&gt;&gt;, Attributes)&gt;;</code></pre>
+
+            <p>This means:</p>
+
+            <ul>
+              <li>Every packet passes through multiple vtable lookups</li>
+              <li>No compile-time optimization across interceptor boundaries</li>
+              <li>Lost type information cannot be recovered</li>
+            </ul>
+
+            <h4>5. Error Handling Strategy</h4>
+
+            <p>Errors in background tasks were typically logged and swallowed:</p>
+
+            <pre><code class="language-rust">if let Err(err) = rtcp_writer.write(&amp;[Box::new(nack)], &amp;a).await {
+    log::warn!("failed sending nack: {err}");
+}</code></pre>
+
+            <p>While pragmatic for reliability, this prevents error propagation to callers who might want to react to failures.</p>
+
+            <hr>
+
+            <h2>The New Sans-I/O Interceptor Framework</h2>
+
+            <p>The new interceptor framework addresses these limitations by building on top of <code>sansio::Protocol</code> and using <strong>generic composition</strong> instead of trait objects.</p>
+
+            <h3>Core Design Principle</h3>
+
+            <p>Every interceptor is:</p>
+
+            <ol>
+              <li><strong>A state machine</strong> implementing <code>sansio::Protocol&lt;TaggedPacket, TaggedPacket, ()&gt;</code></li>
+              <li><strong>Generic over its inner interceptor</strong> <code>P: Interceptor</code></li>
+              <li><strong>Composable at compile time</strong> via type nesting</li>
+            </ol>
+
+            <pre><code class="language-rust">pub trait Interceptor:
+    sansio::Protocol&lt;
+        TaggedPacket,
+        TaggedPacket,
+        (),
+        Rout = TaggedPacket,
+        Wout = TaggedPacket,
+        Eout = (),
+        Time = Instant,
+        Error = Error,
+    &gt; + Sized
+{
+    fn with&lt;O, F&gt;(self, f: F) -&gt; O
+    where
+        F: FnOnce(Self) -&gt; O,
+        O: Interceptor;
+
+    fn bind_local_stream(&amp;mut self, info: &amp;StreamInfo);
+    fn unbind_local_stream(&amp;mut self, info: &amp;StreamInfo);
+    fn bind_remote_stream(&amp;mut self, info: &amp;StreamInfo);
+    fn unbind_remote_stream(&amp;mut self, info: &amp;StreamInfo);
+}</code></pre>
+
+            <p>The <code>TaggedPacket</code> type carries both the packet and metadata:</p>
+
+            <pre><code class="language-rust">pub enum Packet {
+    Rtp(rtp::Packet),
+    Rtcp(Vec&lt;Box&lt;dyn rtcp::Packet&gt;&gt;),
+}
+
+pub type TaggedPacket = TransportMessage&lt;Packet&gt;;
+
+pub struct TransportMessage&lt;T&gt; {
+    pub now: Instant,                 // Packet received/sent timestamp
+    pub transport: TransportContext,  // Source/destination info
+    pub message: T,                   // The actual RTP/RTCP packet
+}</code></pre>
+
+            <h3>Generic Composition</h3>
+
+            <p>The key insight is that each interceptor <strong>wraps</strong> another interceptor as a generic type parameter:</p>
+
+            <pre><code class="language-rust">pub struct NackGeneratorInterceptor&lt;P: Interceptor&gt; {
+    inner: P,
+    size: u16,
+    interval: Duration,
+    receive_logs: HashMap&lt;u32, ReceiveLog&gt;,
+    write_queue: VecDeque&lt;TaggedPacket&gt;,
+    // ...
+}</code></pre>
+
+            <p>Composition happens through a <strong>Registry</strong> that builds nested types:</p>
+
+            <pre><code class="language-rust">pub struct Registry&lt;P&gt; {
+    inner: P,
+}
+
+impl Registry&lt;NoopInterceptor&gt; {
+    pub fn new() -&gt; Self {
+        Registry { inner: NoopInterceptor::new() }
+    }
+}
+
+impl&lt;P: Interceptor&gt; Registry&lt;P&gt; {
+    pub fn with&lt;O, F&gt;(self, f: F) -&gt; Registry&lt;O&gt;
+    where
+        F: FnOnce(P) -&gt; O,
+        O: Interceptor,
+    {
+        Registry { inner: f(self.inner) }
+    }
+
+    pub fn build(self) -&gt; P {
+        self.inner
+    }
+}</code></pre>
+
+            <p>Each interceptor provides a builder that returns a closure:</p>
+
+            <pre><code class="language-rust">impl&lt;P: Interceptor&gt; NackGeneratorBuilder&lt;P&gt; {
+    pub fn build(self) -&gt; impl FnOnce(P) -&gt; NackGeneratorInterceptor&lt;P&gt; {
+        move |inner| NackGeneratorInterceptor::new(
+            inner,
+            self.size,
+            self.interval,
+            self.skip_last_n,
+            self.max_nacks_per_packet,
+        )
+    }
+}</code></pre>
+
+            <p>Usage is fluent and type-safe:</p>
+
+            <pre><code class="language-rust">let chain = Registry::new()
+    .with(NackGeneratorBuilder::new()
+        .with_size(512)
+        .with_interval(Duration::from_millis(100))
+        .build())
+    .with(NackResponderBuilder::new()
+        .with_size(1024)
+        .build())
+    .with(SenderReportBuilder::new()
+        .with_interval(Duration::from_secs(1))
+        .build())
+    .build();
+
+// Type: SenderReportInterceptor&lt;NackResponderInterceptor&lt;NackGeneratorInterceptor&lt;NoopInterceptor&gt;&gt;&gt;</code></pre>
+
+            <p>The resulting type is fully known at compile time, enabling aggressive optimization.</p>
+
+            <h3>The Polling Model</h3>
+
+            <p>Instead of spawning background tasks, interceptors use the <strong>polling model</strong>:</p>
+
+            <pre><code class="language-rust">impl&lt;P: Interceptor&gt; sansio::Protocol&lt;TaggedPacket, TaggedPacket, ()&gt;
+    for NackGeneratorInterceptor&lt;P&gt;
+{
+    fn handle_read(&amp;mut self, msg: TaggedPacket) -&gt; Result&lt;()&gt; {
+        // Track incoming RTP sequence numbers
+        if let Packet::Rtp(ref pkt) = msg.message {
+            if let Some(log) = self.receive_logs.get_mut(&amp;pkt.header.ssrc) {
+                log.add(pkt.header.sequence_number);
+            }
+        }
+        self.inner.handle_read(msg)
+    }
+
+    fn poll_read(&amp;mut self) -&gt; Option&lt;TaggedPacket&gt; {
+        self.inner.poll_read()
+    }
+
+    fn handle_timeout(&amp;mut self, now: Instant) -&gt; Result&lt;()&gt; {
+        if self.eto &lt;= now {
+            self.eto = now + self.interval;
+            self.generate_nacks(now);  // Detect gaps, queue NACKs
+        }
+        self.inner.handle_timeout(now)
+    }
+
+    fn poll_write(&amp;mut self) -&gt; Option&lt;TaggedPacket&gt; {
+        // First drain our queue, then delegate to inner
+        if let Some(pkt) = self.write_queue.pop_front() {
+            return Some(pkt);
+        }
+        self.inner.poll_write()
+    }
+
+    fn poll_timeout(&amp;mut self) -&gt; Option&lt;Instant&gt; {
+        let inner_timeout = self.inner.poll_timeout();
+        match inner_timeout {
+            Some(t) =&gt; Some(t.min(self.eto)),
+            None =&gt; Some(self.eto),
+        }
+    }
+}</code></pre>
+
+            <p>The caller (usually the RTCPeerConnection orchestrator) drives the state machine:</p>
+
+            <pre><code class="language-rust">// Caller loop
+loop {
+    // Process incoming packets
+    while let Some(pkt) = receive_from_network() {
+        chain.handle_read(pkt)?;
+    }
+
+    // Handle timeouts
+    let now = Instant::now();
+    chain.handle_timeout(now)?;
+
+    // Drain outputs
+    while let Some(pkt) = chain.poll_read() {
+        deliver_to_application(pkt);
+    }
+    while let Some(pkt) = chain.poll_write() {
+        send_to_network(pkt);
+    }
+
+    // Schedule next wake
+    if let Some(deadline) = chain.poll_timeout() {
+        sleep_until(deadline);
+    }
+}</code></pre>
+
+            <h3>Direction-Agnostic Processing</h3>
+
+            <p><strong>Important:</strong> Unlike PeerConnection's pipeline where <code>read</code> and <code>write</code> have opposite processing direction orders, interceptors have <strong>no direction concept</strong>.</p>
+
+            <p>In PeerConnection's pipeline, handlers are traversed in opposite orders:</p>
+
+            <pre><code>Read:  Network → HandlerA → HandlerB → HandlerC → Application
+Write: Application → HandlerC → HandlerB → HandlerA → Network
+       (reversed order)</code></pre>
+
+            <p>In Interceptor chains, <strong>all operations flow in the same direction</strong>:</p>
+
+            <pre><code>handle_read:    Outer → Inner (A.handle_read calls B.handle_read calls C.handle_read)
+handle_write:   Outer → Inner (A.handle_write calls B.handle_write calls C.handle_write)
+handle_event:   Outer → Inner (A.handle_event calls B.handle_event calls C.handle_event)
+handle_timeout: Outer → Inner (A.handle_timeout calls B.handle_timeout calls C.handle_timeout)
+
+poll_read:    Outer → Inner (A.poll_read calls B.poll_read calls C.poll_read)
+poll_write:   Outer → Inner (A.poll_write calls B.poll_write calls C.poll_write)
+poll_event:   Outer → Inner (A.poll_event calls B.poll_event calls C.poll_event)
+poll_timeout: Outer → Inner (A.poll_timeout calls B.poll_timeout calls C.poll_timeout)</code></pre>
+
+            <p>This means interceptors are <strong>symmetric</strong>—they process <code>read</code>, <code>write</code>, and <code>event</code> in the same structural order. The distinction between "inbound" and "outbound" is <strong>semantic</strong> (based on message content), not <strong>structural</strong> (based on call order).</p>
+
+            <p>This design simplifies reasoning about interceptor behavior:</p>
+
+            <ul>
+              <li>Each interceptor sees packets in consistent order regardless of direction</li>
+              <li>NACK generator can track incoming packets (<code>handle_read</code>) and emit feedback (<code>poll_write</code>) without special direction handling</li>
+              <li>TWCC sender adds sequence numbers on <code>handle_write</code> while TWCC receiver tracks arrivals on <code>handle_read</code>—both using the same outer-to-inner flow</li>
+            </ul>
+
+            <p>The PeerConnection's <code>InterceptorHandler</code> is responsible for placing the interceptor at the correct position in the bidirectional pipeline, but the interceptor itself remains direction-agnostic.</p>
+
+            <hr>
+
+            <h2>Benefits of the Generic-Based Design</h2>
+
+            <h3>1. Zero Runtime Overhead for Composition</h3>
+
+            <p>With the old design:</p>
+
+            <pre><code class="language-rust">Arc&lt;dyn Interceptor&gt; → Arc&lt;dyn RTPWriter&gt; → Arc&lt;dyn RTPWriter&gt; → ...</code></pre>
+
+            <p>Each arrow is a vtable lookup at runtime.</p>
+
+            <p>With the new design:</p>
+
+            <pre><code class="language-rust">SenderReportInterceptor&lt;NackResponderInterceptor&lt;NackGeneratorInterceptor&lt;NoopInterceptor&gt;&gt;&gt;</code></pre>
+
+            <p>The compiler sees the entire chain as a single type and can inline across boundaries.</p>
+
+            <h3>2. No Async Runtime Dependency</h3>
+
+            <p>The <code>sansio::Protocol</code> trait is completely synchronous:</p>
+
+            <pre><code class="language-rust">fn handle_read(&amp;mut self, msg: Rin) -&gt; Result&lt;(), Self::Error&gt;;
+fn poll_read(&amp;mut self) -&gt; Option&lt;Self::Rout&gt;;
+fn handle_timeout(&amp;mut self, now: Self::Time) -&gt; Result&lt;(), Self::Error&gt;;
+fn poll_timeout(&amp;mut self) -&gt; Option&lt;Self::Time&gt;;</code></pre>
+
+            <p>This means:</p>
+
+            <ul>
+              <li><strong>Works anywhere</strong>: sync code, async code, WASM, embedded systems</li>
+              <li><strong>No allocation per call</strong>: no Future boxing</li>
+              <li><strong>Deterministic timing</strong>: caller controls when timeouts fire</li>
+            </ul>
+
+            <h3>3. Testability Without Ceremony</h3>
+
+            <p>Testing is straightforward—no async blocks, no runtime setup:</p>
+
+            <pre><code class="language-rust">#[test]
+fn test_nack_generator_detects_packet_loss() {
+    let mut chain = Registry::new()
+        .with(NackGeneratorBuilder::new()
+            .with_size(512)
+            .with_interval(Duration::from_millis(100))
+            .build())
+        .build();
+
+    let ssrc = 0x12345678;
+    chain.bind_remote_stream(&amp;nack_stream_info(ssrc));
+
+    // Simulate packets: 0, 1, 2, [gap: 3-5], 6, 7
+    for seq in [0u16, 1, 2, 6, 7] {
+        let pkt = create_rtp_packet(ssrc, seq);
+        chain.handle_read(pkt).unwrap();
+    }
+
+    while chain.poll_read().is_some() {}
+
+    // Advance time past the NACK interval
+    let now = Instant::now() + Duration::from_millis(150);
+    chain.handle_timeout(now).unwrap();
+
+    // Poll for generated NACK
+    let nack_pkt = chain.poll_write().expect("should generate NACK");
+    if let Packet::Rtcp(rtcp_packets) = &amp;nack_pkt.message {
+        let nack = rtcp_packets[0]
+            .as_any()
+            .downcast_ref::&lt;TransportLayerNack&gt;()
+            .unwrap();
+        assert_eq!(nack.nacks[0].packet_id, 3);  // First missing seq
+    }
+}</code></pre>
+
+            <h3>4. Type-Safe Feature Detection</h3>
+
+            <p>Each interceptor can inspect <code>StreamInfo</code> during binding to decide whether to activate:</p>
+
+            <pre><code class="language-rust">fn stream_supports_nack(info: &amp;StreamInfo) -&gt; bool {
+    info.rtcp_feedback
+        .iter()
+        .any(|fb| fb.typ == "nack" &amp;&amp; fb.parameter.is_empty())
+}
+
+fn stream_supports_twcc(info: &amp;StreamInfo) -&gt; Option&lt;u8&gt; {
+    info.rtp_header_extensions
+        .iter()
+        .find(|ext| ext.uri == TRANSPORT_CC_URI)
+        .map(|ext| ext.id as u8)
+}
+
+impl&lt;P: Interceptor&gt; Interceptor for NackGeneratorInterceptor&lt;P&gt; {
+    fn bind_remote_stream(&amp;mut self, info: &amp;StreamInfo) {
+        if stream_supports_nack(info) {
+            self.receive_logs.insert(info.ssrc, ReceiveLog::new(self.size));
+        }
+        self.inner.bind_remote_stream(info);
+    }
+}</code></pre>
+
+            <p>This ensures interceptors only consume resources for streams that actually need them.</p>
+
+            <h3>5. Explicit Data Flow</h3>
+
+            <p>Every packet transformation is visible in the code:</p>
+
+            <pre><code class="language-rust">fn handle_write(&amp;mut self, msg: TaggedPacket) -&gt; Result&lt;()&gt; {
+    // TWCC: Add sequence number to outgoing RTP
+    if let Packet::Rtp(ref mut pkt) = msg.message {
+        if let Some(stream) = self.streams.get(&amp;pkt.header.ssrc) {
+            let seq = self.next_sequence_number;
+            self.next_sequence_number = self.next_sequence_number.wrapping_add(1);
+
+            let tcc_ext = TransportCcExtension { transport_sequence: seq };
+            pkt.header.set_extension(stream.hdr_ext_id, tcc_ext.marshal()?);
+        }
+    }
+    self.inner.handle_write(msg)
+}</code></pre>
+
+            <p>No hidden channels, no background mutations—just straightforward state machine transitions.</p>
+
+            <hr>
+
+            <h2>Integrating Interceptors into the RTC Crate</h2>
+
+            <p>The <a href="https://github.com/webrtc-rs/rtc/tree/master/rtc">rtc crate</a> integrates the new interceptor framework throughout its architecture.</p>
+
+            <h3>Generic RTCPeerConnection</h3>
+
+            <p>The <code>RTCPeerConnection</code> struct is parametrized with the interceptor type:</p>
+
+            <pre><code class="language-rust">pub struct RTCPeerConnection&lt;I = NoopInterceptor&gt;
+where
+    I: Interceptor,
+{
+    pub(crate) configuration: RTCConfiguration&lt;I&gt;,
+    pub(crate) rtp_transceivers: Vec&lt;RTCRtpTransceiver&lt;I&gt;&gt;,
+    pub(crate) pipeline_context: PipelineContext,
+    // ...
+}</code></pre>
+
+            <p>This type parameter flows through the entire call stack:</p>
+
+            <ul>
+              <li><code>RTCConfiguration&lt;I&gt;</code> stores the built interceptor</li>
+              <li><code>RTCRtpTransceiver&lt;I&gt;</code> carries the same type for consistency</li>
+              <li>Handler types use the parameter: <code>InterceptorHandler&lt;'_, I&gt;</code>, <code>EndpointHandler&lt;'_, I&gt;</code></li>
+            </ul>
+
+            <h3>Configuration Builder</h3>
+
+            <p>The configuration builder supports type-safe registry building:</p>
+
+            <pre><code class="language-rust">impl RTCConfigurationBuilder&lt;NoopInterceptor&gt; {
+    pub fn new() -&gt; Self { /* ... */ }
+}
+
+impl&lt;I: Interceptor&gt; RTCConfigurationBuilder&lt;I&gt; {
+    pub fn with_interceptor_registry&lt;P&gt;(
+        self,
+        interceptor_registry: Registry&lt;P&gt;,
+    ) -&gt; RTCConfigurationBuilder&lt;P&gt;
+    where
+        P: Interceptor,
+    {
+        RTCConfigurationBuilder {
+            interceptor: interceptor_registry.build(),
+            // ... transfer other fields
+        }
+    }
+}</code></pre>
+
+            <p>Usage:</p>
+
+            <pre><code class="language-rust">let config = RTCConfigurationBuilder::new()
+    .with_ice_servers(vec![ice_server])
+    .with_interceptor_registry(
+        Registry::new()
+            .with(NackGeneratorBuilder::new().build())
+            .with(NackResponderBuilder::new().build())
+            .with(SenderReportBuilder::new().build())
+    )
+    .build()?;
+
+let peer_connection = RTCPeerConnection::new(config);</code></pre>
+
+            <h3>Interceptor Handler in the Pipeline</h3>
+
+            <p>The <code>InterceptorHandler</code> bridges between the RTC message format and the interceptor's packet format:</p>
+
+            <pre><code class="language-rust">pub(crate) struct InterceptorHandler&lt;'a, I: Interceptor&gt; {
+    ctx: &amp;'a mut InterceptorHandlerContext,
+    interceptor: &amp;'a mut I,
+}
+
+impl&lt;'a, I: Interceptor&gt; sansio::Protocol&lt;TaggedRTCMessageInternal, TaggedRTCMessageInternal, RTCEventInternal&gt;
+    for InterceptorHandler&lt;'a, I&gt;
+{
+    fn handle_read(&amp;mut self, msg: TaggedRTCMessageInternal) -&gt; Result&lt;()&gt; {
+        match msg.message {
+            RTCMessageInternal::Rtp(rtp_message) =&gt; {
+                let tagged_packet = TaggedPacket {
+                    now: msg.now,
+                    transport: msg.transport,
+                    message: Packet::Rtp(rtp_message.packet),
+                };
+                self.interceptor.handle_read(tagged_packet)?;
+            }
+            RTCMessageInternal::Rtcp(rtcp_packets) =&gt; {
+                let tagged_packet = TaggedPacket {
+                    now: msg.now,
+                    transport: msg.transport,
+                    message: Packet::Rtcp(rtcp_packets),
+                };
+                self.interceptor.handle_read(tagged_packet)?;
+            }
+            _ =&gt; { /* Forward non-RTP/RTCP unchanged */ }
+        }
+        Ok(())
+    }
+
+    fn poll_read(&amp;mut self) -&gt; Option&lt;TaggedRTCMessageInternal&gt; {
+        // Convert interceptor output back to RTC format
+        self.interceptor.poll_read().map(|pkt| {
+            TaggedRTCMessageInternal {
+                now: pkt.now,
+                transport: pkt.transport,
+                message: match pkt.message {
+                    Packet::Rtp(rtp) =&gt; RTCMessageInternal::Rtp(RTPMessage { packet: rtp }),
+                    Packet::Rtcp(rtcp) =&gt; RTCMessageInternal::Rtcp(rtcp),
+                },
+            }
+        })
+    }
+
+    // ... similar for handle_write, poll_write, handle_timeout, poll_timeout
+}</code></pre>
+
+            <h3>Stream Binding Lifecycle</h3>
+
+            <p>Stream binding occurs at specific lifecycle points:</p>
+
+            <p><strong>1. Local stream binding</strong> happens when <code>start_rtp_senders()</code> is called:</p>
+
+            <pre><code class="language-rust">// In RTCRtpSender
+pub(crate) fn interceptor_local_streams_op(
+    &amp;mut self,
+    media_engine: &amp;MediaEngine,
+    interceptor: &amp;mut I,
+    is_binding: bool,
+) {
+    for coding in self.track().codings() {
+        let stream_info = create_stream_info(
+            coding.ssrc,
+            coding.rtx_ssrc,
+            coding.fec_ssrc,
+            codec.payload_type,
+            rtx_payload_type,
+            fec_payload_type,
+            &amp;codec.rtp_codec,
+            &amp;header_extensions,
+        );
+
+        if is_binding {
+            interceptor.bind_local_stream(&amp;stream_info);
+        } else {
+            interceptor.unbind_local_stream(&amp;stream_info);
+        }
+    }
+}</code></pre>
+
+            <p><strong>2. Remote stream binding</strong> happens when processing the remote description:</p>
+
+            <pre><code class="language-rust">// In RTCRtpReceiver
+pub(crate) fn interceptor_remote_stream_op(
+    interceptor: &amp;mut I,
+    is_binding: bool,
+    ssrc: SSRC,
+    payload_type: PayloadType,
+    rtp_codec: &amp;RTCRtpCodec,
+    header_extensions: &amp;[RTCRtpHeaderExtensionParameters],
+) {
+    let stream_info = create_stream_info(/* ... */);
+
+    if is_binding {
+        interceptor.bind_remote_stream(&amp;stream_info);
+    } else {
+        interceptor.unbind_remote_stream(&amp;stream_info);
+    }
+}</code></pre>
+
+            <h3>Default Interceptor Configuration</h3>
+
+            <p>The RTC crate provides helper functions to register common interceptors:</p>
+
+            <pre><code class="language-rust">pub fn register_default_interceptors&lt;P: Interceptor&gt;(
+    media_engine: &amp;mut MediaEngine,
+    registry: Registry&lt;P&gt;,
+) -&gt; Result&lt;Registry&lt;impl Interceptor&gt;&gt; {
+    let registry = configure_nack(media_engine, registry)?;
+    let registry = configure_rtcp_reports(registry)?;
+    let registry = configure_twcc_receiver(media_engine, registry)?;
+    Ok(registry)
+}
+
+fn configure_nack&lt;P: Interceptor&gt;(
+    media_engine: &amp;mut MediaEngine,
+    registry: Registry&lt;P&gt;,
+) -&gt; Result&lt;Registry&lt;impl Interceptor&gt;&gt; {
+    // Register RTCP feedback in media engine
+    media_engine.register_feedback(
+        RTCPFeedback { typ: "nack".to_string(), parameter: "".to_string() },
+        RTPCodecType::Video,
+    );
+
+    Ok(registry
+        .with(NackGeneratorBuilder::new().build())
+        .with(NackResponderBuilder::new().build()))
+}</code></pre>
+
+            <hr>
+
+            <h2>Concrete Interceptor Implementations</h2>
+
+            <h3>NACK Generator</h3>
+
+            <p>Tracks incoming RTP sequence numbers and generates NACK requests for missing packets:</p>
+
+            <pre><code class="language-rust">pub struct NackGeneratorInterceptor&lt;P&gt; {
+    inner: P,
+    interval: Duration,
+    eto: Instant,  // Expected timeout
+    receive_logs: HashMap&lt;u32, ReceiveLog&gt;,  // Per-SSRC tracking
+    nack_counts: HashMap&lt;u32, HashMap&lt;u16, u16&gt;&gt;,  // Retransmit limits
+    write_queue: VecDeque&lt;TaggedPacket&gt;,
+}
+
+impl&lt;P: Interceptor&gt; NackGeneratorInterceptor&lt;P&gt; {
+    fn generate_nacks(&amp;mut self, now: Instant) {
+        for (&amp;ssrc, log) in &amp;self.receive_logs {
+            let missing = log.missing_seq_numbers(self.skip_last_n);
+            if missing.is_empty() { continue; }
+
+            // Filter by retransmit count limits
+            let filtered = self.filter_by_nack_count(ssrc, missing);
+            if filtered.is_empty() { continue; }
+
+            let nack = TransportLayerNack {
+                sender_ssrc: self.sender_ssrc,
+                media_ssrc: ssrc,
+                nacks: build_nack_pairs(filtered),
+            };
+
+            self.write_queue.push_back(TaggedPacket {
+                now,
+                transport: TransportContext::default(),
+                message: Packet::Rtcp(vec![Box::new(nack)]),
+            });
+        }
+    }
+}</code></pre>
+
+            <h3>NACK Responder</h3>
+
+            <p>Buffers outgoing packets and retransmits on NACK requests (with RFC 4588 RTX support):</p>
+
+            <pre><code class="language-rust">pub struct NackResponderInterceptor&lt;P&gt; {
+    inner: P,
+    streams: HashMap&lt;u32, LocalStream&gt;,
+    write_queue: VecDeque&lt;TaggedPacket&gt;,
+}
+
+struct LocalStream {
+    send_buffer: SendBuffer,
+    ssrc_rtx: Option&lt;u32&gt;,
+    payload_type_rtx: Option&lt;u8&gt;,
+    rtx_sequence_number: u16,
+}
+
+impl&lt;P: Interceptor&gt; NackResponderInterceptor&lt;P&gt; {
+    fn handle_nack(&amp;mut self, now: Instant, nack: &amp;TransportLayerNack) {
+        let Some(stream) = self.streams.get_mut(&amp;nack.media_ssrc) else { return };
+
+        for seq in nack.iter_sequence_numbers() {
+            let Some(original) = stream.send_buffer.get(seq) else { continue };
+
+            let packet = if let (Some(rtx_ssrc), Some(rtx_pt)) =
+                (stream.ssrc_rtx, stream.payload_type_rtx)
+            {
+                // RFC 4588: Create RTX packet with original seq in payload
+                let mut rtx_payload = Vec::with_capacity(2 + original.payload.len());
+                rtx_payload.extend_from_slice(&amp;seq.to_be_bytes());
+                rtx_payload.extend_from_slice(&amp;original.payload);
+
+                rtp::Packet {
+                    header: rtp::header::Header {
+                        ssrc: rtx_ssrc,
+                        payload_type: rtx_pt,
+                        sequence_number: stream.next_rtx_seq(),
+                        timestamp: original.header.timestamp,
+                        marker: original.header.marker,
+                        ..Default::default()
+                    },
+                    payload: rtx_payload.into(),
+                }
+            } else {
+                // No RTX: retransmit original packet
+                original.clone()
+            };
+
+            self.write_queue.push_back(TaggedPacket {
+                now,
+                transport: TransportContext::default(),
+                message: Packet::Rtp(packet),
+            });
+        }
+    }
+}</code></pre>
+
+            <h3>TWCC Sender</h3>
+
+            <p>Adds transport-wide sequence numbers to outgoing RTP packets:</p>
+
+            <pre><code class="language-rust">pub struct TwccSenderInterceptor&lt;P&gt; {
+    inner: P,
+    next_sequence_number: u16,  // Shared across all streams
+    streams: HashMap&lt;u32, LocalStream&gt;,
+}
+
+impl&lt;P: Interceptor&gt; sansio::Protocol&lt;TaggedPacket, TaggedPacket, ()&gt;
+    for TwccSenderInterceptor&lt;P&gt;
+{
+    fn handle_write(&amp;mut self, mut msg: TaggedPacket) -&gt; Result&lt;()&gt; {
+        if let Packet::Rtp(ref mut pkt) = msg.message {
+            if let Some(stream) = self.streams.get(&amp;pkt.header.ssrc) {
+                let seq = self.next_sequence_number;
+                self.next_sequence_number = self.next_sequence_number.wrapping_add(1);
+
+                let tcc_ext = TransportCcExtension { transport_sequence: seq };
+                pkt.header.set_extension(stream.hdr_ext_id, tcc_ext.marshal()?);
+            }
+        }
+        self.inner.handle_write(msg)
+    }
+}</code></pre>
+
+            <h3>TWCC Receiver</h3>
+
+            <p>Tracks incoming packet arrival times and generates TWCC feedback:</p>
+
+            <pre><code class="language-rust">pub struct TwccReceiverInterceptor&lt;P&gt; {
+    inner: P,
+    interval: Duration,
+    start_time: Option&lt;Instant&gt;,
+    recorder: Option&lt;Recorder&gt;,
+    streams: HashMap&lt;u32, RemoteStream&gt;,
+    write_queue: VecDeque&lt;TaggedPacket&gt;,
+    next_timeout: Option&lt;Instant&gt;,
+}
+
+impl&lt;P: Interceptor&gt; sansio::Protocol&lt;TaggedPacket, TaggedPacket, ()&gt;
+    for TwccReceiverInterceptor&lt;P&gt;
+{
+    fn handle_read(&amp;mut self, msg: TaggedPacket) -&gt; Result&lt;()&gt; {
+        if let Packet::Rtp(ref pkt) = msg.message {
+            if let Some(stream) = self.streams.get(&amp;pkt.header.ssrc) {
+                if let Some(ext) = pkt.header.get_extension(stream.hdr_ext_id) {
+                    let tcc = TransportCcExtension::unmarshal(&amp;mut ext.as_ref())?;
+
+                    let arrival_time = self.start_time
+                        .map(|start| msg.now.duration_since(start).as_micros() as i64)
+                        .unwrap_or(0);
+
+                    if let Some(recorder) = self.recorder.as_mut() {
+                        recorder.record(pkt.header.ssrc, tcc.transport_sequence, arrival_time);
+                    }
+                }
+            }
+        }
+        self.inner.handle_read(msg)
+    }
+
+    fn handle_timeout(&amp;mut self, now: Instant) -&gt; Result&lt;()&gt; {
+        if self.next_timeout.map_or(false, |t| now &gt;= t) {
+            self.generate_feedback(now);
+            self.next_timeout = Some(now + self.interval);
+        }
+        self.inner.handle_timeout(now)
+    }
+}</code></pre>
+
+            <hr>
+
+            <h2>Summary: Old vs. New Design</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Aspect</th>
+                  <th>Old Async Design</th>
+                  <th>New Sans-I/O Design</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Composition</strong></td>
+                  <td>Runtime trait objects</td>
+                  <td>Compile-time generics</td>
+                </tr>
+                <tr>
+                  <td><strong>Runtime Dependency</strong></td>
+                  <td>Requires tokio/async-std</td>
+                  <td>None (works anywhere)</td>
+                </tr>
+                <tr>
+                  <td><strong>Per-Call Overhead</strong></td>
+                  <td>Future allocation</td>
+                  <td>Zero-cost</td>
+                </tr>
+                <tr>
+                  <td><strong>Background Tasks</strong></td>
+                  <td><code>tokio::spawn</code></td>
+                  <td>Polling model</td>
+                </tr>
+                <tr>
+                  <td><strong>State Sharing</strong></td>
+                  <td><code>Mutex&lt;HashMap&gt;</code></td>
+                  <td>Direct ownership</td>
+                </tr>
+                <tr>
+                  <td><strong>Timeout Handling</strong></td>
+                  <td><code>tokio::select!</code> + ticker</td>
+                  <td><code>handle_timeout</code> + <code>poll_timeout</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Testability</strong></td>
+                  <td>Requires async runtime</td>
+                  <td>Pure synchronous tests</td>
+                </tr>
+                <tr>
+                  <td><strong>Error Propagation</strong></td>
+                  <td>Log and swallow</td>
+                  <td><code>Result</code> return values</td>
+                </tr>
+                <tr>
+                  <td><strong>Type Information</strong></td>
+                  <td>Erased at boundaries</td>
+                  <td>Preserved through chain</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <hr>
+
+            <h2>Conclusion</h2>
+
+            <p>The interceptor redesign is not just a refactor—it is a <strong>re-alignment with sansio::Protocol fundamentals</strong>. Protocol logic is fundamentally <strong>single-threaded state evolution</strong>, and the sans-I/O pattern embraces this directly.</p>
+
+            <p>By combining:</p>
+
+            <ul>
+              <li><strong>Sans-I/O</strong> state machines</li>
+              <li><strong>Generic composition</strong> instead of dynamic dispatch</li>
+              <li><strong>Poll-driven</strong> timeout handling</li>
+            </ul>
+
+            <p>The re-designed interceptor framework achieves:</p>
+
+            <ol>
+              <li><strong>Generic composition</strong> replaces runtime polymorphism, enabling zero-cost abstraction across interceptor boundaries.</li>
+              <li><strong>The polling model</strong> eliminates async runtime dependencies while providing explicit control over timing and I/O integration.</li>
+              <li><strong>Compile-time type nesting</strong> preserves type information, enabling the optimizer to inline across the entire interceptor chain.</li>
+              <li><strong>Deterministic state machines</strong> make testing straightforward and protocol behavior reproducible.</li>
+              <li><strong>Seamless integration</strong> with the RTCPeerConnection through consistent generic parametrization.</li>
+            </ol>
+
+            <p>This design philosophy extends naturally to other protocol components. Whether implementing bandwidth estimation, simulcast layer switching, or custom RTCP feedback mechanisms, the <code>sansio::Protocol</code> trait provides a solid foundation for building composable, testable, and efficient protocol handlers.</p>
+
+            <hr>
+
+            <p><strong>Key Takeaways:</strong></p>
+
+            <ul>
+              <li>Sans-I/O separates protocol logic from I/O concerns</li>
+              <li>Generic composition enables zero-overhead interceptor chaining</li>
+              <li>The polling model integrates naturally with any I/O framework</li>
+              <li>Stream binding provides type-safe feature negotiation</li>
+              <li>Testability comes for free without async ceremony</li>
+            </ul>
+
+            <hr>
+
+            <h2>References</h2>
+
+            <ul>
+              <li><a href="https://github.com/webrtc-rs/rtc/tree/master/rtc-interceptor">rtc-interceptor</a> — The new interceptor framework</li>
+              <li><a href="https://github.com/webrtc-rs/rtc/tree/master/rtc">rtc</a> — RTCPeerConnection integration</li>
+              <li><a href="../04/building-webrtc-pipeline-with-sansio.html">Building WebRTC's Pipeline with <code>sansio::Protocol</code></a> — Previous article on the sans-I/O pipeline</li>
+              <li><a href="https://datatracker.ietf.org/doc/html/rfc3550">RFC 3550</a> — RTP/RTCP specification</li>
+              <li><a href="https://datatracker.ietf.org/doc/html/rfc4585">RFC 4585</a> — Extended RTP Profile for RTCP-Based Feedback (NACK)</li>
+              <li><a href="https://datatracker.ietf.org/doc/html/rfc4588">RFC 4588</a> — RTP Retransmission Payload Format (RTX)</li>
+              <li><a href="https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions">draft-holmer-rmcat-transport-wide-cc-extensions</a> — Transport-Wide Congestion Control (TWCC)</li>
+            </ul>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
