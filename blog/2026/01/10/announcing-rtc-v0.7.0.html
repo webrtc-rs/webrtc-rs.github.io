@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing rtc 0.7.0: mDNS Support for Privacy-Preserving WebRTC">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing rtc 0.7.0: mDNS Support for Privacy-Preserving WebRTC | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../../index.html"><strong>🏠 Home &nbsp;&nbsp; </strong></a>
+          <a class="navbar-item" href="../../../index.html"><strong>📝 Blog &nbsp;&nbsp; </strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            
+
+<h1>Announcing <code>rtc</code> 0.7.0: mDNS Support for Privacy-Preserving WebRTC 🎉</h1>
+<div class="blog-meta">
+  <span>January 10, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/10/announcing-rtc-v0.7.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+
+<p>We're excited to announce <strong><code>rtc</code> 0.7.0</strong>, a significant release that brings <strong>multicast DNS (mDNS) support</strong> to our sans-I/O WebRTC implementation. This release enables privacy-preserving peer connections by hiding local IP addresses with <code>.local</code> hostnames, following <a href="https://www.rfc-editor.org/rfc/rfc6762.html">RFC 6762</a> and WebRTC best practices.</p>
+
+<h2>What's New in 0.7.0</h2>
+
+<h3>mDNS Support for IP Privacy 🔒</h3>
+
+<p>The headline feature is <strong>comprehensive mDNS support</strong> across the stack. mDNS allows WebRTC peers to exchange ICE candidates without exposing local IP addresses, addressing privacy concerns in modern browsers and applications.</p>
+
+<p><strong>Key capabilities:</strong></p>
+
+<ul>
+<li><strong>Query-only mode</strong> - Resolve <code>.local</code> hostnames from remote peers</li>
+<li><strong>Query-and-gather mode</strong> - Both resolve remote hostnames and hide your own IP</li>
+<li><strong>Sans-I/O design</strong> - mDNS implementation follows <code>sansio::Protocol</code> pattern</li>
+<li><strong>Seamless integration</strong> - mDNS is deeply integrated into the ICE agent</li>
+<li><strong>Configurable modes</strong> - Disabled, QueryOnly, or QueryAndGather via <code>SettingEngine</code></li>
+</ul>
+
+<p><strong>Privacy benefits:</strong></p>
+
+<ul>
+<li>Prevent IP address leakage to remote peers</li>
+<li>Comply with privacy-focused browser policies (Firefox, Safari)</li>
+<li>Support WebRTC in privacy-sensitive applications</li>
+<li>Follow W3C WebRTC security guidelines</li>
+</ul>
+
+<hr>
+
+<h2>Architecture: Three-Level mDNS Integration</h2>
+
+<p>The mDNS implementation spans three layers of the stack, demonstrating the composability of the sans-I/O architecture:</p>
+
+<h3>1. <code>rtc-mdns</code> Crate: Sans-I/O Protocol Implementation</h3>
+
+<p>A new standalone crate implementing mDNS as a <code>sansio::Protocol</code>:</p>
+
+<pre><code class="language-rust">use rtc_mdns::{MdnsConfig, Mdns, MdnsEvent};
+use sansio::Protocol;
+use std::time::{Duration, Instant};
+
+// Create mDNS connection
+let config = MdnsConfig::default()
+    .with_query_interval(Duration::from_secs(1))
+    .with_local_names(vec!["myhost.local".to_string()])
+    .with_local_ip(local_ip);
+
+let mut mdns = Mdns::new(config);
+
+// Query for a hostname
+let query_id = mdns.query("remote-peer.local");
+
+// Sans-I/O event loop
+loop {
+    // 1. Send outgoing mDNS packets
+    while let Some(packet) = mdns.poll_write() {
+        socket.send_to(&packet.message, packet.transport.peer_addr).await?;
+    }
+    
+    // 2. Handle mDNS events
+    while let Some(event) = mdns.poll_event() {
+        match event {
+            MdnsEvent::QueryAnswered { query_id, addr } => {
+                println!("Resolved to: {}", addr);
+            }
+            _ => {}
+        }
+    }
+    
+    // 3. Process incoming packets and timeouts
+    // mdns.handle_read(packet)?;
+    // mdns.handle_timeout(now)?;
+}
+</code></pre>
+
+<p><strong>Features of <code>rtc-mdns</code>:</strong></p>
+
+<ul>
+<li>RFC 6762 compliant mDNS implementation</li>
+<li>Query and server modes</li>
+<li>Automatic query retries with configurable intervals</li>
+<li>Multiple concurrent query tracking</li>
+<li>Zero I/O dependencies (pure protocol logic)</li>
+</ul>
+
+<h3>2. ICE Agent Integration: Seamless <code>.local</code> Resolution</h3>
+
+<p>The mDNS protocol is integrated directly into <code>rtc-ice::Agent</code>:</p>
+
+<pre><code class="language-rust">// ICE agent transparently uses mDNS when needed
+impl Protocol for Agent {
+    fn handle_read(&mut self, message: TaggedBytesMut) -> Result<()> {
+        // mDNS packets automatically routed to internal mDNS handler
+        if message.transport.peer_addr.port() == MDNS_PORT {
+            self.mdns.handle_read(message)?;
+        } else {
+            // Regular STUN/ICE packets
+        }
+    }
+    
+    fn poll_write(&mut self) -> Option<TaggedBytes> {
+        // Outgoing mDNS queries sent seamlessly
+        if let Some(packet) = self.mdns.poll_write() {
+            return Some(packet);
+        }
+        // Regular ICE packets...
+    }
+}
+</code></pre>
+
+<p><strong>ICE improvements:</strong></p>
+
+<ul>
+<li>Automatic <code>.local</code> hostname resolution during connectivity checks</li>
+<li>mDNS queries triggered on-demand when encountering <code>.local</code> candidates</li>
+<li>Proper handling of mDNS responses in candidate pair evaluation</li>
+<li>Fixed <code>find_remote_candidate()</code> bug for <code>.local</code> remote addresses</li>
+</ul>
+
+<h3>3. PeerConnection Configuration: User-Friendly API</h3>
+
+<p>Configure mDNS behavior through <code>SettingEngine</code>:</p>
+
+<pre><code class="language-rust">use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::configuration::setting_engine::SettingEngine;
+use rtc::ice::mdns::MulticastDnsMode;
+use std::time::Duration;
+
+let mut setting_engine = SettingEngine::default();
+
+// Option 1: Query-only (resolve remote .local addresses)
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryOnly);
+
+// Option 2: Query-and-gather (hide your IP + resolve remote)
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryAndGather);
+setting_engine.set_multicast_dns_local_name("my-peer.local".to_string());
+setting_engine.set_multicast_dns_local_ip(Some(local_ip));
+
+// Optional: Set query timeout
+setting_engine.set_multicast_dns_timeout(Some(Duration::from_secs(10)));
+
+let config = RTCConfigurationBuilder::new()
+    .with_setting_engine(setting_engine)
+    .build();
+
+let peer_connection = RTCPeerConnection::new(config)?;
+</code></pre>
+
+<p><strong>Three mDNS modes:</strong></p>
+
+<ul>
+<li><strong><code>Disabled</code></strong> - No mDNS support (default for compatibility)</li>
+<li><strong><code>QueryOnly</code></strong> - Resolve <code>.local</code> hostnames from remote peers only</li>
+<li><strong><code>QueryAndGather</code></strong> - Resolve remote + advertise local hostname (full privacy)</li>
+</ul>
+
+<hr>
+
+<h2>New Example: mDNS Query and Gather</h2>
+
+<p>The <a href="https://github.com/webrtc-rs/rtc/tree/master/examples/examples/mdns-query-and-gather">mdns-query-and-gather example</a> demonstrates how WebRTC.rs hides local IP addresses using mDNS:</p>
+
+<pre><code class="language-rust">// Configure full mDNS support
+let mut setting_engine = SettingEngine::default();
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryAndGather);
+setting_engine.set_multicast_dns_local_name(
+    "webrtc-rs-hides-local-ip-by-mdns.local".to_string()
+);
+setting_engine.set_multicast_dns_local_ip(Some(local_addr.ip()));
+
+let config = RTCConfigurationBuilder::new()
+    .with_setting_engine(setting_engine)
+    .build();
+
+let mut pc = RTCPeerConnection::new(config)?;
+
+// Add candidate with local IP - mDNS will hide it in SDP
+let candidate = CandidateHostConfig {
+    base_config: CandidateConfig {
+        address: local_addr.ip().to_string(),  // Real IP
+        port: local_addr.port(),
+        // ... mDNS transparently converts to .local hostname
+    },
+    ..Default::default()
+}.new_candidate_host()?;
+
+pc.add_local_candidate(candidate)?;
+
+// SDP will show: "webrtc-rs-hides-local-ip-by-mdns.local" instead of IP
+</code></pre>
+
+<p><strong>Key demonstration:</strong></p>
+
+<p>This example showcases a unique aspect of the sans-I/O design: <strong>handling multiple I/O sockets in a single event loop</strong>. The application multiplexes:</p>
+
+<ol>
+<li><strong>mDNS multicast socket</strong> - For sending/receiving mDNS queries (port 5353)</li>
+<li><strong>WebRTC peer connection socket</strong> - For ICE/DTLS/RTP/RTCP traffic</li>
+</ol>
+
+<pre><code class="language-rust">let mdns_socket = UdpSocket::from_std(MulticastSocket::new().into_std()?)?;
+let pc_socket = UdpSocket::bind(format!("{host}:{port}")).await?;
+
+loop {
+    // Route outgoing packets to correct socket
+    while let Some(msg) = pc.poll_write() {
+        if msg.transport.peer_addr.port() == MDNS_PORT {
+            mdns_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+        } else {
+            pc_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+        }
+    }
+    
+    // Multiplex incoming packets
+    tokio::select! {
+        Ok((n, peer_addr)) = mdns_socket.recv_from(&mut mdns_buf) => {
+            pc.handle_read(TaggedBytesMut { /* mDNS packet */ })?;
+        }
+        Ok((n, peer_addr)) = pc_socket.recv_from(&mut pc_buf) => {
+            pc.handle_read(TaggedBytesMut { /* WebRTC packet */ })?;
+        }
+    }
+}
+</code></pre>
+
+<p>This demonstrates the flexibility of sans-I/O architecture - the protocol layer doesn't care how many sockets you use or how you multiplex them. The caller has complete control over I/O strategy.</p>
+
+<hr>
+
+<h2>Additional Improvements</h2>
+
+<h3>Bug Fixes and Stability</h3>
+
+<ul>
+<li><strong>Fixed interceptor initialization</strong> - Interceptors now start after connection is established (#19)</li>
+<li><strong>Fixed simulcast test flakiness</strong> - Resolved SRTP duplicate index issue (#18)</li>
+<li><strong>Fixed ICE candidate resolution</strong> - Proper <code>.local</code> address handling in <code>find_remote_candidate()</code></li>
+<li><strong>Fixed mDNS query lifecycle</strong> - Correct timeout handling and query state management</li>
+<li><strong>Optimized DTLS handshake</strong> - Removed unused <code>remote_addr</code> parameter</li>
+</ul>
+
+<h3>Testing Improvements</h3>
+
+<ul>
+<li>Increased timeout for simulcast interop tests (15s → 25s)</li>
+<li>Better test stability for browser interoperability tests</li>
+<li>Enhanced mDNS unit and integration tests</li>
+</ul>
+
+<h3>Documentation Updates</h3>
+
+<ul>
+<li>Comprehensive <code>SettingEngine</code> mDNS configuration docs</li>
+<li>Updated README with mDNS example reference</li>
+<li>Inline documentation for <code>MulticastDnsMode</code> and related APIs</li>
+<li>Fixed <code>MediaStreamTrack::new()</code> API documentation after v0.5.0 changes</li>
+</ul>
+
+<hr>
+
+<h2>Why mDNS Matters for WebRTC</h2>
+
+<h3>Privacy Concerns</h3>
+
+<p>Traditional WebRTC ICE gathering exposes local IP addresses in SDP offers/answers. This creates privacy risks:</p>
+
+<ul>
+<li><strong>Location tracking</strong> - IP addresses reveal geographic location</li>
+<li><strong>Network topology</strong> - Exposes internal network structure</li>
+<li><strong>Identity correlation</strong> - IP addresses can link user identities across sessions</li>
+</ul>
+
+<h3>Modern Browser Policies</h3>
+
+<p>Privacy-focused browsers have responded:</p>
+
+<ul>
+<li><strong>Firefox</strong> - Uses mDNS by default for local candidates</li>
+<li><strong>Safari</strong> - Requires mDNS for privacy-sensitive contexts</li>
+<li><strong>Chrome</strong> - Working towards mDNS support for privacy</li>
+</ul>
+
+<h3>WebRTC.rs Solution</h3>
+
+<p>With v0.7.0, Rust applications can now match browser privacy standards:</p>
+
+<pre><code class="language-text">// Old behavior (v0.6.0): SDP exposes IP
+// candidate:1 1 udp 192.168.1.100 50000 typ host
+
+// New behavior (v0.7.0): SDP uses mDNS hostname
+// candidate:1 1 udp webrtc-rs-hides-local-ip-by-mdns.local 50000 typ host
+</code></pre>
+
+<p>Remote peers resolve the hostname via mDNS queries on the local network, maintaining privacy while enabling connectivity.</p>
+
+<hr>
+
+<h2>Migration Guide</h2>
+
+<h3>Enabling mDNS in Existing Applications</h3>
+
+<p>If you're upgrading from v0.6.0, mDNS is <strong>disabled by default</strong> for backward compatibility. To enable:</p>
+
+<pre><code class="language-rust">// Step 1: Configure mDNS mode
+let mut setting_engine = SettingEngine::default();
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryOnly);
+
+// Step 2: Apply to configuration
+let config = RTCConfigurationBuilder::new()
+    .with_setting_engine(setting_engine)
+    .build();
+
+let mut pc = RTCPeerConnection::new(config)?;
+</code></pre>
+
+<h3>Full Privacy Mode (Query and Gather)</h3>
+
+<p>For maximum privacy with IP hiding:</p>
+
+<pre><code class="language-rust">use std::net::IpAddr;
+
+let local_ip: IpAddr = get_local_ip(); // Your method to get local IP
+
+let mut setting_engine = SettingEngine::default();
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryAndGather);
+setting_engine.set_multicast_dns_local_name("myapp.local".to_string());
+setting_engine.set_multicast_dns_local_ip(Some(local_ip));
+setting_engine.set_multicast_dns_timeout(Some(Duration::from_secs(10)));
+
+let config = RTCConfigurationBuilder::new()
+    .with_setting_engine(setting_engine)
+    .build();
+</code></pre>
+
+<h3>Socket Management for mDNS</h3>
+
+<p>When using mDNS, route packets based on destination port:</p>
+
+<pre><code class="language-rust">const MDNS_PORT: u16 = 5353;
+
+loop {
+    while let Some(msg) = pc.poll_write() {
+        if msg.transport.peer_addr.port() == MDNS_PORT {
+            // Send via mDNS multicast socket
+            mdns_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+        } else {
+            // Send via regular WebRTC socket
+            pc_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+        }
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Sans-I/O Benefits Demonstrated</h2>
+
+<p>This release showcases why sans-I/O architecture is powerful for WebRTC:</p>
+
+<h3>1. Protocol Composability</h3>
+
+<p>mDNS implementation (<code>rtc-mdns::Mdns</code>) is itself a <code>sansio::Protocol</code>, making it trivial to embed inside another protocol (<code>rtc-ice::Agent</code>):</p>
+
+<pre><code class="language-rust">struct Agent {
+    mdns: Mdns,  // Embedded sans-I/O protocol
+    // other fields...
+}
+
+impl Protocol for Agent {
+    fn poll_write(&mut self) -> Option<TaggedBytes> {
+        // Delegate to embedded protocol
+        if let Some(packet) = self.mdns.poll_write() {
+            return Some(packet);
+        }
+        // Agent's own logic...
+    }
+}
+</code></pre>
+
+<p>No callbacks, no async complexity - just simple method delegation.</p>
+
+<h3>2. Multi-Socket I/O Control</h3>
+
+<p>The caller controls how many sockets to use and how to multiplex them. The mdns-query-and-gather example uses two sockets, but you could use:</p>
+
+<ul>
+<li>One socket with port filtering</li>
+<li>Separate threads per socket</li>
+<li>Different async runtimes per socket</li>
+<li>Mix blocking and async I/O</li>
+</ul>
+
+<p>The protocol layer doesn't impose any I/O strategy.</p>
+
+<h3>3. Testability</h3>
+
+<p>mDNS protocol logic is fully testable without real network I/O:</p>
+
+<pre><code class="language-rust">#[test]
+fn test_mdns_query_response() {
+    let mut mdns = Mdns::new(config);
+    let query_id = mdns.query("test.local");
+    
+    // Simulate sending query
+    let packet = mdns.poll_write().unwrap();
+    
+    // Simulate receiving response
+    let response = create_mdns_response("test.local", "192.168.1.100");
+    mdns.handle_read(response).unwrap();
+    
+    // Verify event
+    let event = mdns.poll_event().unwrap();
+    assert!(matches!(event, MdnsEvent::QueryAnswered { .. }));
+}
+</code></pre>
+
+<p>No mocking frameworks, no network setup - just pure protocol testing.</p>
+
+<hr>
+
+<h2>Getting Started</h2>
+
+<h3>Installation</h3>
+
+<pre><code class="language-toml">[dependencies]
+rtc = "0.7.0"
+</code></pre>
+
+<h3>Quick Example with mDNS</h3>
+
+<pre><code class="language-rust">use rtc::peer_connection::RTCPeerConnection;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::configuration::setting_engine::SettingEngine;
+use rtc::ice::mdns::MulticastDnsMode;
+use rtc::mdns::{MDNS_PORT, MulticastSocket};
+use rtc::sansio::Protocol;
+use rtc::shared::{TaggedBytesMut, TransportContext, TransportProtocol};
+use bytes::BytesMut;
+use tokio::net::UdpSocket;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Enable mDNS
+    let mut setting_engine = SettingEngine::default();
+    setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryOnly);
+    
+    let config = RTCConfigurationBuilder::new()
+        .with_setting_engine(setting_engine)
+        .build();
+    
+    let mut pc = RTCPeerConnection::new(config)?;
+
+    // Create and set local description
+    let offer = pc.create_offer(None)?;
+    pc.set_local_description(offer)?;
+
+    // Create two sockets: one for mDNS multicast, one for peer connection
+    let mdns_socket = UdpSocket::from_std(MulticastSocket::new().into_std()?)?;
+    let pc_socket = UdpSocket::bind("0.0.0.0:0").await?;
+    let pc_local_addr = pc_socket.local_addr()?;
+    
+    let mut mdns_buf = vec![0u8; 2000];
+    let mut pc_buf = vec![0u8; 2000];
+
+    // Sans-I/O event loop with multi-socket handling
+    loop {
+        // 1. Send outgoing packets to appropriate socket
+        while let Some(msg) = pc.poll_write() {
+            if msg.transport.peer_addr.port() == MDNS_PORT {
+                mdns_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+            } else {
+                pc_socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+            }
+        }
+        
+        // 2. Handle state changes
+        while let Some(event) = pc.poll_event() {
+            // Handle events
+        }
+        
+        // 3. Process application messages
+        while let Some(message) = pc.poll_read() {
+            // Process RTP/RTCP/DataChannel messages
+        }
+        
+        // 4. Multiplex I/O from both sockets
+        tokio::select! {
+            Ok((n, peer_addr)) = mdns_socket.recv_from(&mut mdns_buf) => {
+                pc.handle_read(TaggedBytesMut {
+                    now: std::time::Instant::now(),
+                    transport: TransportContext {
+                        local_addr: "0.0.0.0:5353".parse().unwrap(),
+                        peer_addr,
+                        ecn: None,
+                        transport_protocol: TransportProtocol::UDP,
+                    },
+                    message: BytesMut::from(&mdns_buf[..n]),
+                })?;
+            }
+            Ok((n, peer_addr)) = pc_socket.recv_from(&mut pc_buf) => {
+                pc.handle_read(TaggedBytesMut {
+                    now: std::time::Instant::now(),
+                    transport: TransportContext {
+                        local_addr: pc_local_addr,
+                        peer_addr,
+                        ecn: None,
+                        transport_protocol: TransportProtocol::UDP,
+                    },
+                    message: BytesMut::from(&pc_buf[..n]),
+                })?;
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>Check out the <a href="https://github.com/webrtc-rs/rtc/tree/master/examples/examples/mdns-query-and-gather">mdns-query-and-gather example</a> for the complete working code!</p>
+
+<hr>
+
+<h2>Feature Parity Update</h2>
+
+<p>Progress toward full feature parity with the <code>webrtc</code> crate:</p>
+
+<p>✅ <strong>Complete:</strong></p>
+<ul>
+<li>ICE, DTLS, SRTP/SRTCP, SCTP</li>
+<li>Data Channels (reliable &amp; unreliable)</li>
+<li>RTP/RTCP, Media Tracks, SDP</li>
+<li>Peer Connection API</li>
+<li>Simulcast</li>
+<li>RTCP Interceptors (NACK, Reports, TWCC)</li>
+<li><strong>mDNS Support</strong> ← New in 0.7.0!</li>
+</ul>
+
+<p>🎯 <strong>Future Work:</strong></p>
+<ul>
+<li>Advanced bandwidth estimation algorithms</li>
+<li>Performance optimizations and benchmarking</li>
+<li>Additional privacy features (TURN over TLS, etc.)</li>
+</ul>
+
+<hr>
+
+<h2>Links</h2>
+
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Crate</strong>: https://crates.io/crates/rtc</li>
+<li><strong>Docs</strong>: https://docs.rs/rtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Examples</strong>: https://github.com/webrtc-rs/rtc/tree/master/examples</li>
+</ul>
+
+<hr>
+
+<h2>Full Changelog</h2>
+
+<h3>Added</h3>
+<ul>
+<li>✨ <strong><code>rtc-mdns</code> crate</strong> - Complete sans-I/O mDNS implementation (RFC 6762)</li>
+<li>✨ mDNS integration in <code>rtc-ice::Agent</code> for <code>.local</code> hostname resolution</li>
+<li>✨ <code>MulticastDnsMode</code> enum (Disabled, QueryOnly, QueryAndGather)</li>
+<li>✨ <code>SettingEngine::set_multicast_dns_mode()</code> configuration API</li>
+<li>✨ <code>SettingEngine::set_multicast_dns_local_name()</code> for IP hiding</li>
+<li>✨ <code>SettingEngine::set_multicast_dns_local_ip()</code> for local IP binding</li>
+<li>✨ <code>SettingEngine::set_multicast_dns_timeout()</code> for query timeout control</li>
+<li>✨ <code>mdns-query-and-gather</code> example demonstrating IP privacy</li>
+<li>✨ <code>MulticastSocket</code> utility for mDNS multicast I/O</li>
+<li>✨ Comprehensive mDNS documentation and examples</li>
+</ul>
+
+<h3>Changed</h3>
+<ul>
+<li>🔄 <code>rtc-ice::Agent</code> - Integrated mDNS protocol for candidate resolution</li>
+<li>🔄 ICE candidate evaluation - Handles <code>.local</code> hostnames transparently</li>
+</ul>
+
+<h3>Fixed</h3>
+<ul>
+<li>🐛 Interceptor initialization timing - Start after connection established (#19)</li>
+<li>🐛 Simulcast test flakiness - SRTP duplicate index handling (#18)</li>
+<li>🐛 <code>find_remote_candidate()</code> - Correct <code>.local</code> address matching</li>
+<li>🐛 mDNS query lifecycle - Proper timeout and state management</li>
+<li>🐛 mDNS answer processing - Fixed local IP extraction from A records</li>
+<li>🐛 DTLS handshake - Removed unused <code>remote_addr</code> parameter</li>
+</ul>
+
+<h3>Improved</h3>
+<ul>
+<li>📚 Complete <code>SettingEngine</code> mDNS documentation with examples</li>
+<li>📚 Updated main README with mDNS example reference</li>
+<li>📚 Enhanced inline documentation for all mDNS APIs</li>
+<li>🏗️ Refactored ICE agent for cleaner mDNS integration</li>
+<li>🏗️ Better multicast socket abstraction</li>
+<li>🧪 Increased test timeouts for better stability (15s → 25s)</li>
+</ul>
+
+<hr>
+
+<h2>Commits</h2>
+
+<p>This release includes <strong>19 commits</strong> focused on mDNS implementation, integration, and stability:</p>
+
+<ul>
+<li>Complete sans-I/O mDNS protocol implementation</li>
+<li>Deep ICE agent integration for <code>.local</code> resolution</li>
+<li>User-friendly configuration via <code>SettingEngine</code></li>
+<li>Comprehensive example with multi-socket I/O</li>
+<li>Bug fixes for interceptor timing and simulcast stability</li>
+<li>Documentation improvements across the board</li>
+</ul>
+
+<hr>
+
+<h2>Relationship with <code>webrtc</code> Crate</h2>
+
+<p>As stated in previous announcements, <code>rtc</code> (sans-I/O) and <code>webrtc</code> (async) are <strong>complementary</strong>:</p>
+
+<ul>
+<li><strong>Use <code>webrtc</code></strong> for quick start with Tokio and async/await</li>
+<li><strong>Use <code>rtc</code></strong> for runtime independence, custom I/O, or maximum control</li>
+</ul>
+
+<p>Both crates are actively maintained and share protocol implementations where possible. The mDNS feature demonstrates the advantages of sans-I/O for protocol composability and flexible I/O management.</p>
+
+<hr>
+
+<p><em>Thanks to everyone who contributed feedback, bug reports, and feature requests! The mDNS implementation represents significant work in privacy-preserving WebRTC. Special thanks to the WebRTC-rs community for their continued support.</em> 🦀</p>
+
+<p>Feedback and contributions welcome on <a href="https://github.com/webrtc-rs/rtc">GitHub</a>!</p>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
