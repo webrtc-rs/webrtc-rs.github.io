@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing rtc 0.8.0: WebRTC Stats Collection for Sans-I/O - Comprehensive W3C-compliant statistics API with zero-cost accumulation and instant snapshots">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content table th,
+    .blog-content table td {
+      border: 1px solid #dbdbdb;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing rtc 0.8.0: WebRTC Stats Collection for Sans-I/O | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            
+
+<h1>Announcing <code>rtc</code> 0.8.0: WebRTC Stats Collection for Sans-I/O 📊</h1>
+<div class="blog-meta">
+  <span>January 17, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/17/announcing-rtc-v0.8.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+
+<p>We're thrilled to announce <strong><code>rtc</code> 0.8.0</strong>, a major milestone that brings <strong>comprehensive WebRTC statistics collection</strong> to our sans-I/O WebRTC implementation. This release implements the <a href="https://www.w3.org/TR/webrtc-stats/">W3C WebRTC Stats API</a>, enabling applications to monitor and diagnose peer connection health, media quality, and network performance—all without sacrificing the zero-overhead design principles of sansio.</p>
+
+<h2>What's New in 0.8.0</h2>
+
+<h3>WebRTC Stats Collection API 📈</h3>
+
+<p>The headline feature is a <strong>production-ready stats collection system</strong> that continuously accumulates statistics during normal packet processing and provides instant snapshots on demand via the <code>get_stats()</code> API.</p>
+
+<p><strong>Key capabilities:</strong></p>
+
+<ul>
+<li><strong>W3C WebRTC Stats compliant</strong> - Implements standardized stats types and fields</li>
+<li><strong>Zero-cost accumulation</strong> - Stats collected during normal packet processing, no extra queries</li>
+<li><strong>Instant snapshots</strong> - No async waiting, no mutex locks, no I/O</li>
+<li><strong>Comprehensive coverage</strong> - ICE, Transport, RTP streams, Data Channels, Codecs, and more</li>
+<li><strong>Sans-I/O design</strong> - Explicit timestamp parameter, no hidden system calls</li>
+<li><strong>Type-safe access</strong> - Strongly-typed stats structures with iterator helpers</li>
+</ul>
+
+<p><strong>Statistics categories covered:</strong></p>
+
+<ul>
+<li>✅ <strong>ICE &amp; Transport</strong> - Candidate pairs, bytes/packets sent/received, RTT, STUN transactions</li>
+<li>✅ <strong>RTP Streams</strong> - Inbound/outbound packet counts, loss, jitter, bitrate, RTCP feedback</li>
+<li>✅ <strong>Data Channels</strong> - Messages sent/received, bytes transferred, buffer amounts</li>
+<li>✅ <strong>Codecs</strong> - Payload types, MIME types, clock rates, channels</li>
+<li>✅ <strong>Certificates</strong> - Fingerprints, algorithms, certificate chains</li>
+<li>✅ <strong>Peer Connection</strong> - Data channels opened/closed, connection state</li>
+</ul>
+
+<hr>
+
+<h2>Architecture: Continuous Accumulation, Instant Snapshots</h2>
+
+<p>The stats implementation follows the sansio philosophy: <strong>accumulate incrementally during event processing, snapshot synchronously on demand</strong>.</p>
+
+<h3>How It Works</h3>
+
+<pre><code>┌────────────────────────────────────────────────────────────────┐
+│                    RTCPeerConnection                           │
+│                                                                │
+│   handle_read(packet)   ──────┐                                │
+│                               ▼                                │
+│                      ┌─────────────────┐                       │
+│                      │  Handler        │                       │
+│                      │  Pipeline       │                       │
+│                      │  (ICE, DTLS,    │                       │
+│                      │   SRTP, SCTP,   │                       │
+│                      │   Interceptors) │                       │
+│                      └────────┬────────┘                       │
+│                               │                                │
+│                               ▼                                │
+│                      ┌─────────────────┐                       │
+│                      │ RTCStatsAccumu- │                       │
+│                      │ lator           │                       │
+│                      │ (incremental    │                       │
+│                      │  updates)       │                       │
+│                      └────────┬────────┘                       │
+│                               │                                │
+│   get_stats(now,  ────────────┼────────┐                       │
+│     StatsSelector::None)      ▼        ▼                       │
+│                      snapshot()  RTCStatsReport                │
+│                      (instant)   (returned immediately)        │
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<p><strong>Benefits over traditional approaches:</strong></p>
+
+<ul>
+<li><strong>No async coordination</strong> - Stats ready instantly, no <code>await</code> needed</li>
+<li><strong>No locks or mutexes</strong> - Single-threaded accumulation in event loop</li>
+<li><strong>No extra network I/O</strong> - Stats collected as packets flow through</li>
+<li><strong>Deterministic timestamps</strong> - Explicit <code>now</code> parameter enables testing</li>
+</ul>
+
+<h3>Comparison with Other Implementations</h3>
+
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Pion (Go)</th>
+<th>Async WebRTC</th>
+<th>Sansio RTC (v0.8.0)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Collection</td>
+<td>WaitGroup + goroutines</td>
+<td>tokio::join! async</td>
+<td>Synchronous accumulation</td>
+</tr>
+<tr>
+<td>Timing</td>
+<td>On-demand fetch</td>
+<td>On-demand async fetch</td>
+<td>Continuous accumulation + snapshot</td>
+</tr>
+<tr>
+<td>I/O</td>
+<td>Direct network access</td>
+<td>Async network</td>
+<td>No I/O, application-driven</td>
+</tr>
+<tr>
+<td>Threading</td>
+<td>Multi-threaded</td>
+<td>Async tasks</td>
+<td>Single-threaded, event-loop friendly</td>
+</tr>
+<tr>
+<td>Synchronization</td>
+<td>Mutex + WaitGroup</td>
+<td>Mutex + async</td>
+<td>None needed (zero locks!)</td>
+</tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>Using the Stats API</h2>
+
+<h3>Basic Usage</h3>
+
+<pre><code class="language-rust">use rtc::peer_connection::RTCPeerConnection;
+use rtc::statistics::StatsSelector;
+use std::time::Instant;
+
+// Create and configure peer connection
+let mut peer_connection = RTCPeerConnection::new(config)?;
+
+// ... normal WebRTC operations (handle_read, poll_write, etc.) ...
+
+// Get stats snapshot at any time (all stats)
+let now = Instant::now();
+let report = peer_connection.get_stats(now, StatsSelector::None);
+
+// Access peer connection stats
+if let Some(pc_stats) = report.peer_connection() {
+    println!("Data channels opened: {}", pc_stats.data_channels_opened);
+    println!("Data channels closed: {}", pc_stats.data_channels_closed);
+}
+
+// Iterate over inbound RTP streams
+for inbound in report.inbound_rtp_streams() {
+    println!("SSRC: {}", inbound.received_rtp_stream_stats.rtp_stream_stats.ssrc);
+    println!("Packets received: {}", inbound.received_rtp_stream_stats.packets_received);
+    println!("Bytes received: {}", inbound.bytes_received);
+    println!("Packets lost: {}", inbound.received_rtp_stream_stats.packets_lost);
+    println!("Jitter: {}", inbound.received_rtp_stream_stats.jitter);
+}
+</code></pre>
+
+<h3>Filtering Stats with StatsSelector</h3>
+
+<p>The <code>get_stats()</code> API supports the W3C stats selection algorithm, allowing you to filter statistics for specific senders or receivers:</p>
+
+<pre><code class="language-rust">use rtc::statistics::StatsSelector;
+
+// Get all stats for the entire connection
+let all_stats = peer_connection.get_stats(now, StatsSelector::None);
+
+// Get stats only for a specific sender (outbound streams)
+let sender_stats = peer_connection.get_stats(now, StatsSelector::Sender(sender_id));
+
+// Get stats only for a specific receiver (inbound streams)
+let receiver_stats = peer_connection.get_stats(now, StatsSelector::Receiver(receiver_id));
+</code></pre>
+
+<p>This is particularly useful when you only need stats for a specific track:</p>
+
+<pre><code class="language-rust">// Get the sender ID from an RTP sender
+let sender_id = peer_connection.add_track(track)?;
+
+// Later, get stats only for that sender
+let report = peer_connection.get_stats(Instant::now(), StatsSelector::Sender(sender_id));
+
+// Only contains outbound RTP streams and related stats for this sender
+for outbound in report.outbound_rtp_streams() {
+    println!("Packets sent: {}", outbound.sent_rtp_stream_stats.packets_sent);
+}
+</code></pre>
+
+<p><strong>Benefits of filtered stats:</strong></p>
+<ul>
+<li>Reduced memory allocation (smaller report)</li>
+<li>Faster processing (fewer stats to iterate)</li>
+<li>Cleaner API when you only care about specific streams</li>
+</ul>
+
+<hr>
+
+<h3>Filtering by Stats Type</h3>
+
+<p>You can also filter the report by stats type after retrieval:</p>
+
+<pre><code class="language-rust">use rtc::statistics::stats::RTCStatsType;
+
+let report = peer_connection.get_stats(now, StatsSelector::None);
+
+// Filter by stats type
+for entry in report.iter_by_type(RTCStatsType::RemoteCandidate) {
+    if let RTCStatsReportEntry::RemoteCandidate(candidate) = entry {
+        println!("Remote IP: {}", candidate.address.as_deref().unwrap_or("unknown"));
+        println!("Port: {}", candidate.port);
+    }
+}
+
+// Or iterate all entries with pattern matching
+for entry in report.iter() {
+    match entry {
+        RTCStatsReportEntry::InboundRtp(stats) => { /* ... */ }
+        RTCStatsReportEntry::OutboundRtp(stats) => { /* ... */ }
+        RTCStatsReportEntry::IceCandidatePair(stats) => { /* ... */ }
+        _ => {}
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Periodic Stats Reporting</h2>
+
+<h3>Periodic Stats Reporting</h3>
+
+<p>Integrate stats into your event loop for periodic monitoring:</p>
+
+<pre><code class="language-rust">use std::time::{Duration, Instant};
+
+const STATS_INTERVAL: Duration = Duration::from_secs(5);
+let mut last_stats_time = Instant::now();
+
+loop {
+    // Normal event loop operations
+    while let Some(msg) = peer_connection.poll_write() {
+        socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+    }
+    
+    while let Some(event) = peer_connection.poll_event() {
+        // Handle events
+    }
+    
+    while let Some(message) = peer_connection.poll_read() {
+        // Process messages
+    }
+    
+    // Periodic stats collection
+    let now = Instant::now();
+    if now.duration_since(last_stats_time) >= STATS_INTERVAL {
+        let report = peer_connection.get_stats(now, StatsSelector::None);
+        
+        // Log or export stats
+        println!("\n=== WebRTC Stats ===");
+        for inbound in report.inbound_rtp_streams() {
+            println!("Track: {}", inbound.track_identifier);
+            println!("  Packets: {}", inbound.received_rtp_stream_stats.packets_received);
+            println!("  Loss: {}", inbound.received_rtp_stream_stats.packets_lost);
+        }
+        println!("====================\n");
+        
+        last_stats_time = now;
+    }
+    
+    // Continue with timeout and I/O handling...
+}
+</code></pre>
+
+<h3>Type-Safe Stats Access</h3>
+
+<p>The <code>RTCStatsReport</code> provides convenient accessors for common stats:</p>
+
+<pre><code class="language-rust">let report = peer_connection.get_stats(Instant::now(), StatsSelector::None);
+
+// Direct access to peer connection stats
+let pc_stats = report.peer_connection();
+
+// Direct access to transport stats
+let transport_stats = report.transport();
+
+// Iterators for collections
+let inbound_streams = report.inbound_rtp_streams();
+let outbound_streams = report.outbound_rtp_streams();
+let data_channels = report.data_channels();
+let candidate_pairs = report.candidate_pairs();
+
+// Generic access by ID
+if let Some(entry) = report.get("specific-stats-id") {
+    // Process specific stats entry
+}
+
+// Iterate all entries
+for entry in report.iter() {
+    match entry {
+        RTCStatsReportEntry::InboundRtp(stats) => { /* ... */ }
+        RTCStatsReportEntry::OutboundRtp(stats) => { /* ... */ }
+        RTCStatsReportEntry::IceCandidatePair(stats) => { /* ... */ }
+        _ => {}
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>New Example: Stats Monitoring</h2>
+
+<p>The <a href="https://github.com/webrtc-rs/rtc/tree/master/examples/examples/stats">stats example</a> demonstrates comprehensive stats collection for incoming audio and video streams.</p>
+
+<p><strong>Output example:</strong></p>
+
+<pre><code>=== WebRTC Stats ===
+
+Inbound RTP Stats for: video/vp8
+  SSRC: 1234567890
+  Packets Received: 2450
+  Bytes Received: 1361125
+  Packets Lost: 5
+  Jitter: 12.5
+
+Inbound RTP Stats for: audio/opus
+  SSRC: 987654321
+  Packets Received: 4820
+  Bytes Received: 245000
+  Packets Lost: 0
+  Jitter: 2.3
+
+Remote Candidate: IP(192.168.1.100) Port(54321)
+====================
+</code></pre>
+
+<hr>
+
+<h2>Design Principles: Sansio Stats Architecture</h2>
+
+<p>The stats implementation showcases core sansio design principles:</p>
+
+<h3>1. Incremental Accumulation</h3>
+
+<p>Stats are accumulated <strong>incrementally</strong> during normal <code>handle_read/handle_write/handle_event/handle_timeout</code> processing:</p>
+
+<pre><code class="language-rust">// In ICE handler
+impl IceHandler {
+    fn handle_read(&mut self, packet: TaggedBytesMut) -> Result&lt;()&gt; {
+        // Process packet normally
+        // ...
+        
+        // Update stats atomically as side effect
+        if let Some(pair_id) = self.active_candidate_pair {
+            self.stats.ice_candidate_pairs
+                .get_mut(&pair_id)
+                .on_packet_received(packet.message.len(), packet.now);
+        }
+        
+        Ok(())
+    }
+}
+</code></pre>
+
+<p>No separate stats collection phase—stats update is a zero-cost side effect of normal processing.</p>
+
+<h3>2. Synchronous Snapshots</h3>
+
+<p>The <code>get_stats()</code> call returns <strong>instantly</strong> with current accumulated values:</p>
+
+<pre><code class="language-rust">pub fn get_stats(&mut self, now: std::time::Instant, selector: StatsSelector) -> RTCStatsReport {
+    // Update ICE agent stats before taking snapshot
+    self.update_ice_agent_stats();
+    
+    // Update codec stats from transceivers before taking snapshot
+    self.update_codec_stats();
+    
+    // Return instant snapshot (no async, no waiting)
+    self.pipeline_context.stats.snapshot_with_selector(now, selector)
+}
+</code></pre>
+
+<p>No async coordination, no mutex locks, no waiting. Just a pure function call.</p>
+
+<h3>3. Explicit Timestamp Parameter</h3>
+
+<p>Following sansio principles, <code>get_stats()</code> takes an <strong>explicit timestamp</strong> rather than calling <code>Instant::now()</code> internally:</p>
+
+<pre><code class="language-rust">// Good: Caller controls time source
+let report = peer_connection.get_stats(Instant::now(), StatsSelector::None);
+
+// Enables deterministic testing
+let report = peer_connection.get_stats(test_instant, StatsSelector::None);
+</code></pre>
+
+<p>This maintains sansio's promise: <strong>no hidden I/O or system calls</strong>.</p>
+
+<h3>4. Centralized Stats Storage</h3>
+
+<p>A single <code>RTCStatsAccumulator</code> in <code>PipelineContext</code> holds all stats, avoiding scattered state across components:</p>
+
+<pre><code class="language-rust">pub struct PipelineContext {
+    // Other pipeline state...
+    
+    pub stats: RTCStatsAccumulator,  // Centralized stats storage
+}
+
+impl RTCStatsAccumulator {
+    pub fn snapshot(&self, now: Instant) -> RTCStatsReport {
+        let mut entries = Vec::new();
+        
+        // Collect snapshots from all accumulators
+        entries.push(self.peer_connection.snapshot(now));
+        entries.push(self.transport.snapshot(now));
+        
+        for (_, accumulator) in &self.ice_candidate_pairs {
+            entries.push(accumulator.snapshot(now));
+        }
+        
+        for (_, accumulator) in &self.inbound_rtp_streams {
+            entries.push(accumulator.snapshot(now));
+        }
+        
+        // ... more stat types ...
+        
+        RTCStatsReport::new(entries)
+    }
+}
+</code></pre>
+
+<h3>5. Type-Safe, Iterator-Friendly API</h3>
+
+<p>The <code>RTCStatsReport</code> provides both generic and type-specific access patterns:</p>
+
+<pre><code class="language-rust">// Generic access
+for entry in report.iter() { /* all entries */ }
+for id in report.ids() { /* all IDs */ }
+if let Some(entry) = report.get("specific-id") { /* by ID */ }
+
+// Type-filtered access
+for entry in report.iter_by_type(RTCStatsType::InboundRTP) { /* filtered */ }
+
+// Direct type-specific accessors (zero-cost)
+let pc_stats = report.peer_connection();  // Option&lt;&RTCPeerConnectionStats&gt;
+let inbound = report.inbound_rtp_streams();  // Iterator&lt;&RTCInboundRtpStreamStats&gt;
+let outbound = report.outbound_rtp_streams();  // Iterator&lt;&RTCOutboundRtpStreamStats&gt;
+</code></pre>
+
+<hr>
+
+<h2>Coverage: What Stats Are Available?</h2>
+
+<p>The implementation provides comprehensive coverage of W3C WebRTC Stats:</p>
+
+<h3>✅ Fully Implemented (95%+ coverage)</h3>
+
+<p><strong>Network &amp; Transport:</strong></p>
+<ul>
+<li><code>RTCIceCandidateStats</code> - Local and remote ICE candidates</li>
+<li><code>RTCIceCandidatePairStats</code> - Bytes/packets sent/received, RTT, STUN transactions</li>
+<li><code>RTCTransportStats</code> - DTLS state, SRTP cipher, selected candidate pair</li>
+<li><code>RTCCertificateStats</code> - Certificate fingerprints and chains</li>
+</ul>
+
+<p><strong>RTP Streams:</strong></p>
+<ul>
+<li><code>RTCInboundRtpStreamStats</code> - Packets/bytes received, loss, jitter, FEC</li>
+<li><code>RTCOutboundRtpStreamStats</code> - Packets/bytes sent, retransmits, quality limitation</li>
+<li><code>RTCRemoteInboundRtpStreamStats</code> - Round-trip time from RTCP reports</li>
+<li><code>RTCRemoteOutboundRtpStreamStats</code> - Remote sender info from RTCP</li>
+</ul>
+
+<p><strong>Codecs &amp; Channels:</strong></p>
+<ul>
+<li><code>RTCCodecStats</code> - Payload types, MIME types, clock rates</li>
+<li><code>RTCDataChannelStats</code> - Messages/bytes sent/received, buffer state</li>
+<li><code>RTCPeerConnectionStats</code> - Data channels opened/closed</li>
+</ul>
+
+<h3>🔄 Application-Provided (By Design)</h3>
+
+<p>Some stats require media encoding/decoding information that lives outside the sansio protocol layer:</p>
+
+<ul>
+<li><code>RTCAudioSourceStats</code> / <code>RTCVideoSourceStats</code> - Capture device stats</li>
+<li><code>RTCAudioPlayoutStats</code> - Audio jitter buffer, concealment</li>
+<li>Encoder/Decoder stats - Frame encoding/decoding metrics</li>
+</ul>
+
+<p>The sansio design provides <strong>integration APIs</strong> for applications to supply these stats, maintaining the separation between protocol (sansio) and media processing (application).</p>
+
+<hr>
+
+<h2>Additional Improvements in v0.8.0</h2>
+
+<h3>New Examples &amp; Integration Tests</h3>
+
+<ul>
+<li>✨ <strong>stats example</strong> - Comprehensive stats monitoring demonstration</li>
+<li>✨ <strong>stats integration tests</strong> - Browser interop verification</li>
+<li>✨ <strong>W3C stats selection algorithm</strong> - Filter stats by sender/receiver with <code>StatsSelector</code></li>
+<li>✨ <strong>Multiple interop tests</strong> - mdns, rtcp-processing, trickle-ice, ice-tcp, media-rejection</li>
+<li>✨ play-from-disk-playlist-control, save-to-disk-av1, data-channels-simple examples</li>
+<li>✨ rtcp-processing, ICE TCP active mode, trickle-ice, ice-tcp examples</li>
+</ul>
+
+<h3>Bug Fixes</h3>
+
+<ul>
+<li>🐛 Fixed stats transport missing fields</li>
+<li>🐛 Fixed noop interceptor bug for <code>handle_poll_read</code> (#28)</li>
+<li>🐛 Fixed simulcast bidirectional issue (#20)</li>
+<li>🐛 Fixed integration test for single media session verification (#11)</li>
+<li>🐛 Fixed SDP generation bug for rejected media sections with mid</li>
+</ul>
+
+<h3>Documentation &amp; Code Quality</h3>
+
+<ul>
+<li>📚 Comprehensive stats API documentation with examples</li>
+<li>🏗️ Refactored stats accumulator architecture for clarity</li>
+<li>🏗️ Implemented W3C stats selection algorithm</li>
+</ul>
+
+<h3>Parser Improvements</h3>
+
+<ul>
+<li>🔧 Accept unknown bandwidth types in SDP parser per RFC 8866 (#29)</li>
+</ul>
+
+<hr>
+
+<h2>Why Stats Matter for WebRTC</h2>
+
+<h3>Monitoring &amp; Diagnostics</h3>
+
+<p>WebRTC applications need real-time visibility into connection health:</p>
+
+<ul>
+<li><strong>Network quality</strong> - Packet loss, jitter, RTT for adaptive bitrate</li>
+<li><strong>Media quality</strong> - Frame rates, resolution, encoding quality</li>
+<li><strong>Troubleshooting</strong> - Diagnose connectivity issues, performance bottlenecks</li>
+<li><strong>User experience</strong> - Detect poor quality before users complain</li>
+</ul>
+
+<h3>Production Requirements</h3>
+
+<p>For production WebRTC deployments:</p>
+
+<ul>
+<li><strong>SLA monitoring</strong> - Track uptime, quality metrics</li>
+<li><strong>Capacity planning</strong> - Understand bandwidth usage patterns</li>
+<li><strong>Cost optimization</strong> - Identify inefficient codec/network configurations</li>
+<li><strong>Compliance</strong> - Record call quality metrics for regulations</li>
+</ul>
+
+<h3>Integration with Monitoring Systems</h3>
+
+<p>The sansio stats API makes integration straightforward:</p>
+
+<pre><code class="language-rust">// Export to Prometheus
+let report = peer_connection.get_stats(Instant::now(), StatsSelector::None);
+for inbound in report.inbound_rtp_streams() {
+    prometheus_gauge!("webrtc_packets_received", 
+        inbound.received_rtp_stream_stats.packets_received as f64);
+    prometheus_gauge!("webrtc_packets_lost",
+        inbound.received_rtp_stream_stats.packets_lost as f64);
+}
+
+// Log to structured logging
+for outbound in report.outbound_rtp_streams() {
+    info!(
+        ssrc = outbound.sent_rtp_stream_stats.rtp_stream_stats.ssrc,
+        packets_sent = outbound.sent_rtp_stream_stats.packets_sent,
+        bytes_sent = outbound.sent_rtp_stream_stats.bytes_sent,
+        "Outbound RTP stream stats"
+    );
+}
+
+// Send to custom analytics
+let analytics_data = serde_json::to_string(&report)?;
+analytics_client.track("webrtc_stats", analytics_data)?;
+</code></pre>
+
+<hr>
+
+<h2>Migration Guide</h2>
+
+<h3>Upgrading from v0.7.x</h3>
+
+<p>The stats API is entirely <strong>new</strong> in v0.8.0, so no breaking changes to existing code. Simply start calling <code>get_stats()</code> when you want statistics:</p>
+
+<pre><code class="language-rust">use std::time::Instant;
+
+// Your existing v0.7.x code continues to work
+let mut peer_connection = RTCPeerConnection::new(config)?;
+
+// New in v0.8.0: Get stats at any time
+let report = peer_connection.get_stats(Instant::now(), StatsSelector::None);
+</code></pre>
+
+<h3>Enabling Stats Collection</h3>
+
+<p>Stats accumulation is <strong>always enabled</strong> (zero overhead by design). Just call <code>get_stats()</code> whenever you need a snapshot:</p>
+
+<pre><code class="language-rust">// In your event loop
+let now = Instant::now();
+
+// Process peer connection as usual
+while let Some(msg) = peer_connection.poll_write() { /* ... */ }
+while let Some(event) = peer_connection.poll_event() { /* ... */ }
+
+// Get stats periodically or on-demand
+if should_collect_stats {
+    let report = peer_connection.get_stats(now, StatsSelector::None);
+    // Use report...
+}
+</code></pre>
+
+<hr>
+
+<h2>Feature Parity Update</h2>
+
+<p>Progress toward full feature parity with the <code>webrtc</code> crate:</p>
+
+<p>✅ <strong>Complete:</strong></p>
+<ul>
+<li>ICE, DTLS, SRTP/SRTCP, SCTP</li>
+<li>Data Channels (reliable &amp; unreliable)</li>
+<li>RTP/RTCP, Media Tracks, SDP</li>
+<li>Peer Connection API</li>
+<li>Simulcast</li>
+<li>RTCP Interceptors (NACK, RTCP Reports, TWCC)</li>
+<li>mDNS Support</li>
+<li><strong>WebRTC Stats API</strong> ← New in 0.8.0! 🎉</li>
+</ul>
+
+<p>🎯 <strong>Future Work:</strong></p>
+<ul>
+<li>Advanced bandwidth estimation algorithms</li>
+<li>Performance optimizations and benchmarking</li>
+<li>Additional RTCP features</li>
+</ul>
+
+<hr>
+
+<h2>Links</h2>
+
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Crate</strong>: https://crates.io/crates/rtc</li>
+<li><strong>Docs</strong>: https://docs.rs/rtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Examples</strong>: https://github.com/webrtc-rs/rtc/tree/master/examples</li>
+<li><strong>Stats Design Doc</strong>: https://github.com/webrtc-rs/webrtc-rs.github.io/blob/master/blog/draft/Sansio%20RTC%20Stats%20Collector%20Design.md</li>
+</ul>
+
+<hr>
+
+<h2>Full Changelog</h2>
+
+<h3>Added</h3>
+<ul>
+<li>✨ <strong>WebRTC Stats API</strong> - Complete W3C-compliant stats collection system</li>
+<li>✨ <code>RTCPeerConnection::get_stats()</code> - Synchronous stats snapshot API with <code>StatsSelector</code></li>
+<li>✨ <code>StatsSelector</code> enum - Filter stats by sender, receiver, or all (W3C stats selection algorithm)</li>
+<li>✨ <code>RTCStatsReport</code> - Type-safe stats report with iterator helpers</li>
+<li>✨ <code>RTCStatsAccumulator</code> - Centralized stats accumulation system</li>
+<li>✨ 15+ stats types covering ICE, Transport, RTP, Codecs, Data Channels</li>
+<li>✨ <strong>stats example</strong> - Comprehensive stats monitoring demonstration</li>
+<li>✨ Integration tests for stats API with browser interop</li>
+<li>✨ Multiple new integration tests: mdns, rtcp-processing, trickle-ice, ice-tcp, media-rejection</li>
+<li>✨ W3C stats selection algorithm implementation</li>
+<li>✨ play-from-disk-playlist-control example</li>
+<li>✨ save-to-disk-av1 example</li>
+<li>✨ data-channels-simple example</li>
+<li>✨ rtcp-processing example</li>
+<li>✨ ICE TCP active mode support</li>
+<li>✨ trickle-ice example</li>
+<li>✨ ice-tcp example</li>
+</ul>
+
+<h3>Changed</h3>
+<ul>
+<li>🔄 Refactored stats accumulator architecture for clarity</li>
+<li>🔄 Improved stats ID management and naming</li>
+<li>🔄 Enhanced RTP stream stats structure</li>
+<li>🔄 Better codec stats accumulator implementation</li>
+<li>🔄 Improved ICE candidate pair accumulator</li>
+</ul>
+
+<h3>Fixed</h3>
+<ul>
+<li>🐛 Fixed stats transport missing fields</li>
+<li>🐛 Fixed noop interceptor bug for <code>handle_poll_read</code> (#28)</li>
+<li>🐛 Fixed simulcast bidirectional issue where both peers send over single m= line (#20)</li>
+<li>🐛 Fixed integration test for single media session verification (#11)</li>
+<li>🐛 Fixed SDP generation bug for rejected media sections with mid</li>
+</ul>
+
+<h3>Improved</h3>
+<ul>
+<li>📚 Comprehensive inline documentation for stats API</li>
+<li>📚 Updated README with stats example</li>
+<li>🏗️ Cleaner accumulator architecture</li>
+<li>🧪 Enhanced unit tests for stats accumulators</li>
+<li>🧪 Better integration test coverage with browser interop</li>
+<li>🔧 Accept unknown bandwidth types in SDP parser per RFC 8866 (#29)</li>
+</ul>
+
+<hr>
+
+<h2>Commits</h2>
+
+<p>This release includes <strong>50 commits</strong> focused on stats implementation, testing, and quality improvements:</p>
+
+<ul>
+<li>Complete W3C WebRTC Stats API implementation</li>
+<li>15+ accumulator types for different stats categories</li>
+<li>Comprehensive unit and integration tests</li>
+<li>Multiple new examples demonstrating various features</li>
+<li>Bug fixes and stability improvements</li>
+<li>Enhanced documentation and design documentation</li>
+</ul>
+
+<p><strong>Detailed breakdown:</strong></p>
+<ul>
+<li>152 files changed</li>
+<li>22,859 insertions</li>
+<li>2,504 deletions</li>
+</ul>
+
+<hr>
+
+<h2>Relationship with <code>webrtc</code> Crate</h2>
+
+<p>As stated in previous announcements, <code>rtc</code> (sans-I/O) and <code>webrtc</code> (async) are <strong>complementary</strong>:</p>
+
+<ul>
+<li><strong>Use <code>webrtc</code></strong> for quick start with Tokio and async/await</li>
+<li><strong>Use <code>rtc</code></strong> for runtime independence, custom I/O, or maximum control</li>
+</ul>
+
+<p>Both crates are actively maintained and share protocol implementations where possible. The stats implementation demonstrates the advantages of sans-I/O for:</p>
+<ul>
+<li>Zero-cost incremental accumulation</li>
+<li>Instant synchronous snapshots</li>
+<li>Deterministic testing with explicit timestamps</li>
+<li>Complete application control over collection timing</li>
+</ul>
+
+<hr>
+
+<p><em>Thanks to everyone who contributed feedback, bug reports, and feature requests! The WebRTC Stats implementation represents a significant milestone in providing production-ready monitoring capabilities while maintaining sansio's zero-overhead design principles. Special thanks to the WebRTC-rs community for their continued support.</em> 🦀</p>
+
+<p>Feedback and contributions welcome on <a href="https://github.com/webrtc-rs/rtc">GitHub</a>!</p>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
