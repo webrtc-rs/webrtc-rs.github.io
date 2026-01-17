@@ -79,6 +79,16 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/01/17/stats-collector-design-sansio.html">Stats Collector Design: An Incremental Accumulation Approach</a></h2>
+              <div class="date">January 17, 2026</div>
+              <div class="excerpt">
+                <p>WebRTC statistics are essential for monitoring connection health, debugging issues, and implementing adaptive quality control. This article examines how RTC collects W3C-compliant statistics without async runtimes, background tasks, or locks.</p>
+                <p>Using an <strong>incremental accumulation</strong> pattern, stats are updated as packets flow through the handler pipeline, then snapshots are taken instantly on demand via <code>get_stats()</code>. The design achieves zero-cost collection, instant snapshots, and deterministic testing with explicit timestamp parameters.</p>
+              </div>
+              <a href="./2026/01/17/stats-collector-design-sansio.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/01/17/announcing-rtc-v0.8.0.html">Announcing rtc 0.8.0: WebRTC Stats Collection for Sans-I/O 📊</a></h2>
               <div class="date">January 17, 2026</div>
               <div class="excerpt">

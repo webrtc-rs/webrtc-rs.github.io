@@ -598,7 +598,7 @@ Progress toward full feature parity with the `webrtc` crate:
 - **Docs**: https://docs.rs/rtc
 - **Discord**: https://discord.gg/4Ju8UHdXMs
 - **Examples**: https://github.com/webrtc-rs/rtc/tree/master/examples
-- **Stats Design Doc**: https://github.com/webrtc-rs/webrtc-rs.github.io/blob/master/blog/draft/Sansio%20RTC%20Stats%20Collector%20Design.md
+- **Stats Collector Design**: https://webrtc.rs/blog/2026/01/17/stats-collector-design-sansio.html
 
 ---
 
