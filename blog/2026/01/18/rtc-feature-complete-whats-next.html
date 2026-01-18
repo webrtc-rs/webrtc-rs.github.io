@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RTC Feature Complete: What's Next for Sans-I/O WebRTC - Browser interoperability, performance engineering, test coverage, and code quality roadmap">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content table th,
+    .blog-content table td {
+      border: 1px solid #dbdbdb;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>RTC Feature Complete: What's Next for Sans-I/O WebRTC | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+
+
+<h1>RTC Feature Complete: What's Next for Sans-I/O WebRTC</h1>
+<div class="blog-meta">
+  <span>January 18, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/18/rtc-feature-complete-whats-next.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+
+<h2>Introduction</h2>
+
+<p>With the release of <strong>rtc 0.8.0</strong>, the sans-I/O WebRTC implementation has reached a significant milestone: <strong>full feature parity</strong> with the async-based <code>webrtc</code> crate and <strong>comprehensive W3C WebRTC API compliance</strong>. This article reflects on what we've achieved and outlines the roadmap for what comes next.</p>
+
+<hr>
+
+<h2>Achievement: Feature Parity with Async WebRTC</h2>
+
+<p>The <code>rtc</code> crate now provides all the functionality of the <code>webrtc</code> crate, reimagined with sans-I/O principles. Here's a summary of the complete feature set:</p>
+
+<h3>Protocol Stack</h3>
+
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><strong>ICE</strong></td><td>Host, SRFLX, Relay candidates</td><td>✅ Complete</td></tr>
+<tr><td><strong>ICE</strong></td><td>Trickle ICE</td><td>✅ Complete</td></tr>
+<tr><td><strong>ICE</strong></td><td>ICE-TCP (passive &amp; active)</td><td>✅ Complete</td></tr>
+<tr><td><strong>ICE</strong></td><td>mDNS for privacy</td><td>✅ Complete</td></tr>
+<tr><td><strong>DTLS</strong></td><td>DTLS 1.2 with certificate fingerprints</td><td>✅ Complete</td></tr>
+<tr><td><strong>SRTP</strong></td><td>AES-CM, AES-GCM cipher suites</td><td>✅ Complete</td></tr>
+<tr><td><strong>SCTP</strong></td><td>Reliable &amp; unreliable data channels</td><td>✅ Complete</td></tr>
+<tr><td><strong>RTP</strong></td><td>Header extensions, payload types</td><td>✅ Complete</td></tr>
+<tr><td><strong>RTCP</strong></td><td>SR, RR, NACK, PLI, FIR, TWCC</td><td>✅ Complete</td></tr>
+</tbody>
+</table>
+
+<h3>Peer Connection API</h3>
+
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><code>createOffer()</code> / <code>createAnswer()</code></td><td>✅ Complete</td></tr>
+<tr><td><code>setLocalDescription()</code> / <code>setRemoteDescription()</code></td><td>✅ Complete</td></tr>
+<tr><td><code>addIceCandidate()</code> (local &amp; remote)</td><td>✅ Complete</td></tr>
+<tr><td><code>addTrack()</code> / <code>removeTrack()</code></td><td>✅ Complete</td></tr>
+<tr><td><code>createDataChannel()</code></td><td>✅ Complete</td></tr>
+<tr><td><code>getStats()</code> with <code>StatsSelector</code></td><td>✅ Complete</td></tr>
+<tr><td><code>getSenders()</code> / <code>getReceivers()</code></td><td>✅ Complete</td></tr>
+<tr><td><code>getTransceivers()</code></td><td>✅ Complete</td></tr>
+<tr><td>Connection state events</td><td>✅ Complete</td></tr>
+<tr><td>ICE state events</td><td>✅ Complete</td></tr>
+<tr><td>Data channel events</td><td>✅ Complete</td></tr>
+<tr><td>Track events</td><td>✅ Complete</td></tr>
+</tbody>
+</table>
+
+<h3>Interceptor Framework</h3>
+
+<table>
+<thead>
+<tr>
+<th>Interceptor</th>
+<th>Purpose</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><strong>NACK Generator</strong></td><td>Request retransmission of lost packets</td><td>✅ Complete</td></tr>
+<tr><td><strong>NACK Responder</strong></td><td>Respond to NACK with cached packets</td><td>✅ Complete</td></tr>
+<tr><td><strong>Sender Report</strong></td><td>Generate RTCP SR for senders</td><td>✅ Complete</td></tr>
+<tr><td><strong>Receiver Report</strong></td><td>Generate RTCP RR for receivers</td><td>✅ Complete</td></tr>
+<tr><td><strong>TWCC Sender</strong></td><td>Add transport-wide sequence numbers</td><td>✅ Complete</td></tr>
+<tr><td><strong>TWCC Receiver</strong></td><td>Generate TWCC feedback</td><td>✅ Complete</td></tr>
+<tr><td><strong>Simulcast</strong></td><td>RID/MID header extensions</td><td>✅ Complete</td></tr>
+</tbody>
+</table>
+
+<h3>WebRTC Stats API</h3>
+
+<table>
+<thead>
+<tr>
+<th>Stats Type</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>RTCPeerConnectionStats</td><td>100%</td></tr>
+<tr><td>RTCTransportStats</td><td>100%</td></tr>
+<tr><td>RTCIceCandidateStats</td><td>100%</td></tr>
+<tr><td>RTCIceCandidatePairStats</td><td>89%</td></tr>
+<tr><td>RTCCertificateStats</td><td>100%</td></tr>
+<tr><td>RTCCodecStats</td><td>100%</td></tr>
+<tr><td>RTCDataChannelStats</td><td>100%</td></tr>
+<tr><td>RTCInboundRtpStreamStats</td><td>60%*</td></tr>
+<tr><td>RTCOutboundRtpStreamStats</td><td>67%*</td></tr>
+<tr><td>RTCRemoteInboundRtpStreamStats</td><td>83%</td></tr>
+<tr><td>RTCRemoteOutboundRtpStreamStats</td><td>83%</td></tr>
+</tbody>
+</table>
+
+<p>*Media encoding/decoding stats require application-provided data (roadmap item)</p>
+
+<hr>
+
+<h2>Achievement: W3C WebRTC Specification Compliance</h2>
+
+<p>The <code>rtc</code> crate follows the W3C WebRTC specification closely:</p>
+
+<h3>Specification Conformance</h3>
+
+<ul>
+<li><strong><a href="https://www.w3.org/TR/webrtc/">WebRTC 1.0</a></strong> — Peer connection lifecycle, SDP negotiation, ICE handling</li>
+<li><strong><a href="https://www.w3.org/TR/webrtc-stats/">WebRTC Stats</a></strong> — Statistics identifiers and types</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc8829">JSEP</a></strong> — JavaScript Session Establishment Protocol</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc8445">ICE</a></strong> — Interactive Connectivity Establishment</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc8838">Trickle ICE</a></strong> — Incremental ICE candidate exchange</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc6762">mDNS</a></strong> — Multicast DNS for ICE candidates</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc6347">DTLS 1.2</a></strong> — Datagram Transport Layer Security</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc3711">SRTP</a></strong> — Secure Real-time Transport Protocol</li>
+<li><strong><a href="https://datatracker.ietf.org/doc/html/rfc8261">SCTP over DTLS</a></strong> — Data channel transport</li>
+</ul>
+
+<hr>
+
+<h2>Achievement: Sans-I/O Architecture Benefits</h2>
+
+<p>By building WebRTC with sans-I/O principles, we've achieved:</p>
+
+<h3>Runtime Independence</h3>
+
+<pre><code class="language-rust">// Works with any async runtime or no runtime at all
+let mut pc = RTCPeerConnection::new(config)?;
+
+// You control the I/O loop
+loop {
+    // Poll for outgoing data
+    while let Some(msg) = pc.poll_write() {
+        socket.send_to(&amp;msg.message, msg.transport.peer_addr)?;
+    }
+
+    // Handle incoming data
+    let (n, peer_addr) = socket.recv_from(&amp;mut buf)?;
+    pc.handle_read(TaggedBytesMut { ... })?;
+
+    // Handle timeouts
+    pc.handle_timeout(Instant::now())?;
+}</code></pre>
+
+<h3>Deterministic Testing</h3>
+
+<pre><code class="language-rust">#[test]
+fn test_with_controlled_time() {
+    let fixed_time = Instant::now();
+
+    // All operations use explicit timestamps
+    pc.handle_read(packet, fixed_time)?;
+    pc.handle_timeout(fixed_time)?;
+
+    let stats = pc.get_stats(fixed_time, StatsSelector::None);
+    assert_eq!(stats.packets_received, expected);
+}</code></pre>
+
+<h3>Zero Hidden I/O</h3>
+
+<ul>
+<li>No background tasks or threads</li>
+<li>No hidden network operations</li>
+<li>No implicit timers</li>
+<li>Complete application control</li>
+</ul>
+
+<hr>
+
+<h2>What's Next: The Roadmap</h2>
+
+<p>With feature parity achieved, the focus shifts to four key areas: <strong>browser interoperability</strong>, <strong>performance</strong>, <strong>test coverage</strong>, and <strong>code quality</strong>.</p>
+
+<hr>
+
+<h2>Focus 1: Browser Interoperability</h2>
+
+<p>Ensuring seamless interoperability with all major browsers is critical for real-world deployments. While the core protocol implementation is complete, comprehensive browser testing and compatibility verification is ongoing.</p>
+
+<h3>Target Browsers</h3>
+
+<table>
+<thead>
+<tr>
+<th>Browser</th>
+<th>Platform</th>
+<th>Status</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><strong>Chrome/Chromium</strong></td><td>Windows, macOS, Linux</td><td>🔄 In Progress</td><td>High</td></tr>
+<tr><td><strong>Firefox</strong></td><td>Windows, macOS, Linux</td><td>🔄 In Progress</td><td>High</td></tr>
+<tr><td><strong>Safari</strong></td><td>macOS, iOS</td><td>📋 Planned</td><td>High</td></tr>
+<tr><td><strong>Edge</strong></td><td>Windows</td><td>📋 Planned</td><td>Medium</td></tr>
+<tr><td><strong>Mobile Chrome</strong></td><td>Android</td><td>📋 Planned</td><td>Medium</td></tr>
+<tr><td><strong>Mobile Safari</strong></td><td>iOS</td><td>📋 Planned</td><td>Medium</td></tr>
+</tbody>
+</table>
+
+<h3>Interoperability Test Scenarios</h3>
+
+<p><strong>Data Channels:</strong></p>
+<ul>
+<li>Reliable ordered channels</li>
+<li>Unreliable unordered channels</li>
+<li>Multiple concurrent channels</li>
+<li>Large message fragmentation</li>
+<li>Binary and text messages</li>
+</ul>
+
+<p><strong>Media:</strong></p>
+<ul>
+<li>Audio-only calls (Opus codec)</li>
+<li>Video-only streams (VP8, VP9, H.264)</li>
+<li>Audio + Video combined</li>
+<li>Simulcast with layer switching</li>
+<li>Screen sharing</li>
+</ul>
+
+<p><strong>ICE &amp; Connectivity:</strong></p>
+<ul>
+<li>Direct host-to-host connection</li>
+<li>STUN-assisted connectivity</li>
+<li>TURN relay fallback</li>
+<li>Trickle ICE candidate exchange</li>
+<li>ICE restart mid-session</li>
+<li>mDNS candidate handling</li>
+</ul>
+
+<p><strong>SDP Negotiation:</strong></p>
+<ul>
+<li>Offer/Answer exchange</li>
+<li>Renegotiation (add/remove tracks)</li>
+<li>Codec negotiation</li>
+<li>Extension negotiation</li>
+<li>Rejected media sections</li>
+</ul>
+
+<h3>Browser-Specific Quirks</h3>
+
+<p>Each browser has its own WebRTC implementation quirks that need to be handled:</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                     Browser Compatibility Matrix                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Issue                          │ Chrome │ Firefox │ Safari │ Edge          │
+├─────────────────────────────────┼────────┼─────────┼────────┼───────────────┤
+│  SDP format variations          │   ✓    │    ✓    │   ⚠    │    ✓          │
+│  ICE candidate formatting       │   ✓    │    ✓    │   ⚠    │    ✓          │
+│  DTLS role handling             │   ✓    │    ✓    │   ⚠    │    ✓          │
+│  Data channel negotiation       │   ✓    │    ✓    │   ✓    │    ✓          │
+│  Simulcast configuration        │   ✓    │    ⚠    │   ⚠    │    ✓          │
+│  TWCC support                   │   ✓    │    ✓    │   ⚠    │    ✓          │
+└─────────────────────────────────┴────────┴─────────┴────────┴───────────────┘
+  ✓ = Works as expected   ⚠ = Requires special handling   ✗ = Known issues</code></pre>
+
+<h3>Automated Browser Testing</h3>
+
+<p><strong>Planned infrastructure:</strong></p>
+
+<ol>
+<li><strong>Selenium/Playwright tests</strong> — Automated browser control for E2E testing</li>
+<li><strong>WebDriver BiDi</strong> — Modern browser automation protocol</li>
+<li><strong>CI integration</strong> — Run browser tests on every PR</li>
+<li><strong>Cross-platform matrix</strong> — Test on Windows, macOS, Linux</li>
+</ol>
+
+<pre><code class="language-yaml"># Example CI configuration (planned)
+browser-interop:
+  strategy:
+    matrix:
+      browser: [chrome, firefox, safari, edge]
+      os: [ubuntu-latest, macos-latest, windows-latest]
+  steps:
+    - run: cargo build --release
+    - run: ./run-browser-tests.sh ${{ matrix.browser }}</code></pre>
+
+<h3>Known Issues to Address</h3>
+
+<ul>
+<li>Safari SDP parsing edge cases</li>
+<li>Firefox simulcast layer negotiation</li>
+<li>Mobile browser power management</li>
+<li>Browser-specific codec preferences</li>
+<li>ICE candidate timing differences</li>
+</ul>
+
+<hr>
+
+<h2>Focus 2: Performance Engineering</h2>
+
+<p>Performance is not an afterthought—it's a core requirement for real-time communication. This focus area encompasses systematic benchmarking, profiling, and optimization across the entire stack.</p>
+
+<h3>Benchmarking Infrastructure</h3>
+
+<p>Before optimizing, we need to measure. A comprehensive benchmarking infrastructure is essential.</p>
+
+<p><strong>Planned benchmark suite:</strong></p>
+
+<pre><code class="language-rust">// Using criterion for statistical rigor
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+
+fn bench_datachannel_throughput(c: &amp;mut Criterion) {
+    let mut group = c.benchmark_group("datachannel");
+
+    for size in [64, 1024, 16384, 65536].iter() {
+        group.throughput(Throughput::Bytes(*size as u64));
+        group.bench_with_input(
+            BenchmarkId::new("send", size),
+            size,
+            |b, &amp;size| {
+                b.iter(|| {
+                    dc.send(&amp;message[..size])
+                });
+            },
+        );
+    }
+    group.finish();
+}
+
+fn bench_rtp_pipeline(c: &amp;mut Criterion) {
+    c.bench_function("rtp_parse", |b| {
+        b.iter(|| RtpPacket::unmarshal(&amp;packet_bytes))
+    });
+
+    c.bench_function("rtp_marshal", |b| {
+        b.iter(|| packet.marshal_to(&amp;mut buffer))
+    });
+
+    c.bench_function("srtp_encrypt", |b| {
+        b.iter(|| context.encrypt_rtp(&amp;mut packet))
+    });
+
+    c.bench_function("srtp_decrypt", |b| {
+        b.iter(|| context.decrypt_rtp(&amp;mut packet))
+    });
+}
+
+criterion_group!(benches, bench_datachannel_throughput, bench_rtp_pipeline);
+criterion_main!(benches);</code></pre>
+
+<p><strong>Benchmark categories:</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Metrics</th>
+<th>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Throughput</td><td>Messages/sec, Bytes/sec</td><td>criterion, custom</td></tr>
+<tr><td>Latency</td><td>p50, p99, p999</td><td>criterion, hdr_histogram</td></tr>
+<tr><td>Memory</td><td>Allocations, peak usage</td><td>dhat, heaptrack</td></tr>
+<tr><td>CPU</td><td>Cycles per operation</td><td>perf, flamegraph</td></tr>
+</tbody>
+</table>
+
+<h3>Profiling and Analysis</h3>
+
+<p><strong>Profiling workflow:</strong></p>
+
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Performance Analysis Workflow                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   1. Baseline         2. Profile           3. Analyze                       │
+│   ┌─────────┐        ┌─────────┐          ┌─────────┐                       │
+│   │ Run     │───────▶│ Collect │─────────▶│ Generate│                       │
+│   │ Bench   │        │ Samples │          │ Reports │                       │
+│   └─────────┘        └─────────┘          └─────────┘                       │
+│        │                  │                    │                            │
+│        ▼                  ▼                    ▼                            │
+│   criterion          perf record          flamegraph                        │
+│   results            + perf script        + hotspot analysis                │
+│                                                                             │
+│   4. Optimize         5. Validate          6. Document                      │
+│   ┌─────────┐        ┌─────────┐          ┌─────────┐                       │
+│   │ Apply   │───────▶│ Re-run  │─────────▶│ Record  │                       │
+│   │ Changes │        │ Bench   │          │ Gains   │                       │
+│   └─────────┘        └─────────┘          └─────────┘                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘</code></pre>
+
+<p><strong>Profiling tools:</strong></p>
+
+<ul>
+<li><strong>perf</strong> — Linux performance counters, CPU profiling</li>
+<li><strong>flamegraph</strong> — Visualize hot code paths</li>
+<li><strong>heaptrack</strong> — Memory allocation profiling</li>
+<li><strong>cargo-llvm-lines</strong> — Generic code bloat analysis</li>
+<li><strong>valgrind/cachegrind</strong> — Cache behavior analysis</li>
+</ul>
+
+<h3>DataChannel Optimization</h3>
+
+<p>WebRTC DataChannels are increasingly used for high-throughput applications. Optimization targets:</p>
+
+<p><strong>SCTP layer:</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Optimization</th>
+<th>Description</th>
+<th>Expected Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Chunk batching</td><td>Combine small messages into fewer SCTP chunks</td><td>Reduce overhead 20-40%</td></tr>
+<tr><td>Zero-copy I/O</td><td>Avoid buffer copies in send/receive path</td><td>Reduce CPU usage</td></tr>
+<tr><td>TSN tracking</td><td>Optimize sequence number management</td><td>Reduce memory allocations</td></tr>
+<tr><td>Congestion control</td><td>Tune SCTP congestion parameters</td><td>Improve throughput stability</td></tr>
+</tbody>
+</table>
+
+<p><strong>Application layer:</strong></p>
+
+<ul>
+<li>Message framing optimization</li>
+<li>Backpressure handling</li>
+<li>Buffer pool for allocations</li>
+</ul>
+
+<p><strong>Performance targets:</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Baseline</th>
+<th>Target</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Throughput (reliable, ordered)</td><td>TBD</td><td>&gt; 500 Mbps</td><td>Single channel</td></tr>
+<tr><td>Throughput (unreliable)</td><td>TBD</td><td>&gt; 1 Gbps</td><td>Best-effort</td></tr>
+<tr><td>Latency (1KB message)</td><td>TBD</td><td>&lt; 1 ms</td><td>p99</td></tr>
+<tr><td>Messages/second</td><td>TBD</td><td>&gt; 100K</td><td>Small messages</td></tr>
+</tbody>
+</table>
+
+<h3>RTP/RTCP Pipeline Optimization</h3>
+
+<p>Media transport is latency-sensitive and high-volume.</p>
+
+<p><strong>Packet processing:</strong></p>
+
+<pre><code>Incoming RTP Packet
+        │
+        ▼
+┌───────────────┐
+│ UDP Receive   │ ← Goal: zero-copy receive
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ SRTP Decrypt  │ ← Goal: hardware AES-NI
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ RTP Parse     │ ← Goal: minimal validation
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ Interceptors  │ ← Goal: inline, no allocations
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ Jitter Buffer │ ← Goal: lock-free, pre-allocated
+└───────┬───────┘
+        │
+        ▼
+    Application</code></pre>
+
+<p><strong>Specific optimizations:</strong></p>
+
+<ul>
+<li><strong>SIMD parsing</strong> — Use SIMD instructions for header parsing where beneficial</li>
+<li><strong>AES-NI</strong> — Ensure hardware acceleration for SRTP</li>
+<li><strong>Inline interceptors</strong> — Compile-time interceptor composition (already implemented via generics)</li>
+<li><strong>Pre-allocated buffers</strong> — Avoid per-packet allocations</li>
+<li><strong>Branch prediction</strong> — Optimize common code paths</li>
+</ul>
+
+<h3>ICE Performance</h3>
+
+<p>Connection establishment time directly impacts user experience.</p>
+
+<p><strong>Optimization areas:</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Current</th>
+<th>Target</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Candidate gathering</td><td>TBD</td><td>&lt; 100ms</td><td>Parallel STUN queries</td></tr>
+<tr><td>Connectivity checks</td><td>TBD</td><td>&lt; 500ms</td><td>Prioritized pair testing</td></tr>
+<tr><td>DTLS handshake</td><td>TBD</td><td>&lt; 200ms</td><td>Session resumption</td></tr>
+<tr><td>Total time-to-media</td><td>TBD</td><td>&lt; 1s</td><td>Combined optimizations</td></tr>
+</tbody>
+</table>
+
+<p><strong>Techniques:</strong></p>
+
+<ul>
+<li>Aggressive candidate nomination</li>
+<li>Parallel connectivity checks</li>
+<li>STUN response caching</li>
+<li>Optimized candidate pair sorting</li>
+</ul>
+
+<h3>Memory Optimization</h3>
+
+<p>Real-time systems benefit from predictable memory behavior.</p>
+
+<p><strong>Goals:</strong></p>
+
+<ul>
+<li>Minimize allocations in hot paths</li>
+<li>Use buffer pools for packet buffers</li>
+<li>Pre-allocate data structures where possible</li>
+<li>Reduce memory fragmentation</li>
+</ul>
+
+<p><strong>Tracking:</strong></p>
+
+<pre><code class="language-rust">// Example: Using dhat for allocation profiling
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+#[test]
+fn test_allocations_in_hot_path() {
+    let _profiler = dhat::Profiler::new_heap();
+
+    // Run hot path code
+    for _ in 0..10000 {
+        process_rtp_packet(&amp;packet);
+    }
+
+    // Analyze allocation count and sizes
+}</code></pre>
+
+<h3>Continuous Performance Monitoring</h3>
+
+<p><strong>CI integration:</strong></p>
+
+<ul>
+<li>Run benchmarks on every PR</li>
+<li>Track performance regressions</li>
+<li>Publish benchmark results</li>
+<li>Alert on significant regressions</li>
+</ul>
+
+<p><strong>Planned dashboard metrics:</strong></p>
+
+<ul>
+<li>Throughput trends over time</li>
+<li>Latency percentiles</li>
+<li>Memory usage patterns</li>
+<li>CPU efficiency</li>
+</ul>
+
+<hr>
+
+<h2>Focus 3: Test Coverage</h2>
+
+<h3>Current State</h3>
+
+<p>The codebase has growing test coverage, but there's room for improvement:</p>
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Current</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Unit tests</td><td>Partial</td><td>80%+ line coverage</td></tr>
+<tr><td>Integration tests</td><td>28 test files</td><td>Comprehensive scenarios</td></tr>
+<tr><td>Interop tests</td><td>Chrome, Firefox</td><td>All major browsers</td></tr>
+<tr><td>Fuzz tests</td><td>Limited</td><td>Critical parsers</td></tr>
+</tbody>
+</table>
+
+<h3>Unit Test Expansion</h3>
+
+<p><strong>Priority areas for unit testing:</strong></p>
+
+<ol>
+<li><strong>SDP parsing and generation</strong> — Complex edge cases in offer/answer</li>
+<li><strong>ICE state machine</strong> — All state transitions and error conditions</li>
+<li><strong>DTLS handshake</strong> — Certificate validation, cipher negotiation</li>
+<li><strong>SCTP association</strong> — Stream management, congestion control</li>
+<li><strong>Interceptor logic</strong> — NACK timing, RTCP report generation</li>
+</ol>
+
+<p><strong>Example test structure:</strong></p>
+
+<pre><code class="language-rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ice_state_transitions() {
+        // Test all valid state transitions
+        // Test invalid transition handling
+        // Test event emission
+    }
+
+    #[test]
+    fn test_nack_timing_accuracy() {
+        // Verify NACK generation timing
+        // Test RTT-based retransmit intervals
+    }
+}</code></pre>
+
+<h3>Integration Test Expansion</h3>
+
+<p><strong>Planned integration test scenarios:</strong></p>
+
+<ul>
+<li>Multi-party conferencing (3+ peers)</li>
+<li>Renegotiation (adding/removing tracks mid-session)</li>
+<li>Network condition simulation (packet loss, delay, reordering)</li>
+<li>Long-running sessions (stability over hours)</li>
+<li>ICE restart scenarios</li>
+<li>TURN relay failover</li>
+<li>Simulcast layer switching</li>
+<li>DataChannel flow control under load</li>
+</ul>
+
+<h3>Fuzz Testing</h3>
+
+<p>Critical parsers should be fuzz-tested:</p>
+
+<pre><code class="language-rust">// Using cargo-fuzz or libfuzzer
+fuzz_target!(|data: &amp;[u8]| {
+    let _ = RtpPacket::unmarshal(data);
+});
+
+fuzz_target!(|data: &amp;[u8]| {
+    let _ = StunMessage::unmarshal(data);
+});</code></pre>
+
+<p><strong>Priority fuzz targets:</strong></p>
+
+<ul>
+<li>RTP/RTCP packet parsing</li>
+<li>STUN message parsing</li>
+<li>SDP parsing</li>
+<li>SCTP chunk parsing</li>
+<li>DTLS record parsing</li>
+</ul>
+
+<hr>
+
+<h2>Focus 4: Code Quality and Tech Debt</h2>
+
+<h3>TODO/FIXME Cleanup</h3>
+
+<p>The codebase currently contains <strong>104 TODO/FIXME comments</strong> that need to be addressed:</p>
+
+<pre><code class="language-bash">$ grep -r "TODO\|FIXME" --include="*.rs" | wc -l
+104</code></pre>
+
+<p><strong>Categorization plan:</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Missing features</td><td>Implement or document as "won't fix"</td></tr>
+<tr><td>Performance notes</td><td>Create benchmark, then optimize</td></tr>
+<tr><td>Error handling</td><td>Improve error messages and recovery</td></tr>
+<tr><td>Code cleanup</td><td>Refactor or remove dead code</td></tr>
+<tr><td>Documentation</td><td>Add missing docs</td></tr>
+</tbody>
+</table>
+
+<p><strong>Tracking approach:</strong></p>
+
+<ol>
+<li>Create GitHub issues for each significant TODO</li>
+<li>Prioritize by impact (user-facing vs internal)</li>
+<li>Address in dedicated cleanup sprints</li>
+<li>Add CI check to prevent new untracked TODOs</li>
+</ol>
+
+<h3>Documentation Improvements</h3>
+
+<ul>
+<li>Complete rustdoc coverage for public APIs</li>
+<li>Add architecture decision records (ADRs)</li>
+<li>Improve inline code comments for complex algorithms</li>
+<li>Create troubleshooting guide</li>
+<li>Add performance tuning guide</li>
+</ul>
+
+<h3>API Refinements</h3>
+
+<p>Some APIs may benefit from refinement based on user feedback:</p>
+
+<ul>
+<li>Error types consolidation</li>
+<li>Builder pattern consistency</li>
+<li>Event handling ergonomics</li>
+<li>Configuration validation</li>
+</ul>
+
+<hr>
+
+<h2>Community Contribution Opportunities</h2>
+
+<p>We welcome contributions in these areas:</p>
+
+<h3>Good First Issues</h3>
+
+<ul>
+<li>Documentation improvements</li>
+<li>Adding missing unit tests</li>
+<li>Resolving simple TODO comments</li>
+<li>Example improvements</li>
+</ul>
+
+<h3>Intermediate</h3>
+
+<ul>
+<li>Integration test scenarios</li>
+<li>Benchmark implementations</li>
+<li>Bug fixes with clear reproduction</li>
+</ul>
+
+<h3>Advanced</h3>
+
+<ul>
+<li>Performance optimizations</li>
+<li>New interceptor implementations</li>
+<li>Protocol extensions</li>
+</ul>
+
+<p>See <a href="https://github.com/webrtc-rs/rtc/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a> for guidelines.</p>
+
+<hr>
+
+<h2>Conclusion</h2>
+
+<p>The <code>rtc</code> crate has achieved its primary goal: a complete, W3C-compliant WebRTC implementation using sans-I/O principles. With feature parity established, the focus now shifts to making it <strong>faster</strong>, <strong>more reliable</strong>, and <strong>easier to use</strong>.</p>
+
+<p>The sans-I/O architecture provides a solid foundation for these improvements. By separating protocol logic from I/O, we can:</p>
+
+<ul>
+<li>Benchmark and optimize without network variability</li>
+<li>Test deterministically with controlled time</li>
+<li>Profile precisely with no background noise</li>
+</ul>
+
+<p>We're excited about the road ahead and welcome community participation in shaping the future of Rust WebRTC.</p>
+
+<hr>
+
+<h2>Get Involved</h2>
+
+<ul>
+<li><strong>GitHub</strong>: <a href="https://github.com/webrtc-rs/rtc">https://github.com/webrtc-rs/rtc</a></li>
+<li><strong>Discord</strong>: <a href="https://discord.gg/4Ju8UHdXMs">https://discord.gg/4Ju8UHdXMs</a></li>
+<li><strong>Crates.io</strong>: <a href="https://crates.io/crates/rtc">https://crates.io/crates/rtc</a></li>
+<li><strong>Documentation</strong>: <a href="https://docs.rs/rtc">https://docs.rs/rtc</a></li>
+</ul>
+
+<p>Have ideas for performance improvements or want to contribute tests? Open an issue or join the discussion on Discord!</p>
+
+<hr>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://www.w3.org/TR/webrtc/">W3C WebRTC 1.0 Specification</a></li>
+<li><a href="https://www.w3.org/TR/webrtc-stats/">W3C WebRTC Statistics API</a></li>
+<li><a href="/blog/2026/01/04/building-webrtc-pipeline-with-sansio.html">Building WebRTC's Pipeline with sansio::Protocol</a></li>
+<li><a href="/blog/2026/01/09/interceptor-design-principle-sansio.html">Interceptor Design Principle</a></li>
+<li><a href="/blog/2026/01/17/stats-collector-design-sansio.html">Stats Collector Design</a></li>
+</ul>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
