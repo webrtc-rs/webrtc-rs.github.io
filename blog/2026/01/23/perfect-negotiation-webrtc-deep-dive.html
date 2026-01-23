@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A comprehensive guide to the Perfect Negotiation pattern in WebRTC, exploring implementation details in the rtc library with practical examples and lessons learned.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content table th,
+    .blog-content table td {
+      border: 1px solid #dbdbdb;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Perfect Negotiation in WebRTC: A Deep Dive into rtc Implementation | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+
+<h1>Perfect Negotiation in WebRTC: A Deep Dive into <code>rtc</code> Implementation</h1>
+<div class="blog-meta">
+  <span>January 23, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/23/perfect-negotiation-webrtc-deep-dive.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+
+<h2>Introduction</h2>
+<p>WebRTC's offer/answer negotiation model is inherently asymmetric: one peer must initiate as the "offerer" while the other responds as the "answerer." This asymmetry creates complexity in peer-to-peer applications where either side might want to initiate renegotiation, and it becomes particularly problematic when both peers attempt to send offers simultaneously—a scenario known as <strong>"glare"</strong>.</p>
+<p><strong>Perfect Negotiation</strong> is a design pattern introduced by the W3C WebRTC Working Group that elegantly solves these problems. It makes negotiation appear symmetric from the application's perspective while handling edge cases like glare automatically behind the scenes.</p>
+<p>In this deep dive, we'll explore:</p>
+<ul>
+  <li>What Perfect Negotiation is and why it matters</li>
+  <li>How it's implemented in browser-based WebRTC</li>
+  <li>The primitives required to support Perfect Negotiation</li>
+  <li>How <code>rtc</code> implements these primitives at the sans-I/O level</li>
+  <li>A complete working example demonstrating the pattern</li>
+  <li>Lessons learned and bugs discovered during implementation</li>
+</ul>
+<hr>
+<h2>Understanding Perfect Negotiation</h2>
+<h3>The Problem: Asymmetric Negotiation</h3>
+<p>Traditional WebRTC applications have asymmetric roles:</p>
+<pre><code class="language-javascript">// Offerer side (Client A)
+const offer = await pc.createOffer();
+await pc.setLocalDescription(offer);
+sendToServer(offer);
+
+// Answerer side (Client B)  
+const offer = await receiveFromServer();
+await pc.setRemoteDescription(offer);
+const answer = await pc.createAnswer();
+await pc.setLocalDescription(answer);
+sendToServer(answer);</code></pre>
+<p>This creates several problems:</p>
+<ol>
+  <li><strong>Role Coordination</strong>: Applications must decide who calls whom before connecting</li>
+  <li><strong>Bidirectional Calling</strong>: Hard to support "either peer can initiate"</li>
+  <li><strong>Renegotiation</strong>: Only one peer can trigger renegotiation safely</li>
+  <li><strong>Glare Handling</strong>: If both peers send offers simultaneously, one must be rejected</li>
+</ol>
+<h3>The Solution: Perfect Negotiation Pattern</h3>
+<p>Perfect Negotiation eliminates these issues by:</p>
+<h4>1. <strong>Symmetric Application Code</strong></h4>
+<p>Both peers run identical code:</p>
+<pre><code class="language-javascript">// Same code on BOTH peers!
+pc.onnegotiationneeded = async () =&gt; {
+  makingOffer = true;
+  await pc.setLocalDescription();
+  signaler.send({ description: pc.localDescription });
+  makingOffer = false;
+};
+
+signaler.onmessage = async ({ data: { description } }) =&gt; {
+  const offerCollision = description.type === &#x27;offer&#x27; &amp;&amp; 
+    (makingOffer || pc.signalingState !== &#x27;stable&#x27;);
+  
+  ignoreOffer = !polite &amp;&amp; offerCollision;
+  if (ignoreOffer) return;
+  
+  await pc.setRemoteDescription(description);
+  if (description.type === &#x27;offer&#x27;) {
+    await pc.setLocalDescription();
+    signaler.send({ description: pc.localDescription });
+  }
+};</code></pre>
+<h4>2. <strong>Automatic Glare Resolution</strong></h4>
+<p>When collision occurs:</p>
+<ul>
+  <li><strong>Polite peer</strong>: Backs off by rolling back its offer</li>
+  <li><strong>Impolite peer</strong>: Ignores the colliding offer and continues</li>
+</ul>
+<h4>3. <strong>Assigned Roles</strong></h4>
+<p>Despite symmetric code, peers have roles:</p>
+<ul>
+  <li><strong>Polite</strong>: Yields during collisions ("after you")</li>
+  <li><strong>Impolite</strong>: Wins collisions ("no, after YOU")</li>
+</ul>
+<p>Role assignment is arbitrary (e.g., connection order) and doesn't affect functionality.</p>
+<h3>Key Mechanisms</h3>
+<p>The pattern relies on four key mechanisms:</p>
+<h4>1. <strong><code>makingOffer</code> Flag</strong></h4>
+<p>Tracks whether we're currently creating an offer:</p>
+<pre><code class="language-javascript">let makingOffer = false;
+
+pc.onnegotiationneeded = async () =&gt; {
+  makingOffer = true;
+  try {
+    await pc.setLocalDescription();
+    signaler.send({ description: pc.localDescription });
+  } finally {
+    makingOffer = false;  // Always clear, even on error
+  }
+};</code></pre>
+<h4>2. <strong>Collision Detection</strong></h4>
+<p>Determines if incoming offer collides with our state:</p>
+<pre><code class="language-javascript">const readyForOffer = 
+  !makingOffer &amp;&amp;
+  (pc.signalingState === &quot;stable&quot; || isSettingRemoteAnswerPending);
+
+const offerCollision = description.type === &quot;offer&quot; &amp;&amp; !readyForOffer;</code></pre>
+<p>A collision occurs when:</p>
+<ul>
+  <li>We receive an offer, AND</li>
+  <li>We're currently making an offer OR not in stable state</li>
+</ul>
+<h4>3. <strong>Rollback (Polite Peer)</strong></h4>
+<p>The polite peer automatically rolls back when accepting a colliding offer:</p>
+<pre><code class="language-javascript">// In browser, rollback is implicit when setting remote offer
+// while in HaveLocalOffer state
+await pc.setRemoteDescription(incomingOffer);
+// ^ This automatically rolls back our pending local offer</code></pre>
+<h4>4. <strong>Ignore Strategy (Impolite Peer)</strong></h4>
+<p>The impolite peer simply ignores colliding offers:</p>
+<pre><code class="language-javascript">ignoreOffer = !polite &amp;&amp; offerCollision;
+if (ignoreOffer) {
+  return;  // Don&#x27;t process this offer
+}
+
+// Also ignore ICE candidates for ignored offers
+if (!ignoreOffer) {
+  await pc.addIceCandidate(candidate);
+}</code></pre>
+<h3>State Transitions</h3>
+<p>Perfect Negotiation leverages these signaling state transitions:</p>
+<pre><code>Normal offer/answer:
+Stable → HaveLocalOffer → Stable → HaveRemoteOffer → Stable
+
+Polite peer rollback (collision):
+HaveLocalOffer → Stable (via SetLocal rollback)
+              → HaveRemoteOffer → Stable
+
+Offer rejection:
+HaveRemoteOffer → Stable (via SetRemote rollback)</code></pre>
+<hr>
+<h2>WebRTC Primitives Required for Perfect Negotiation</h2>
+<p>To implement Perfect Negotiation, a WebRTC stack must provide:</p>
+<h3>1. Rollback SDP Type</h3>
+<p>Per RFC 8829 §5.7, rollback is a special SDP type that:</p>
+<ul>
+  <li>Returns signaling state to Stable</li>
+  <li>Discards pending local/remote description</li>
+  <li>Typically has empty SDP content</li>
+</ul>
+<pre><code class="language-javascript">// Browser API
+await pc.setLocalDescription({ type: &#x27;rollback&#x27; });</code></pre>
+<h3>2. Signaling State Machine</h3>
+<p>Must support these rollback transitions:</p>
+<table>
+  <thead>
+    <tr>
+      <th>From State</th>
+      <th>Operation</th>
+      <th>SDP Type</th>
+      <th>To State</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>HaveLocalOffer</td>
+      <td>SetLocal</td>
+      <td>Rollback</td>
+      <td>Stable</td>
+    </tr>
+    <tr>
+      <td>HaveRemoteOffer</td>
+      <td>SetRemote</td>
+      <td>Rollback</td>
+      <td>Stable</td>
+    </tr>
+    <tr>
+      <td>Stable</td>
+      <td>SetLocal/SetRemote</td>
+      <td>Rollback</td>
+      <td>Error</td>
+    </tr>
+  </tbody>
+</table>
+<h3>3. Negotiation Needed Event</h3>
+<p>Fires when negotiation is required:</p>
+<pre><code class="language-javascript">pc.onnegotiationneeded = () =&gt; {
+  // Create and send offer
+};</code></pre>
+<p>Must follow W3C spec algorithm to avoid spurious events.</p>
+<h3>4. Signaling State Access</h3>
+<p>Applications need to query current state:</p>
+<pre><code class="language-javascript">if (pc.signalingState === &quot;stable&quot;) {
+  // Safe to create offer
+}</code></pre>
+<hr>
+<h2>How <code>rtc</code> Implements the Primitives</h2>
+<p>Now let's examine how our sans-I/O Rust implementation provides these primitives.</p>
+<h3>✅ Rollback SDP Type</h3>
+<p>The library explicitly defines rollback:</p>
+<pre><code class="language-rust">// rtc/src/peer_connection/sdp/sdp_type.rs
+pub enum RTCSdpType {
+    Offer,
+    Pranswer,
+    Answer,
+    /// Rollback moves the SDP offer and answer back to what they were
+    /// in the last stable state. This is useful for recovering from
+    /// glare (both peers send offers simultaneously).
+    Rollback,
+}</code></pre>
+<p>Constructor for creating rollback descriptions:</p>
+<pre><code class="language-rust">// rtc/src/peer_connection/sdp/session_description.rs
+impl RTCSessionDescription {
+    /// Creates a rollback session description.
+    ///
+    /// Per WebRTC specification (RFC 8829 §5.7), rollback descriptions
+    /// typically have empty SDP content. This is used to abort an in-progress
+    /// negotiation, such as when implementing Perfect Negotiation collision
+    /// resolution.
+    pub fn rollback(sdp: Option&lt;String&gt;) -&gt; Result&lt;RTCSessionDescription&gt; {
+        let mut desc = RTCSessionDescription {
+            sdp: if let Some(sdp) = sdp {
+                sdp
+            } else {
+                &quot;&quot;.to_string()
+            },
+            sdp_type: RTCSdpType::Rollback,
+            parsed: None,
+        };
+
+        if !desc.sdp.is_empty() {
+            let parsed = desc.unmarshal()?;
+            desc.parsed = Some(parsed);
+        }
+
+        Ok(desc)
+    }
+}</code></pre>
+<h3>✅ Signaling State Machine</h3>
+<p>Complete state machine implementation:</p>
+<pre><code class="language-rust">// rtc/src/peer_connection/state/signaling_state.rs
+pub fn check_next_signaling_state(
+    cur: RTCSignalingState,
+    sdp_type: RTCSdpType,
+    op: StateChangeOp,
+    local_description_set: bool,
+    remote_description_set: bool,
+) -&gt; Result&lt;RTCSignalingState&gt; {
+    // Rollback transitions
+    if sdp_type == RTCSdpType::Rollback {
+        match cur {
+            RTCSignalingState::HaveLocalOffer =&gt; {
+                if op == StateChangeOp::SetLocal {
+                    return Ok(RTCSignalingState::Stable);
+                }
+            }
+            RTCSignalingState::HaveRemoteOffer =&gt; {
+                if op == StateChangeOp::SetRemote {
+                    return Ok(RTCSignalingState::Stable);
+                }
+            }
+            RTCSignalingState::Stable =&gt; {
+                return Err(Error::ErrSignalingStateCannotRollback);
+            }
+            // ... other states
+        }
+    }
+    
+    // Normal offer/answer transitions
+    match (cur, sdp_type, op) {
+        // Stable → HaveLocalOffer (offer created)
+        (RTCSignalingState::Stable, RTCSdpType::Offer, StateChangeOp::SetLocal) 
+            if !local_description_set =&gt; {
+            Ok(RTCSignalingState::HaveLocalOffer)
+        }
+        
+        // HaveLocalOffer → Stable (answer received)
+        (RTCSignalingState::HaveLocalOffer, RTCSdpType::Answer, StateChangeOp::SetRemote)
+            =&gt; Ok(RTCSignalingState::Stable),
+        
+        // ... other transitions
+    }
+}</code></pre>
+<h3>✅ Negotiation Needed Event</h3>
+<p>Complete implementation following W3C spec:</p>
+<pre><code class="language-rust">// rtc/src/peer_connection/internal.rs
+pub(super) fn trigger_negotiation_needed(&amp;mut self) {
+    if !self.do_negotiation_needed() {
+        return;
+    }
+    let _ = self.negotiation_needed_op();
+}
+
+fn do_negotiation_needed(&amp;mut self) -&gt; bool {
+    // https://w3c.github.io/webrtc-pc/#updating-the-negotiation-needed-flag
+    
+    if self.negotiation_needed_state == NegotiationNeededState::Run {
+        self.negotiation_needed_state = NegotiationNeededState::Queue;
+        return false;
+    }
+    
+    if self.signaling_state != RTCSignalingState::Stable {
+        return false;
+    }
+    
+    // Check various conditions per spec...
+    // Returns true if negotiation is actually needed
+}</code></pre>
+<h3>✅ Sans-I/O Architecture Benefits</h3>
+<p>The sans-I/O design provides complete control:</p>
+<pre><code class="language-rust">// Applications poll events explicitly
+while let Some(event) = pc.poll_event() {
+    match event {
+        RTCPeerConnectionEvent::OnNegotiationNeeded =&gt; {
+            // Handle when ready
+        }
+        // ... other events
+    }
+}
+
+// Applications control when to apply descriptions
+let offer = pc.create_offer(None)?;
+pc.set_local_description(offer)?;
+
+// Applications manage signaling
+let state = pc.signaling_state();
+if state == RTCSignalingState::Stable {
+    // Safe to create offer
+}</code></pre>
+<p>This flexibility is <strong>perfect</strong> for implementing custom negotiation strategies.</p>
+<hr>
+<h2>Building Perfect Negotiation at the Application Level</h2>
+<p>With the primitives in place, let's build Perfect Negotiation at the application level.</p>
+<h3>PerfectNegotiationHandler</h3>
+<p>Wrapper around RTCPeerConnection implementing the pattern:</p>
+<pre><code class="language-rust">pub struct PerfectNegotiationHandler {
+    pc: RTCPeerConnection,
+    polite: bool,
+    is_making_offer: bool,
+    ignore_offer: bool,
+    signaling_state: RTCSignalingState,
+    auto_answer: bool,
+    suppress_negotiation_needed: bool,
+}
+
+impl PerfectNegotiationHandler {
+    pub fn new(pc: RTCPeerConnection, polite: bool) -&gt; Self {
+        Self {
+            pc,
+            polite,
+            is_making_offer: false,
+            ignore_offer: false,
+            signaling_state: RTCSignalingState::Stable,
+            auto_answer: true,
+            suppress_negotiation_needed: false,
+        }
+    }
+}</code></pre>
+<h3>Collision Detection</h3>
+<p>Implement the readyForOffer logic:</p>
+<pre><code class="language-rust">impl PerfectNegotiationHandler {
+    pub fn handle_remote_description_with_response(
+        &amp;mut self,
+        description: RTCSessionDescription,
+        local_addr: SocketAddr,
+    ) -&gt; Result&lt;Option&lt;RTCSessionDescription&gt;&gt; {
+        let role = if self.polite { &quot;POLITE&quot; } else { &quot;IMPOLITE&quot; };
+        
+        // Detect offer collision
+        let offer_collision = description.sdp_type == RTCSdpType::Offer &amp;&amp;
+            (self.is_making_offer || self.signaling_state != RTCSignalingState::Stable);
+        
+        // Impolite peer ignores colliding offers
+        self.ignore_offer = !self.polite &amp;&amp; offer_collision;
+        if self.ignore_offer {
+            info!(&quot;[{}] Ignoring colliding offer&quot;, role);
+            return Ok(None);
+        }
+        
+        // Polite peer rolls back on collision
+        if offer_collision &amp;&amp; self.polite {
+            warn!(&quot;[{}] Collision detected, rolling back local offer&quot;, role);
+            
+            let mut rollback = RTCSessionDescription::default();
+            rollback.sdp_type = RTCSdpType::Rollback;
+            rollback.sdp = String::new();
+            
+            // Rollback: HaveLocalOffer → Stable
+            self.pc.set_local_description(rollback)?;
+            self.signaling_state = RTCSignalingState::Stable;
+            info!(&quot;[{}] Rolled back to Stable&quot;, role);
+        }
+        
+        // Accept the remote description
+        self.pc.set_remote_description(description.clone())?;
+        self.signaling_state = self.pc.signaling_state();
+        
+        // Auto-create answer if this was an offer
+        if description.sdp_type == RTCSdpType::Offer &amp;&amp; self.auto_answer {
+            info!(&quot;[{}] Creating answer&quot;, role);
+            let answer = self.pc.create_answer(None)?;
+            self.pc.set_local_description(answer.clone())?;
+            
+            // Add local ICE candidate after setting description
+            self.add_local_host_candidate(local_addr)?;
+            
+            self.signaling_state = RTCSignalingState::Stable;
+            return Ok(Some(answer));
+        }
+        
+        Ok(None)
+    }
+}</code></pre>
+<h3>Offer Rejection</h3>
+<p>Support rejecting offers to test SetRemote(rollback):</p>
+<pre><code class="language-rust">impl PerfectNegotiationHandler {
+    /// Reject a remote offer by rolling back to stable
+    pub fn reject_remote_offer(&amp;mut self) -&gt; Result&lt;()&gt; {
+        let role = if self.polite { &quot;POLITE&quot; } else { &quot;IMPOLITE&quot; };
+        
+        if self.signaling_state != RTCSignalingState::HaveRemoteOffer {
+            warn!(&quot;[{}] Cannot reject - not in HaveRemoteOffer state&quot;, role);
+            return Ok(());
+        }
+        
+        info!(&quot;[{}] Rejecting remote offer via SetRemote(rollback)&quot;, role);
+        
+        let mut rollback = RTCSessionDescription::default();
+        rollback.sdp_type = RTCSdpType::Rollback;
+        rollback.sdp = String::new();
+        
+        // Reject: HaveRemoteOffer → Stable
+        self.pc.set_remote_description(rollback)?;
+        self.signaling_state = RTCSignalingState::Stable;
+        
+        info!(&quot;[{}] Successfully rejected offer, back to Stable&quot;, role);
+        Ok(())
+    }
+}</code></pre>
+<h3>ICE Candidate Filtering</h3>
+<p>Ignore candidates for ignored offers:</p>
+<pre><code class="language-rust">impl PerfectNegotiationHandler {
+    pub fn handle_remote_candidate(&amp;mut self, candidate: RTCIceCandidateInit) -&gt; Result&lt;()&gt; {
+        if self.ignore_offer {
+            trace!(&quot;Ignoring ICE candidate (ignoring offer)&quot;);
+            return Ok(());
+        }
+        
+        self.pc.add_remote_candidate(candidate)?;
+        Ok(())
+    }
+}</code></pre>
+<hr>
+<h2>A Complete Working Example</h2>
+<p>Location: <code>examples/examples/perfect-negotiation/</code></p>
+<h3>Architecture</h3>
+<p><strong>Rust ↔ Rust</strong> peer-to-peer with browser UI:</p>
+<pre><code>┌──────────┐                              ┌──────────┐
+│ Browser  │ ◄─────── WebSocket ──────────┤  Polite  │
+│  (UI)    │   (commands/status only)     │   Peer   │
+└──────────┘                              └─────┬────┘
+                                                │
+                                          Relay Channel
+                                          (mpsc channel)
+                                                │
+┌──────────┐                              ┌─────┴────┐
+│ Browser  │ ◄─────── WebSocket ──────────┤ Impolite │
+│  (UI)    │   (commands/status only)     │   Peer   │
+└──────────┘                              └──────────┘</code></pre>
+<p>Both WebRTC peers run in Rust. Browsers are thin clients.</p>
+<h3>Main Event Loop</h3>
+<pre><code class="language-rust">async fn run_peer(
+    role: &amp;str,
+    polite: bool,
+    local_addr: SocketAddr,
+    mut ws: WebSocketStream&lt;TcpStream&gt;,
+    peer_tx: mpsc::Sender&lt;String&gt;,
+    mut peer_rx: mpsc::Receiver&lt;String&gt;,
+) -&gt; Result&lt;()&gt; {
+    let config = RTCConfiguration::default();
+    let pc = RTCPeerConnection::new(config)?;
+    let mut negotiation = PerfectNegotiationHandler::new(pc, polite);
+    
+    let udp_socket = UdpSocket::bind(local_addr).await?;
+    let mut data_channel_created = false;
+    
+    loop {
+        tokio::select! {
+            // Handle peer connection timeouts
+            _ = tokio::time::sleep(sleep_duration) =&gt; {
+                negotiation.peer_connection().handle_timeout(Instant::now()).ok();
+                
+                // Poll events
+                while let Some(event) = negotiation.peer_connection().poll_event() {
+                    match event {
+                        RTCPeerConnectionEvent::OnNegotiationNeeded =&gt; {
+                            if negotiation.suppress_negotiation_needed {
+                                info!(&quot;[{}] Ignoring negotiation (suppressed)&quot;, role);
+                                continue;
+                            }
+                            
+                            if !data_channel_created {
+                                info!(&quot;[{}] Ignoring negotiation (no data channel)&quot;, role);
+                                continue;
+                            }
+                            
+                            // Create offer
+                            negotiation.is_making_offer = true;
+                            let offer = negotiation.peer_connection().create_offer(None)?;
+                            negotiation.peer_connection().set_local_description(offer.clone())?;
+                            negotiation.add_local_host_candidate(local_addr)?;
+                            negotiation.signaling_state = RTCSignalingState::HaveLocalOffer;
+                            negotiation.is_making_offer = false;
+                            
+                            // Send via relay
+                            let msg = SignalingMessage::Description { description: offer };
+                            peer_tx.send(serde_json::to_string(&amp;msg)?).await?;
+                        }
+                        
+                        RTCPeerConnectionEvent::OnIceCandidateEvent(event) =&gt; {
+                            let msg = SignalingMessage::Candidate { 
+                                candidate: event.candidate.to_json()? 
+                            };
+                            peer_tx.send(serde_json::to_string(&amp;msg)?).await?;
+                        }
+                        
+                        // ... other events
+                    }
+                }
+            }
+            
+            // Handle WebSocket commands from browser
+            Some(msg) = ws.next() =&gt; {
+                if let Message::Text(text) = msg? {
+                    match text.as_str() {
+                        &quot;connect&quot; =&gt; {
+                            negotiation.suppress_negotiation_needed = false;
+                            if !data_channel_created {
+                                let label = format!(&quot;data-{}&quot;, role.to_lowercase());
+                                negotiation.peer_connection().create_data_channel(&amp;label, None)?;
+                                data_channel_created = true;
+                            }
+                        }
+                        
+                        &quot;reject&quot; =&gt; {
+                            negotiation.reject_remote_offer()?;
+                            
+                            // Send reject notification to other peer
+                            let msg = SignalingMessage::Reject;
+                            peer_tx.send(serde_json::to_string(&amp;msg)?).await?;
+                        }
+                        
+                        // ... other commands
+                    }
+                }
+            }
+            
+            // Handle signaling messages from other peer
+            Some(peer_msg) = peer_rx.recv() =&gt; {
+                let signal_msg: SignalingMessage = serde_json::from_str(&amp;peer_msg)?;
+                
+                match signal_msg {
+                    SignalingMessage::Description { description } =&gt; {
+                        let response = negotiation.handle_remote_description_with_response(
+                            description,
+                            local_addr,
+                        )?;
+                        
+                        if let Some(answer) = response {
+                            let msg = SignalingMessage::Description { description: answer };
+                            peer_tx.send(serde_json::to_string(&amp;msg)?).await?;
+                        }
+                    }
+                    
+                    SignalingMessage::Candidate { candidate } =&gt; {
+                        negotiation.handle_remote_candidate(candidate)?;
+                    }
+                    
+                    SignalingMessage::Reject =&gt; {
+                        // Other peer rejected our offer, rollback
+                        if negotiation.signaling_state == RTCSignalingState::HaveLocalOffer {
+                            let mut rollback = RTCSessionDescription::default();
+                            rollback.sdp_type = RTCSdpType::Rollback;
+                            rollback.sdp = String::new();
+                            
+                            negotiation.peer_connection().set_local_description(rollback)?;
+                            negotiation.signaling_state = RTCSignalingState::Stable;
+                            negotiation.suppress_negotiation_needed = true;
+                        }
+                    }
+                }
+            }
+            
+            // Handle UDP packets (DTLS/SRTP/SCTP)
+            res = udp_socket.recv_from(&amp;mut buf) =&gt; {
+                if let Ok((n, src_addr)) = res {
+                    negotiation.peer_connection().handle_read(TaggedBytesMut {
+                        now: Instant::now(),
+                        transport: TransportContext {
+                            local_addr,
+                            peer_addr: src_addr,
+                            ecn: None,
+                            transport_protocol: TransportProtocol::UDP,
+                        },
+                        message: &amp;mut buf[..n],
+                    })?;
+                }
+            }
+        }
+    }
+}</code></pre>
+<h3>Running the Example</h3>
+<pre><code class="language-bash">cd examples
+cargo run --example perfect-negotiation</code></pre>
+<p><strong>Test Scenarios:</strong></p>
+<ol>
+  <li><strong>Normal Connection</strong></li>
+</ol>
+<p>   - Open http://localhost:8080/polite and http://localhost:8080/impolite</p>
+<p>   - Click "Connect" in either tab</p>
+<p>   - Observe automatic negotiation</p>
+<ol>
+  <li><strong>Collision Testing</strong></li>
+</ol>
+<p>   - Enable "Manual Mode" in both tabs</p>
+<p>   - Click "Connect" in both tabs quickly (within ~100ms)</p>
+<p>   - Observe collision detection and rollback in logs</p>
+<p>   - Polite peer rolls back, impolite wins</p>
+<ol>
+  <li><strong>Offer Rejection</strong></li>
+</ol>
+<p>   - Enable "Manual Mode" in impolite tab</p>
+<p>   - Click "Connect" in polite tab</p>
+<p>   - Click "Reject Offer" in impolite tab</p>
+<p>   - Observe SetRemote(rollback) transition</p>
+<p>   - Both peers return to Stable state</p>
+<h3>Log Output Examples</h3>
+<p><strong>Successful Collision Resolution:</strong></p>
+<pre><code>[POLITE] Creating offer...
+[IMPOLITE] Creating offer...
+[POLITE] Received remote Offer description
+[POLITE] Collision detected, rolling back local offer
+signaling state changed to stable
+[POLITE] Rolled back to Stable
+[POLITE] Creating answer
+[IMPOLITE] Received remote Answer description
+signaling state changed to stable</code></pre>
+<p><strong>Offer Rejection:</strong></p>
+<pre><code>[POLITE] Sending Offer
+[IMPOLITE] Received remote Offer description
+[IMPOLITE] Rejecting remote offer via SetRemote(rollback)
+signaling state changed to stable
+[IMPOLITE] Successfully rejected offer, back to Stable
+[IMPOLITE] Sent reject notification to other peer
+[POLITE] Received reject notification
+[POLITE] Rolling back our local offer via SetLocal(rollback)
+signaling state changed to stable
+[POLITE] Successfully rolled back to Stable state</code></pre>
+<hr>
+<h2>Design Philosophy: Why Application-Level?</h2>
+<h3>Why Application-Level?</h3>
+<p>The <code>rtc</code> library implements Perfect Negotiation as an <strong>application-level pattern</strong> rather than built-in library feature. This is intentional:</p>
+<h4>Library Focus: Spec-Compliant Primitives</h4>
+<ul>
+  <li>✅ <code>RTCSdpType::Rollback</code> type</li>
+  <li>✅ Complete signaling state machine</li>
+  <li>✅ Rollback state transitions</li>
+  <li>✅ <code>OnNegotiationNeeded</code> event</li>
+  <li>✅ Sans-I/O event-driven architecture</li>
+</ul>
+<p><strong>No library changes needed</strong> for Perfect Negotiation—the primitives are complete and spec-compliant.</p>
+<h4>Application Flexibility</h4>
+<p>Different applications have different needs:</p>
+<ul>
+  <li><strong>Signaling architecture</strong>: Some use WebSocket, others use WebRTC data channels, HTTP long-polling, etc.</li>
+  <li><strong>Collision resolution</strong>: Some might want custom policies beyond polite/impolite</li>
+  <li><strong>Role determination</strong>: Connection order, user interaction, server coordination</li>
+  <li><strong>Error handling</strong>: Retry strategies, fallbacks, logging</li>
+</ul>
+<p>Keeping Perfect Negotiation at the application level allows full customization.</p>
+<h4>Benefits</h4>
+<ol>
+  <li><strong>Focused library</strong>: Core stays focused on WebRTC protocol</li>
+  <li><strong>Zero bloat</strong>: Applications only pay for what they use</li>
+  <li><strong>Testability</strong>: Applications can mock/test their negotiation logic</li>
+  <li><strong>Flexibility</strong>: Custom collision resolution strategies</li>
+  <li><strong>Clarity</strong>: Clear separation between protocol and application logic</li>
+</ol>
+<h3>Comparison with Browser APIs</h3>
+<p>Browsers implement rollback <strong>implicitly</strong>:</p>
+<pre><code class="language-javascript">// Browser: implicit rollback when setting remote offer in HaveLocalOffer state
+await pc.setRemoteDescription(incomingOffer);
+// ^ Automatically rolls back pending local offer</code></pre>
+<p>Our sans-I/O implementation requires <strong>explicit</strong> rollback:</p>
+<pre><code class="language-rust">// rtc: explicit rollback before accepting remote offer
+if collision &amp;&amp; polite {
+    let rollback = RTCSessionDescription::default();
+    rollback.sdp_type = RTCSdpType::Rollback;
+    pc.set_local_description(rollback)?;
+}
+pc.set_remote_description(incoming_offer)?;</code></pre>
+<p>This explicitness:</p>
+<ul>
+  <li>✅ Makes state transitions visible</li>
+  <li>✅ Gives applications full control</li>
+  <li>✅ Aligns with sans-I/O philosophy</li>
+  <li>✅ Easier to test and debug</li>
+</ul>
+<hr>
+<h2>Testing Both Rollback Transitions</h2>
+<p>The example provides comprehensive test coverage for both RFC 8829 rollback transitions.</p>
+<h3>Transition 1: HaveLocalOffer → Stable (SetLocal with rollback)</h3>
+<p><strong>Use case</strong>: Polite peer rolling back on collision</p>
+<p><strong>Test steps</strong>:</p>
+<ol>
+  <li>Both peers create offers simultaneously</li>
+  <li>Polite peer receives impolite's offer</li>
+  <li>Collision detected (<code>is_making_offer || state != Stable</code>)</li>
+  <li>Polite calls <code>set_local_description(rollback)</code></li>
+  <li>State: HaveLocalOffer → Stable</li>
+  <li>Polite accepts impolite's offer</li>
+  <li>Negotiation continues normally</li>
+</ol>
+<p><strong>Verification</strong>:</p>
+<pre><code class="language-rust">assert_eq!(pc.signaling_state(), RTCSignalingState::HaveLocalOffer);
+pc.set_local_description(rollback)?;
+assert_eq!(pc.signaling_state(), RTCSignalingState::Stable);</code></pre>
+<h3>Transition 2: HaveRemoteOffer → Stable (SetRemote with rollback)</h3>
+<p><strong>Use case</strong>: Rejecting an incoming offer</p>
+<p><strong>Test steps</strong>:</p>
+<ol>
+  <li>Peer A sends offer</li>
+  <li>Peer B receives offer → HaveRemoteOffer</li>
+  <li>User clicks "Reject Offer" button</li>
+  <li>Peer B calls <code>set_remote_description(rollback)</code></li>
+  <li>State: HaveRemoteOffer → Stable</li>
+  <li>Reject notification sent to Peer A</li>
+  <li>Peer A also rolls back to Stable</li>
+</ol>
+<p><strong>Verification</strong>:</p>
+<pre><code class="language-rust">assert_eq!(pc.signaling_state(), RTCSignalingState::HaveRemoteOffer);
+pc.set_remote_description(rollback)?;
+assert_eq!(pc.signaling_state(), RTCSignalingState::Stable);</code></pre>
+<p>Both transitions are exercised by the example's Manual Mode feature.</p>
+<hr>
+<h2>Performance Implications</h2>
+<p>Perfect Negotiation has <strong>minimal overhead</strong>:</p>
+<h3>Memory</h3>
+<pre><code class="language-rust">struct PerfectNegotiationHandler {
+    pc: RTCPeerConnection,      // Same as before
+    polite: bool,                // 1 byte
+    is_making_offer: bool,       // 1 byte
+    ignore_offer: bool,          // 1 byte
+    signaling_state: RTCSignalingState,  // 1 byte
+    auto_answer: bool,           // 1 byte
+    suppress_negotiation_needed: bool,   // 1 byte
+}
+// Total added: ~6 bytes (plus alignment)</code></pre>
+<h3>CPU</h3>
+<p>Collision detection:</p>
+<pre><code class="language-rust">let offer_collision = description.sdp_type == RTCSdpType::Offer &amp;&amp;
+    (self.is_making_offer || self.signaling_state != RTCSignalingState::Stable);
+// Two comparisons + one boolean operation
+// ~3 CPU cycles on modern hardware</code></pre>
+<h3>Network</h3>
+<ul>
+  <li><strong>No extra signaling messages</strong> in non-collision case</li>
+  <li><strong>Same number of round trips</strong> as traditional offer/answer</li>
+  <li>Rollback happens locally (no network traffic)</li>
+</ul>
+<h3>Collision Cost</h3>
+<p>Only overhead during actual collisions:</p>
+<ol>
+  <li>Create rollback description (stack allocation)</li>
+  <li>Call <code>set_local_description(rollback)</code> (~microseconds)</li>
+  <li>Continue with normal negotiation</li>
+</ol>
+<p>Collisions are rare (requires microsecond-level timing coincidence).</p>
+<hr>
+<h2>Conclusion</h2>
+<p>Perfect Negotiation represents the modern, spec-compliant approach to WebRTC negotiation. Key takeaways:</p>
+<h3>What We've Covered</h3>
+<ol>
+  <li><strong>Pattern Mechanics</strong>: How Perfect Negotiation eliminates asymmetry</li>
+  <li><strong>Required Primitives</strong>: Rollback, state machine, negotiation events</li>
+  <li><strong>Implementation Details</strong>: Complete working code with collision detection</li>
+  <li><strong>Design Philosophy</strong>: Why application-level is the right approach</li>
+</ol>
+<h3>What <code>rtc</code> Provides</h3>
+<ol>
+  <li>✅ <strong>Complete WebRTC primitives</strong> for Perfect Negotiation</li>
+  <li>✅ <strong>Spec-compliant rollback</strong> support</li>
+  <li>✅ <strong>Working example</strong> demonstrating the pattern</li>
+  <li>✅ <strong>Comprehensive documentation</strong> of rollback API</li>
+  <li>✅ <strong>Sans-I/O flexibility</strong> for custom implementations</li>
+</ol>
+<h3>For Application Developers</h3>
+<p>You can now:</p>
+<ol>
+  <li>Copy the <code>PerfectNegotiationHandler</code> pattern</li>
+  <li>Customize for your signaling architecture</li>
+  <li>Build symmetric P2P applications</li>
+  <li>Handle bidirectional calling gracefully</li>
+  <li>Test collision scenarios with confidence</li>
+</ol>
+<h3>Looking Forward</h3>
+<p>Perfect Negotiation is now a proven, production-ready pattern in <code>rtc</code>. The sans-I/O architecture makes it straightforward to implement while maintaining full control over I/O, threading, and application logic.</p>
+<p>As WebRTC evolves toward more peer-to-peer use cases (gaming, collaboration, IoT), patterns like Perfect Negotiation become increasingly important. The <code>rtc</code> library provides the foundation—applications build the experience.</p>
+<hr>
+<h2>References</h2>
+<h3>Specifications</h3>
+<ul>
+  <li><a href="https://datatracker.ietf.org/doc/html/rfc8829#section-5.7">RFC 8829 (JSEP) §5.7: Rollback</a></li>
+  <li><a href="https://www.w3.org/TR/webrtc/#perfect-negotiation-example">W3C WebRTC 1.0: Perfect Negotiation Example</a></li>
+  <li><a href="https://www.w3.org/TR/webrtc/#dom-peerconnection-setlocaldescription">W3C WebRTC 1.0 §4.4.1.6: Set the RTCSessionDescription</a></li>
+</ul>
+<h3>Learning Resources</h3>
+<ul>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation">MDN: Perfect Negotiation</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling">MDN: Signaling and Video Calling</a></li>
+</ul>
+<h3>Code</h3>
+<ul>
+  <li><a href="https://github.com/webrtc-rs/rtc">webrtc-rs/rtc Repository</a></li>
+  <li>Example: <code>examples/examples/perfect-negotiation/</code></li>
+</ul>
+<hr>
+<p style="text-align: center;">
+  <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+</p>
+
+        </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
