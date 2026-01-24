@@ -1,4 +1,4 @@
-# WebRTC API Compliance Analysis
+# Full WebRTC API Compliance Analysis
 
 **rtc (sans-I/O) vs W3C WebRTC 1.0 Specification**
 

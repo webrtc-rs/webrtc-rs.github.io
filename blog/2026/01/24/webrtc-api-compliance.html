@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WebRTC API Compliance Analysis - How the rtc Sans-I/O library compares to W3C WebRTC 1.0 specification">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content table th,
+    .blog-content table td {
+      border: 1px solid #dbdbdb;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .status-full {
+      color: #48c774;
+      font-weight: 600;
+    }
+
+    .status-partial {
+      color: #ffdd57;
+      font-weight: 600;
+    }
+
+    .status-missing {
+      color: #f14668;
+      font-weight: 600;
+    }
+
+    .highlight-box {
+      background-color: #f0f7ff;
+      border-left: 4px solid #3273dc;
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+  </style>
+  <title>WebRTC API Compliance: Sans-I/O rtc vs W3C Spec | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+
+<h1>WebRTC API Compliance: Sans-I/O <code>rtc</code> vs W3C Spec</h1>
+<div class="blog-meta">
+  <span>January 24, 2026</span>
+  <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/24/webrtc-api-compliance.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+</div>
+
+<p>
+  How does a <strong>Sans-I/O WebRTC implementation</strong> in Rust compare to the browser-based W3C WebRTC API? 
+  After completing the core WebRTC feature set, we conducted a comprehensive compliance analysis against the 
+  <a href="https://www.w3.org/TR/webrtc/" target="_blank">W3C WebRTC 1.0 specification</a>. The results might surprise you.
+</p>
+
+<p>
+  For the complete interface-by-interface comparison, including every method, property, and event across 
+  15+ WebRTC interfaces, see the 
+  <a href="full-webrtc-api-compliance-analysis.html">Full WebRTC API Compliance Analysis</a>.
+  The detailed reference includes:
+</p>
+
+<ul>
+  <li>Line-by-line API member comparisons with implementation notes</li>
+  <li>Status indicators (✅ Full / ⚠️ Partial / ❌ Missing)</li>
+  <li>Architectural differences explained</li>
+  <li>Sans-I/O specific extensions documented</li>
+  <li>Compliance percentages per interface</li>
+</ul>
+
+<hr>
+
+<h2>TL;DR: 95%+ Compliance</h2>
+
+<p>
+  Despite fundamental architectural differences (no async/await, application-controlled I/O), the <code>rtc</code> 
+  library achieves <strong>95%+ compliance</strong> with the W3C WebRTC specification. All core interfaces 
+  reach 90-100% compliance, with gaps only in niche features like DTMF tone sending and Identity Provider APIs.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Interface</th>
+      <th>Compliance</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RTCPeerConnection</td>
+      <td><span class="status-full">100%</span></td>
+      <td>Complete implementation</td>
+    </tr>
+    <tr>
+      <td>RTCSessionDescription</td>
+      <td><span class="status-full">100%</span></td>
+      <td>Full spec + rollback support</td>
+    </tr>
+    <tr>
+      <td>RTCIceCandidate</td>
+      <td><span class="status-full">100%</span></td>
+      <td>All properties including extensions</td>
+    </tr>
+    <tr>
+      <td>RTCDataChannel</td>
+      <td><span class="status-full">100%</span></td>
+      <td>Binary/text, buffering, flow control</td>
+    </tr>
+    <tr>
+      <td>RTCRtpTransceiver</td>
+      <td><span class="status-full">100%</span></td>
+      <td>Full direction control</td>
+    </tr>
+    <tr>
+      <td>RTCRtpSender</td>
+      <td><span class="status-partial">95%</span></td>
+      <td>Missing only DTMF tone sending</td>
+    </tr>
+    <tr>
+      <td>RTCRtpReceiver</td>
+      <td><span class="status-full">100%</span></td>
+      <td>Track management, statistics</td>
+    </tr>
+    <tr>
+      <td>RTCIceTransport</td>
+      <td><span class="status-partial">90%</span></td>
+      <td>Minor: missing selectedCandidatePair accessor</td>
+    </tr>
+    <tr>
+      <td>RTCDtlsTransport</td>
+      <td><span class="status-partial">90%</span></td>
+      <td>Core transport, minor accessor gaps</td>
+    </tr>
+    <tr>
+      <td>RTCStatsReport</td>
+      <td><span class="status-full">95%</span></td>
+      <td>Comprehensive statistics with extensions</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Architecture: Sans-I/O vs Browser WebRTC</h2>
+
+<p>
+  The fundamental difference between browser WebRTC and <code>rtc</code> is the <strong>Sans-I/O architecture</strong>. 
+  This design choice affects API style but not functionality:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Browser WebRTC</th>
+      <th>rtc (Sans-I/O)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Async Model</strong></td>
+      <td>Promises (<code>async</code>/<code>await</code>)</td>
+      <td>Synchronous + explicit timeouts</td>
+    </tr>
+    <tr>
+      <td><strong>Events</strong></td>
+      <td><code>addEventListener()</code></td>
+      <td><code>poll_event()</code> returns enum</td>
+    </tr>
+    <tr>
+      <td><strong>I/O Control</strong></td>
+      <td>Hidden in browser engine</td>
+      <td>Application controls sockets</td>
+    </tr>
+    <tr>
+      <td><strong>Media Capture</strong></td>
+      <td><code>getUserMedia()</code> API</td>
+      <td>Application provides raw frames</td>
+    </tr>
+    <tr>
+      <td><strong>ICE Gathering</strong></td>
+      <td>Automatic via browser stack</td>
+      <td>Application adds local candidates</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="highlight-box">
+  <strong>Key Insight:</strong> Sans-I/O requires the application to handle I/O operations (network sockets, 
+  timers, media capture), but provides <em>identical WebRTC functionality</em> once data reaches the library. 
+  The API surface intentionally mirrors W3C WebRTC for familiarity.
+</div>
+
+<h2>Implementation Highlights</h2>
+
+<h3>✅ Strengths</h3>
+
+<ol>
+  <li><strong>Complete Core WebRTC</strong> - Full peer connection, data channels, RTP/RTCP</li>
+  <li><strong>Perfect Negotiation Support</strong> - Rollback transitions implemented correctly</li>
+  <li><strong>Statistics</strong> - Complete W3C stats specification</li>
+  <li><strong>Transports</strong> - Full ICE/DTLS/SCTP stack</li>
+  <li><strong>Sans-I/O Flexibility</strong> - Application controls all I/O and threading</li>
+  <li><strong>Interceptor Architecture</strong> - NACK, TWCC, PLI, custom interceptors</li>
+  <li><strong>Raw RTP Access</strong> - <code>write_rtp()</code>, <code>write_rtcp()</code> for manual control</li>
+</ol>
+
+<h3>⚠️ Minor Gaps</h3>
+
+<ol>
+  <li><strong>Transport References</strong> - Not exposed (transports managed internally)</li>
+  <li><strong>ICE Candidate Lists</strong> - No accessor (candidates available via events)</li>
+  <li><strong>Dedicated Transport Events</strong> - State changes via connection state events</li>
+</ol>
+
+<h3>❌ Notable Missing Features</h3>
+
+<ol>
+  <li><strong>DTMF Sending</strong> - Can be implemented at app level with RFC 4733</li>
+  <li><strong>Identity Assertions</strong> - IdP integration not implemented</li>
+  <li><strong>Encoded Transforms</strong> - Use interceptor API instead</li>
+</ol>
+
+<hr>
+
+<h2>Architectural Deep Dive</h2>
+
+<h3>Event Handling</h3>
+
+<p><strong>Browser WebRTC:</strong></p>
+
+<pre><code class="language-javascript">pc.onnegotiationneeded = async () => {
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  // Send offer via signaling
+};</code></pre>
+
+<p><strong>rtc (Sans-I/O):</strong></p>
+
+<pre><code class="language-rust">while let Some(event) = pc.poll_event() {
+    match event {
+        RTCPeerConnectionEvent::OnNegotiationNeeded => {
+            let offer = pc.create_offer(None)?;
+            pc.set_local_description(offer)?;
+            // Send offer via signaling
+        }
+        // ... other events
+    }
+}</code></pre>
+
+<h3>I/O Control</h3>
+
+<p><strong>Browser WebRTC:</strong></p>
+<ul>
+  <li>Hidden socket management</li>
+  <li>Automatic packet transmission</li>
+  <li>Browser controls network I/O</li>
+</ul>
+
+<p><strong>rtc (Sans-I/O):</strong></p>
+
+<pre><code class="language-rust">// Application controls socket
+let socket = UdpSocket::bind("0.0.0.0:0")?;
+
+// Application polls for I/O
+if let Some(data) = pc.poll_write()? {
+    socket.send_to(&data.buffer, data.remote_addr)?;
+}
+
+let mut buf = [0u8; 1500];
+if let Ok((len, addr)) = socket.recv_from(&mut buf) {
+    pc.handle_read(&buf[..len], addr, Instant::now())?;
+}</code></pre>
+
+<h3>Timeouts</h3>
+
+<p><strong>Browser WebRTC:</strong></p>
+<ul>
+  <li>Automatic timeout management</li>
+  <li>Hidden retransmissions</li>
+</ul>
+
+<p><strong>rtc (Sans-I/O):</strong></p>
+
+<pre><code class="language-rust">let timeout = pc.poll_timeout();
+sleep(timeout);
+pc.handle_timeout(Instant::now())?;</code></pre>
+
+<hr>
+
+<h2>What's Missing?</h2>
+
+<p>The gaps are almost entirely niche features that most applications don't use:</p>
+
+<ul>
+  <li><strong>DTMF Tone Sending</strong> (RTCDTMFSender): VoIP dial pad tones - rare in modern WebRTC apps</li>
+  <li><strong>Identity Provider APIs</strong> (RTCIdentityProvider): Federated identity - complex, rarely used</li>
+  <li><strong>Encoded Transform APIs</strong>: Experimental feature for E2E encryption in browsers - use interceptor API instead</li>
+  <li><strong>Priority Hints</strong>: Network priority APIs - browser-specific optimizations</li>
+</ul>
+
+<p>
+  For 95%+ of WebRTC use cases—video conferencing, screen sharing, file transfer, gaming—the 
+  <code>rtc</code> library provides complete W3C spec compliance.
+</p>
+
+<h2>Why This Matters</h2>
+
+<p>
+  <strong>Familiar APIs:</strong> Developers with browser WebRTC experience can apply their knowledge directly. 
+  The method names, state machines, and event flows match the W3C specification.
+</p>
+
+<p>
+  <strong>Specification Compliance:</strong> Following the W3C spec ensures correct behavior for interoperability. 
+  Edge cases like rollback, trickle ICE detection, and state transitions work as specified.
+</p>
+
+<p>
+  <strong>Future-Proof:</strong> As the W3C specification evolves, the library can adopt new features while 
+  maintaining its Sans-I/O architecture advantages (testability, determinism, no hidden threads).
+</p>
+
+<h2>Recommendations</h2>
+
+<h3>For Application Developers</h3>
+
+<p><strong>Use rtc for:</strong></p>
+<ul>
+  <li>Server-side WebRTC (SFUs, gateways)</li>
+  <li>Embedded systems / IoT</li>
+  <li>Custom transport layers (e.g., QUIC)</li>
+  <li>Deterministic testing</li>
+  <li>Non-tokio async runtimes</li>
+</ul>
+
+<p><strong>Consider alternatives if:</strong></p>
+<ul>
+  <li>You need DTMF (implement at app level or use webrtc crate)</li>
+  <li>You need identity assertions (uncommon feature)</li>
+  <li>You want browser-like async API (use webrtc crate instead)</li>
+</ul>
+
+<h3>For Library Contributors</h3>
+
+<p><strong>High Priority:</strong></p>
+<ul>
+  <li>✅ Core WebRTC - <strong>COMPLETE</strong></li>
+  <li>✅ Perfect Negotiation - <strong>COMPLETE</strong></li>
+  <li>✅ Statistics - <strong>COMPLETE</strong></li>
+</ul>
+
+<p><strong>Medium Priority:</strong></p>
+<ul>
+  <li>⚠️ Expose transport references</li>
+  <li>⚠️ Add dedicated transport state change events</li>
+</ul>
+
+<p><strong>Low Priority:</strong></p>
+<ul>
+  <li>❌ DTMF sending (niche use case)</li>
+  <li>❌ Identity assertions (rarely used)</li>
+  <li>❌ Encoded transforms (use interceptors)</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+  The <code>rtc</code> library demonstrates that <strong>Sans-I/O architecture does not mean sacrificing 
+  standards compliance</strong>. By separating I/O from protocol logic, we achieve both the flexibility 
+  of manual I/O control <em>and</em> the familiarity of W3C WebRTC APIs.
+</p>
+
+<p>
+  Whether you're building a server-side media router, embedded device, or testing infrastructure, you can 
+  leverage the same WebRTC APIs used in billions of browsers—just with deterministic, testable, thread-safe 
+  implementations.
+</p>
+
+<hr>
+
+<h2>References</h2>
+
+<ul>
+  <li><strong>Full interface-by-interface Comparison and Analysis:</strong> <a href="full-webrtc-api-compliance-analysis.html">Full WebRTC API Compliance Analysis</a></li>
+  <li><strong>W3C WebRTC Spec:</strong> <a href="https://www.w3.org/TR/webrtc/" target="_blank">https://www.w3.org/TR/webrtc/</a></li>
+  <li><strong>MDN Reference:</strong> <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API" target="_blank">https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API</a></li>
+</ul>
+
+<hr>
+<p style="text-align: center;">
+  <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+</p>
+
+        </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
