@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The webrtc-rs project is embarking on a significant architectural evolution. With webrtc v0.17.0 marking the final feature release of the Tokio-coupled...">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Building Async-Friendly webrtc on Sans-I/O rtc: Architecture Design and Roadmap | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Building Async-Friendly <code>webrtc</code> on Sans-I/O <code>rtc</code>: Architecture Design and Roadmap</h1>
+            <div class="blog-meta">
+              <span>January 31, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/31/async-friendly-webrtc-architecture.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+            <p>The webrtc-rs project is embarking on a significant architectural evolution. With <code>webrtc</code> v0.17.0 marking the final feature release of the Tokio-coupled implementation, we're now designing the next generation: an async-friendly API built on top of our Sans-I/O <code>rtc</code> crate, supporting multiple async runtimes while maintaining clean, ergonomic APIs.</p>
+<p>This post details the <strong>proposed architecture design</strong>, explains our approach, and presents the roadmap for webrtc v0.20.0. <strong>This is a design discussion—feedback and suggestions are welcome!</strong></p>
+<hr>
+<h2>The Challenge: Moving Beyond Tokio Coupling</h2>
+<p>The current <code>webrtc</code> crate (v0.17.x) faces fundamental architectural limitations:</p>
+<h3>Callback Hell and Ergonomics Issues</h3>
+<p>The callback-based event handling API creates significant ergonomic challenges:</p>
+<pre><code class="language-rust">
+// Current v0.17.x API - Callback hell
+let pc = Arc::new(api.new_peer_connection(config).await?);
+
+// Problem 1: Excessive cloning and Arc wrapping
+let pc_clone1 = Arc::clone(&amp;pc);
+pc.on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
+    let pc = Arc::clone(&amp;pc_clone1);  // Clone inside closure
+    Box::pin(async move {
+        println!(&quot;State: {s}&quot;);
+        // Need to capture &#x27;pc&#x27; if we want to call methods
+    })
+}));
+
+// Problem 2: Each callback requires new clones
+let pc_clone2 = Arc::clone(&amp;pc);
+pc.on_ice_candidate(Box::new(move |candidate: Option&lt;RTCIceCandidate&gt;| {
+    let pc = Arc::clone(&amp;pc_clone2);  // More cloning...
+    Box::pin(async move {
+        // Send candidate to peer
+    })
+}));
+
+// Problem 3: Verbose nested closures
+let pc_clone3 = Arc::clone(&amp;pc);
+let shared_state = Arc::clone(&amp;my_state);
+pc.on_track(Box::new(move |track: Arc&lt;TrackRemote&gt;| {
+    let shared_state = Arc::clone(&amp;shared_state);
+    Box::pin(async move {
+        // Triple nesting: Box, closure, async block
+    })
+}));
+</code></pre>
+<p><strong>Key Problems</strong>:</p>
+<ol>
+<li><strong>Arc explosion</strong>: Every callback requires <code>Arc::clone(&pc)</code>, then clones inside the closure</li>
+<li><strong>Triple wrapping</strong>: <code>Box::new(move |...| Box::pin(async move { ... }))</code>—verbose and hard to read</li>
+<li><strong>Scattered event handling</strong>: Each event type needs separate callback registration</li>
+<li><strong>Difficult to share state</strong>: Need to wrap everything in <code>Arc&lt;Mutex&lt;&gt;&gt;</code> for mutable state</li>
+<li><strong>No structured cleanup</strong>: Callbacks live forever, no way to coordinate their lifecycle</li>
+<li><strong>Error handling complexity</strong>: Each callback must handle errors independently</li>
+</ol>
+<p><strong>Real-world impact</strong>:</p>
+<pre><code class="language-rust">
+// Managing multiple events becomes unwieldy
+let pc = Arc::new(api.new_peer_connection(config).await?);
+let state = Arc::new(Mutex::new(MyState::new()));
+
+// 10+ lines per callback * 6 event types = 60+ lines of boilerplate!
+let pc1 = Arc::clone(&amp;pc);
+let state1 = Arc::clone(&amp;state);
+pc.on_track(Box::new(move |track| {
+    let state = Arc::clone(&amp;state1);
+    Box::pin(async move { /* ... */ })
+}));
+
+let pc2 = Arc::clone(&amp;pc);
+let state2 = Arc::clone(&amp;state);
+pc.on_data_channel(Box::new(move |dc| {
+    let state = Arc::clone(&amp;state2);
+    Box::pin(async move { /* ... */ })
+}));
+
+// ... 4 more similar blocks
+</code></pre>
+<p>This callback pattern also has resource management issues—when <code>PeerConnection</code> is dropped, these <code>Box</code>ed callbacks may not be properly cleaned up, potentially leading to memory leaks (<a href="https://github.com/webrtc-rs/webrtc/issues/772">#772</a>).</p>
+<h3>Tight Runtime Coupling</h3>
+<p>The current implementation is deeply integrated with Tokio:</p>
+<pre><code class="language-rust">
+// Hidden Tokio dependencies everywhere
+async fn internal_method(&amp;self) -&gt; Result&lt;()&gt; {
+    tokio::spawn(async move { ... });      // Hidden task spawning
+    tokio::time::sleep(duration).await;     // Tokio-specific timers
+    // ... more Tokio coupling
+}
+</code></pre>
+<p><strong>Consequences</strong>:</p>
+<ul>
+<li>Cannot use async-std, smol, or embedded runtimes like embassy</li>
+<li>Hidden background tasks you don't control</li>
+<li>Testing requires Tokio even for protocol-only tests</li>
+<li>Platform limitations where Tokio doesn't work optimally</li>
+</ul>
+<h3>Missed Opportunity: Modern Async Patterns</h3>
+<p>The callback API predates modern Rust async patterns. Modern approaches (Rust 1.75+ with <code>async fn in trait</code>) could provide:</p>
+<ul>
+<li><strong>Stream-based APIs</strong>: Events as <code>impl Stream&lt;Item = Event&gt;</code> instead of callbacks</li>
+<li><strong>Trait-based handlers</strong>: Single trait implementation vs. multiple callback registrations</li>
+<li><strong>Better ergonomics</strong>: No <code>Box::new(move |...| Box::pin(async move { ... }))</code> dance</li>
+<li><strong>Clearer ownership</strong>: Direct ownership without Arc explosion</li>
+<li><strong>Ecosystem alignment</strong>: Works naturally with tokio-stream, async-std streams, etc.</li>
+</ul>
+<hr>
+<h2>The Foundation: Sans-I/O Protocol Core</h2>
+<p>The <code>rtc</code> crate provides a complete Sans-I/O WebRTC implementation:</p>
+<h3>What is Sans-I/O?</h3>
+<p>Sans-I/O (without I/O) separates protocol logic from I/O operations:</p>
+<pre><code class="language-rust">
+// Sans-I/O: Pure protocol logic
+fn process_packet(packet: &amp;[u8]) -&gt; Result&lt;ProtocolAction&gt; {
+    // No I/O, no async, just protocol state machine
+}
+
+// Runtime-specific I/O wrapper
+async fn io_loop(socket: UdpSocket, protocol: &amp;mut RtcState) {
+    let (n, peer_addr) = socket.recv_from(&amp;mut buf).await?;
+    protocol.handle_read(&amp;buf[..n], peer_addr, Instant::now())?;
+    
+    while let Some(msg) = protocol.poll_write() {
+        socket.send_to(&amp;msg.data, msg.addr).await?;
+    }
+}
+</code></pre>
+<h3>The rtc Crate: Feature Complete</h3>
+<p>The <code>rtc</code> crate (v0.8.x) has achieved:</p>
+<ul>
+<li>✅ <strong>Full feature parity</strong> with <code>webrtc</code> v0.17.x</li>
+<li>✅ <strong>W3C compliance</strong>: 95%+ WebRTC API compliance</li>
+<li>✅ <strong>Complete protocol stack</strong>: ICE, DTLS, SRTP, SCTP, RTP/RTCP</li>
+<li>✅ <strong>Interceptor framework</strong> with <code>sansio::Protocol</code> trait</li>
+<li>✅ <strong>WebRTC Stats API</strong> implementation</li>
+<li>✅ <strong>mDNS support</strong> for privacy-preserving connections</li>
+</ul>
+<p><strong>Key advantage</strong>: All protocol logic is testable without networking, deterministic with controlled time, and runtime-agnostic.</p>
+<hr>
+<h2>Learning from Quinn: Runtime Abstraction Done Right</h2>
+<p>Before designing our approach, we studied <a href="https://github.com/quinn-rs/quinn">Quinn</a>, a mature Sans-I/O QUIC implementation in Rust.</p>
+<h3>Quinn's Architecture</h3>
+<p>Quinn does <strong>NOT</strong> create separate crates like <code>quinn-tokio</code>, <code>quinn-async-std</code>, etc. Instead:</p>
+<pre><code>
+quinn/
+├── quinn-proto/          # Sans-I/O protocol (like our rtc crate)
+└── quinn/                # Async API with runtime trait
+    └── src/
+        └── runtime/
+            ├── mod.rs    # Runtime trait
+            ├── tokio.rs  # Tokio implementation
+            └── smol.rs   # smol implementation
+</code></pre>
+<p><strong>Key insight</strong>: Single crate with runtime trait abstraction.</p>
+<h3>Runtime Trait Pattern</h3>
+<p>Quinn defines a <code>Runtime</code> trait:</p>
+<pre><code class="language-rust">
+pub trait Runtime: Send + Sync + Debug + &#x27;static {
+    fn new_timer(&amp;self, i: Instant) -&gt; Pin&lt;Box&lt;dyn AsyncTimer&gt;&gt;;
+    fn spawn(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send&gt;&gt;);
+    fn wrap_udp_socket(&amp;self, sock: UdpSocket) -&gt; io::Result&lt;Box&lt;dyn AsyncUdpSocket&gt;&gt;;
+    fn now(&amp;self) -&gt; Instant;
+}
+</code></pre>
+<p>Concrete implementations:</p>
+<pre><code class="language-rust">
+// Tokio runtime
+pub struct TokioRuntime;
+
+impl Runtime for TokioRuntime {
+    fn spawn(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send&gt;&gt;) {
+        tokio::spawn(future);
+    }
+    
+    fn wrap_udp_socket(&amp;self, sock: UdpSocket) -&gt; io::Result&lt;Box&lt;dyn AsyncUdpSocket&gt;&gt; {
+        Ok(Box::new(tokio::net::UdpSocket::from_std(sock)?))
+    }
+}
+
+// smol runtime
+pub struct SmolRuntime;
+
+impl Runtime for SmolRuntime {
+    fn spawn(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send&gt;&gt;) {
+        ::smol::spawn(future).detach();
+    }
+    
+    fn wrap_udp_socket(&amp;self, sock: UdpSocket) -&gt; io::Result&lt;Box&lt;dyn AsyncUdpSocket&gt;&gt; {
+        Ok(Box::new(Async::new_nonblocking(sock)?))
+    }
+}
+</code></pre>
+<p><strong>Runtime selection via feature flags</strong>:</p>
+<pre><code class="language-toml">
+[features]
+default = [&quot;runtime-tokio&quot;]
+runtime-tokio = [&quot;tokio&quot;]
+runtime-smol = [&quot;smol&quot;, &quot;async-io&quot;]
+</code></pre>
+<p><strong>User code</strong>:</p>
+<pre><code class="language-rust">
+// Works with any runtime!
+let endpoint = Endpoint::builder()
+    .runtime(TokioRuntime)  // or SmolRuntime
+    .bind(...)?;
+</code></pre>
+<h3>Why This Approach is Superior</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Multiple Crates</th>
+      <th>Quinn-style Single Crate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Crate count</td>
+      <td>6+ separate crates</td>
+      <td>2 crates (proto + async)</td>
+    </tr>
+    <tr>
+      <td>User choice</td>
+      <td><code>webrtc-tokio = "0.20"</code></td>
+      <td><code>webrtc = { features = ["runtime-tokio"] }</code></td>
+    </tr>
+    <tr>
+      <td>Code duplication</td>
+      <td>High</td>
+      <td>Minimal</td>
+    </tr>
+    <tr>
+      <td>Maintenance</td>
+      <td>Complex</td>
+      <td>Simple</td>
+    </tr>
+    <tr>
+      <td>Documentation</td>
+      <td>Scattered</td>
+      <td>Centralized</td>
+    </tr>
+    <tr>
+      <td>API consistency</td>
+      <td>Risk of divergence</td>
+      <td>Always consistent</td>
+    </tr>
+    <tr>
+      <td>Testing</td>
+      <td>Per-crate test suites</td>
+      <td>Feature-flag based</td>
+    </tr>
+  </tbody>
+</table>
+<p><strong>Decision</strong>: We're adopting Quinn's architecture pattern for webrtc-rs.</p>
+<hr>
+<h2>Proposed Architecture Design: webrtc v0.20.0</h2>
+<h3>Crate Structure</h3>
+<pre><code>
+rtc/                     # Sans-I/O protocol core (already exists!)
+webrtc/                  # Async-friendly API with runtime abstraction
+    ├── Cargo.toml       # Feature flags for runtime selection
+    └── src/
+        ├── lib.rs
+        ├── peer_connection.rs
+        ├── data_channel.rs
+        ├── track.rs
+        └── runtime/
+            ├── mod.rs         # Runtime trait definitions
+            ├── tokio.rs       # Tokio implementation (default)
+            ├── async_std.rs   # async-std implementation
+            ├── smol.rs        # smol implementation
+            └── embassy.rs     # embassy implementation (embedded)
+</code></pre>
+<h3>Runtime Trait Design</h3>
+<pre><code class="language-rust">
+/// Abstracts async runtime operations for runtime independence
+pub trait Runtime: Send + Sync + Debug + &#x27;static {
+    /// Spawn a background task
+    fn spawn(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send&gt;&gt;);
+    
+    /// Wrap a standard UDP socket as an async socket
+    fn wrap_udp_socket(&amp;self, sock: std::net::UdpSocket) 
+        -&gt; io::Result&lt;Box&lt;dyn AsyncUdpSocket&gt;&gt;;
+    
+    /// Create a timer that expires at the given instant
+    fn new_timer(&amp;self, instant: Instant) -&gt; Pin&lt;Box&lt;dyn AsyncTimer&gt;&gt;;
+    
+    /// Get current time
+    fn now(&amp;self) -&gt; Instant;
+}
+
+/// Async UDP socket abstraction
+pub trait AsyncUdpSocket: Send + Sync + Debug + &#x27;static {
+    fn poll_recv(&amp;mut self, cx: &amp;mut Context, bufs: &amp;mut [IoSliceMut]) 
+        -&gt; Poll&lt;io::Result&lt;usize&gt;&gt;;
+    
+    fn poll_send(&amp;mut self, cx: &amp;mut Context, transmit: &amp;Transmit) 
+        -&gt; Poll&lt;io::Result&lt;()&gt;&gt;;
+    
+    fn local_addr(&amp;self) -&gt; io::Result&lt;SocketAddr&gt;;
+}
+
+/// Async timer abstraction
+pub trait AsyncTimer: Send + Debug + &#x27;static {
+    fn reset(self: Pin&lt;&amp;mut Self&gt;, instant: Instant);
+    fn poll(self: Pin&lt;&amp;mut Self&gt;, cx: &amp;mut Context) -&gt; Poll&lt;()&gt;;
+}
+</code></pre>
+<h3>Modern Async API: Design Choices</h3>
+<p>WebRTC v0.20.0 <strong>plans to use a push-based trait handler approach</strong> for event handling. While there are two primary patterns used in the Rust async ecosystem, WebRTC's complex state management and multiple interconnected event types make trait handlers the most suitable choice.</p>
+<p>Below, we explore both options and explain the rationale for proposing trait-based handlers:</p>
+<h4>Option 1: Push-Based Handler Trait (Proposed for v0.20.0)</h4>
+<p>Events are delivered via trait callbacks, similar to libp2p's <code>NetworkBehaviour</code>:</p>
+<pre><code class="language-rust">
+pub trait PeerConnectionEventHandler: Send {
+    async fn on_connection_state_change(&amp;mut self, state: RTCPeerConnectionState) {}
+    async fn on_ice_candidate(&amp;mut self, candidate: Option&lt;RTCIceCandidate&gt;) {}
+    async fn on_track(&amp;mut self, track: Track) {}
+    async fn on_data_channel(&amp;mut self, channel: DataChannel) {}
+}
+
+struct MyHandler {
+    // Your state
+}
+
+impl PeerConnectionEventHandler for MyHandler {
+    async fn on_track(&amp;mut self, track: Track) {
+        println!(&quot;New track: {}&quot;, track.id());
+        // Handle track with clean ownership
+    }
+}
+</code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>✅ <strong>Single coordination point</strong>: All events handled in one place</li>
+<li>✅ <strong>Familiar to WebRTC users</strong>: Similar to JavaScript WebRTC API</li>
+<li>✅ <strong>Centralized state</strong>: Easy to maintain handler state across events</li>
+<li>✅ <strong>No missed events</strong>: Framework ensures all events are delivered</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>⚠️ <strong>Trait boilerplate</strong>: Requires implementing traits</li>
+<li>⚠️ <strong>Less composable</strong>: Harder to use combinators or share logic</li>
+<li>⚠️ <strong>Framework-style</strong>: More opinionated, less flexible</li>
+<li>⚠️ <strong>Testing complexity</strong>: Requires mocking entire trait</li>
+</ul>
+<h4>Option 2: Pull-Based Stream API (Alternative Pattern)</h4>
+<p>Following Quinn's pattern, events are modeled as async streams that users pull from. While this works well for QUIC's simpler event model, it becomes complex for WebRTC:</p>
+<pre><code class="language-rust">
+use tokio_stream::StreamExt;
+
+// Accept incoming tracks
+let mut tracks = conn.tracks();
+while let Some(track) = tracks.next().await {
+    println!(&quot;New track: {}&quot;, track.id());
+    // Handle track with clean ownership
+}
+
+// Pull ICE candidates
+let mut candidates = conn.ice_candidates();
+while let Some(candidate) = candidates.next().await {
+    send_to_peer(candidate).await?;
+}
+
+// Monitor connection state
+let mut states = conn.connection_states();
+while let Some(state) = states.next().await {
+    match state {
+        RTCPeerConnectionState::Connected =&gt; println!(&quot;Connected!&quot;),
+        RTCPeerConnectionState::Failed =&gt; break,
+        _ =&gt; {}
+    }
+}
+
+// Note: Managing 6+ event streams separately is complex!
+</code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>✅ <strong>Ecosystem integration</strong>: Works naturally with <code>Stream</code> combinators (<code>filter</code>, <code>map</code>, <code>merge</code>)</li>
+<li>✅ <strong>Composable</strong>: Easy to combine multiple streams with <code>tokio::select!</code> or <code>StreamExt</code></li>
+<li>✅ <strong>Clear ownership</strong>: No trait implementations, clean borrow semantics</li>
+<li>✅ <strong>Testable</strong>: Streams are easy to mock and test</li>
+<li>✅ <strong>Modern Rust idiom</strong>: Matches patterns in tokio-tungstenite, async-std</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>⚠️ <strong>Multiple event loops</strong>: Users must spawn tasks or use <code>select!</code> for multiple event types</li>
+<li>⚠️ <strong>Potential backpressure</strong>: Slow consumers could buffer events</li>
+<li>⚠️ <strong>Complexity</strong>: Coordinating 5+ streams can be verbose</li>
+<li>⚠️ <strong>State coordination difficulty</strong>: Sharing state across 6+ separate tasks/loops is complex</li>
+</ul>
+<h3>Comparison: Push vs Pull</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Push-Based (Traits)</th>
+      <th>Pull-Based (Streams)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Composability</strong></td>
+      <td>⭐⭐ Limited</td>
+      <td>⭐⭐⭐⭐⭐ Stream combinators</td>
+    </tr>
+    <tr>
+      <td><strong>Simplicity</strong></td>
+      <td>⭐⭐⭐⭐ Single handler</td>
+      <td>⭐⭐⭐ Multiple loops needed</td>
+    </tr>
+    <tr>
+      <td><strong>Flexibility</strong></td>
+      <td>⭐⭐⭐ Framework-bound</td>
+      <td>⭐⭐⭐⭐⭐ Very flexible</td>
+    </tr>
+    <tr>
+      <td><strong>Testing</strong></td>
+      <td>⭐⭐⭐ Trait mocking</td>
+      <td>⭐⭐⭐⭐⭐ Easy to mock</td>
+    </tr>
+    <tr>
+      <td><strong>Ecosystem fit</strong></td>
+      <td>⭐⭐⭐ Less common</td>
+      <td>⭐⭐⭐⭐⭐ Tokio/async-std idiomatic</td>
+    </tr>
+    <tr>
+      <td><strong>Learning curve</strong></td>
+      <td>⭐⭐⭐⭐ Familiar to WebRTC users</td>
+      <td>⭐⭐⭐⭐ Familiar to Rust devs</td>
+    </tr>
+    <tr>
+      <td><strong>State management</strong></td>
+      <td>⭐⭐⭐⭐⭐ Centralized</td>
+      <td>⭐⭐⭐ Distributed across tasks</td>
+    </tr>
+  </tbody>
+</table>
+<h3>Design Decision: Push-Based Traits for WebRTC v0.20.0</h3>
+<p>After careful consideration of the trade-offs, <strong>we propose the push-based trait handler approach</strong> as the primary API design for v0.20.0. Here's the reasoning behind this design decision:</p>
+<h4>WebRTC's Complex Event Model</h4>
+<p>Unlike Quinn (QUIC), which has a simpler event model focused on accepting streams and datagrams, WebRTC has <strong>multiple interconnected event types</strong> that often need coordinated handling:</p>
+<pre><code class="language-rust">
+// WebRTC events are diverse and interconnected:
+- ICE candidate gathering (continuous during connection)
+- Connection state changes (affects all other operations)
+- Track additions/removals (media streams)
+- Data channel events (application data)
+- DTLS state changes (security layer)
+- SCTP events (data channel transport)
+- Negotiation needed (renegotiation triggers)
+- Signaling state changes
+</code></pre>
+<p><strong>The problem with pull-based streams for WebRTC:</strong></p>
+<pre><code class="language-rust">
+// Pull-based: Need to coordinate 6+ event streams!
+tokio::select! {
+    Some(track) = tracks.next() =&gt; { /* handle track */ },
+    Some(candidate) = candidates.next() =&gt; { /* handle ICE */ },
+    Some(state) = states.next() =&gt; { /* handle state */ },
+    Some(dc) = data_channels.next() =&gt; { /* handle data channel */ },
+    Some(negotiation) = negotiations.next() =&gt; { /* handle renegotiation */ },
+    // ... more branches
+}
+
+// Or spawn 6+ separate tasks:
+tokio::spawn(async move { /* handle tracks */ });
+tokio::spawn(async move { /* handle ICE */ });
+tokio::spawn(async move { /* handle state */ });
+// Coordinating state across tasks becomes complex!
+</code></pre>
+<p><strong>With trait-based handlers:</strong></p>
+<pre><code class="language-rust">
+impl PeerConnectionEventHandler for MyHandler {
+    // All events in one place, easy to coordinate
+    async fn on_track(&amp;mut self, track: Track) {
+        self.tracks.push(track);  // Direct state access
+        self.check_ready().await;  // Easy coordination
+    }
+    
+    async fn on_connection_state_change(&amp;mut self, state: RTCPeerConnectionState) {
+        self.state = state;
+        self.check_ready().await;  // Same coordination logic
+    }
+    
+    async fn check_ready(&amp;mut self) {
+        if self.state == Connected &amp;&amp; !self.tracks.is_empty() {
+            // Coordinated logic across multiple event types
+        }
+    }
+}
+</code></pre>
+<h4>Key Advantages for WebRTC</h4>
+<p>1. <strong>Centralized State Management</strong>: WebRTC applications typically need to coordinate state across multiple event types. A single handler trait makes this natural.</p>
+<p>2. <strong>Familiar Mental Model</strong>: WebRTC developers from JavaScript, Go, C++ are used to callback/handler patterns. This reduces friction.</p>
+<p>3. <strong>Simpler for Common Cases</strong>: Most WebRTC applications need to handle all event types. Writing one trait implementation is simpler than managing 6+ streams.</p>
+<p>4. <strong>Clear Event Ordering</strong>: Events are delivered in order through a single handler, making it easier to reason about state transitions.</p>
+<p>5. <strong>Better Match for Protocol Complexity</strong>: WebRTC's state machine involves complex interactions between ICE, DTLS, SCTP, and RTP layers. Centralized handling helps manage this complexity.</p>
+<h4>Future Flexibility</h4>
+<p>The proposed design for v0.20.0 uses trait-based handlers as the primary API, but we could still provide stream-based access for users who prefer it:</p>
+<pre><code class="language-rust">
+// Optional: Stream-based access built on top of trait system
+impl PeerConnection {
+    pub fn tracks(&amp;self) -&gt; impl Stream&lt;Item = Track&gt; {
+        // Internally uses trait handler to broadcast to stream
+    }
+}
+</code></pre>
+<p>This gives us the best of both worlds: a simple, cohesive API by default, with opt-in flexibility for advanced use cases.</p>
+<h3>Example API Design</h3>
+<p>The proposed primary API for v0.20.0 uses the push-based trait handler approach:</p>
+<h4>Trait-Based Handler Example (v0.20.0 Proposed Primary API)</h4>
+<pre><code class="language-rust">
+use webrtc::{PeerConnection, PeerConnectionEventHandler, runtime::TokioRuntime};
+
+struct MyHandler {
+    // Your application state
+}
+
+impl PeerConnectionEventHandler for MyHandler {
+    async fn on_track(&amp;mut self, track: Track) {
+        println!(&quot;New track: {}&quot;, track.id());
+        // Handle track
+    }
+    
+    async fn on_ice_candidate(&amp;mut self, candidate: Option&lt;RTCIceCandidate&gt;) {
+        // Send to peer
+        send_to_peer(candidate).await;
+    }
+    
+    async fn on_connection_state_change(&amp;mut self, state: RTCPeerConnectionState) {
+        println!(&quot;State: {state}&quot;);
+    }
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let pc = PeerConnection::builder()
+        .runtime(TokioRuntime)
+        .handler(MyHandler::new())
+        .ice_servers(vec![ice_server])
+        .build()
+        .await?;
+    
+    // All events handled via trait methods
+    let offer = pc.create_offer().await?;
+    pc.set_local_description(offer).await?;
+    
+    Ok(())
+}
+</code></pre>
+<h4>Stream-Based Alternative (Optional, for Advanced Use Cases)</h4>
+<p>For users who prefer stream-based patterns, we can provide optional stream access:</p>
+<pre><code class="language-rust">
+use webrtc::{PeerConnection, runtime::TokioRuntime};
+use tokio_stream::StreamExt;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    // Create peer connection with Tokio runtime
+    let pc = PeerConnection::builder()
+        .runtime(TokioRuntime)
+        .ice_servers(vec![ice_server])
+        .build()
+        .await?;
+    
+    // Clean async operations
+    let offer = pc.create_offer().await?;
+    pc.set_local_description(offer).await?;
+    
+    // Handle events via streams
+    tokio::spawn({
+        let pc = pc.clone();
+        async move {
+            let mut tracks = pc.tracks();
+            while let Some(track) = tracks.next().await {
+                println!(&quot;New track: {}&quot;, track.id());
+                // Handle track
+            }
+        }
+    });
+    
+    tokio::spawn({
+        let pc = pc.clone();
+        async move {
+            let mut candidates = pc.ice_candidates();
+            while let Some(candidate) = candidates.next().await {
+                // Send to peer
+                send_to_peer(candidate).await?;
+            }
+        }
+    });
+    
+    Ok(())
+}
+</code></pre>
+<p><strong>Note</strong>: Stream-based access may be provided as a convenience wrapper, but the trait-based handler is the proposed and recommended primary API for v0.20.0. <strong>This design is still being finalized and is subject to community feedback.</strong></p>
+<h3>Runtime Switching</h3>
+<p>The trait-based handler approach works with any runtime by changing the runtime parameter:</p>
+<pre><code class="language-rust">
+// Switch to async-std - just change runtime and feature flag!
+use webrtc::{PeerConnection, runtime::AsyncStdRuntime};
+
+#[async_std::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let pc = PeerConnection::builder()
+        .runtime(AsyncStdRuntime)  // Different runtime, same API!
+        .build()
+        .await?;
+    
+    // Everything else is identical
+}
+</code></pre>
+<h3>Feature Flags</h3>
+<pre><code class="language-toml">
+# webrtc/Cargo.toml
+[features]
+default = [&quot;runtime-tokio&quot;]
+
+# Runtime options
+runtime-tokio = [&quot;tokio&quot;]
+runtime-async-std = [&quot;async-std&quot;]
+runtime-smol = [&quot;smol&quot;, &quot;async-io&quot;]
+runtime-embassy = [&quot;embassy-executor&quot;]
+
+[dependencies]
+rtc = { version = &quot;0.8&quot; }
+tokio = { version = &quot;1&quot;, optional = true }
+async-std = { version = &quot;1&quot;, optional = true }
+smol = { version = &quot;2&quot;, optional = true }
+async-io = { version = &quot;2&quot;, optional = true }
+embassy-executor = { version = &quot;0.6&quot;, optional = true }
+</code></pre>
+<p><strong>User dependencies</strong>:</p>
+<pre><code class="language-toml">
+# Tokio (default)
+[dependencies]
+webrtc = &quot;0.20&quot;
+
+# async-std
+[dependencies]
+webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-async-std&quot;] }
+
+# smol
+[dependencies]
+webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+</code></pre>
+<h3>Wrapping Sans-I/O Core</h3>
+<p>The proposed async API would wrap the <code>rtc</code> Sans-I/O core using the trait-based handler pattern:</p>
+<pre><code class="language-rust">
+pub struct PeerConnection {
+    runtime: Box&lt;dyn Runtime&gt;,
+    inner: rtc::peer_connection::RTCPeerConnection,
+    handler: Arc&lt;Mutex&lt;dyn PeerConnectionEventHandler&gt;&gt;,
+}
+
+impl PeerConnection {
+    pub async fn create_offer(&amp;self) -&gt; Result&lt;SessionDescription&gt; {
+        // Synchronously create offer via Sans-I/O core
+        let offer = self.inner.create_offer(None)?;
+        
+        // Drive I/O loop with runtime
+        self.drive_io().await?;
+        
+        Ok(offer)
+    }
+    
+    async fn drive_io(&amp;self) -&gt; Result&lt;()&gt; {
+        loop {
+            // Send outgoing packets
+            while let Some(msg) = self.inner.poll_write() {
+                self.runtime.send_udp(msg).await?;
+            }
+            
+            // Process events and dispatch to handler
+            while let Some(event) = self.inner.poll_event() {
+                let mut handler = self.handler.lock().await;
+                match event {
+                    Event::Track(track) =&gt; {
+                        handler.on_track(track).await;
+                    }
+                    Event::IceCandidate(candidate) =&gt; {
+                        handler.on_ice_candidate(candidate).await;
+                    }
+                    Event::StateChange(state) =&gt; {
+                        handler.on_connection_state_change(state).await;
+                    }
+                    Event::DataChannel(dc) =&gt; {
+                        handler.on_data_channel(dc).await;
+                    }
+                }
+            }
+                match event {
+                    Event::DataChannel(dc) =&gt; {
+                        handler.on_data_channel(dc).await;
+                    }
+                }
+            }
+            
+            // Handle timeouts
+            if let Some(timeout) = self.inner.poll_timeout() {
+                self.runtime.sleep_until(timeout).await;
+                self.inner.handle_timeout(Instant::now())?;
+            }
+            
+            // Receive incoming packets
+            tokio::select! {
+                Ok((packet, addr)) = self.runtime.recv_udp() =&gt; {
+                    self.inner.handle_read(packet, addr, Instant::now())?;
+                }
+                // ... other branches
+            }
+        }
+    }
+}
+</code></pre>
+<p><strong>Key aspects of the wrapper</strong>:</p>
+<p>1. <strong>Sans-I/O core</strong> (<code>rtc::peer_connection::RTCPeerConnection</code>) handles all protocol logic</p>
+<p>2. <strong>Runtime abstraction</strong> (<code>Box&lt;dyn Runtime&gt;</code>) provides async I/O operations</p>
+<p>3. <strong>Event handler trait</strong> dispatches events from Sans-I/O core to user-implemented handler</p>
+<p>4. <strong>I/O loop</strong> (<code>drive_io</code>) coordinates:</p>
+<p>   - Sending packets: <code>poll_write()</code> → <code>runtime.send_udp()</code></p>
+<p>   - Processing events: <code>poll_event()</code> → handler trait method dispatch</p>
+<p>   - Timer management: <code>poll_timeout()</code> → <code>runtime.sleep_until()</code></p>
+<p>   - Receiving packets: <code>runtime.recv_udp()</code> → <code>handle_read()</code></p>
+<p>This proposed architecture provides clean separation between protocol logic (Sans-I/O), I/O operations (runtime abstraction), and application logic (trait handler).</p>
+<hr>
+<h2>Benefits of This Proposed Architecture</h2>
+<h3>1. Clean, Ergonomic APIs</h3>
+<p><strong>No more callback hell</strong>:</p>
+<pre><code class="language-rust">
+// Trait-based approach - clean and simple
+impl PeerConnectionEventHandler for MyHandler {
+    async fn on_track(&amp;mut self, track: Track) {
+        handle_track(track).await;
+    }
+    
+    async fn on_ice_candidate(&amp;mut self, candidate: Option&lt;RTCIceCandidate&gt;) {
+        send_to_peer(candidate).await;
+    }
+    
+    // All events in one place, easy state coordination
+}
+
+// No Arc cloning, no Box::new, no triple nesting!
+</code></pre>
+<p>Benefits:</p>
+<ul>
+<li>Direct ownership without <code>Arc</code> explosion</li>
+<li>Clear, linear code flow</li>
+<li>Centralized state management with <code>&mut self</code></li>
+<li>Predictable resource cleanup</li>
+<li>Natural coordination across multiple event types</li>
+</ul>
+<h3>2. Runtime Independence</h3>
+<p><strong>Support for multiple runtimes</strong>:</p>
+<ul>
+<li>✅ <strong>Tokio</strong> - Production servers, web services</li>
+<li>✅ <strong>async-std</strong> - Alternative async runtime</li>
+<li>✅ <strong>smol</strong> - Lightweight runtime</li>
+<li>✅ <strong>embassy</strong> - Embedded systems (no_std)</li>
+<li>✅ <strong>Custom runtimes</strong> - Implement <code>Runtime</code> trait</li>
+</ul>
+<p><strong>Same protocol core, different I/O</strong>:</p>
+<pre><code class="language-rust">
+// The rtc core doesn&#x27;t change
+let mut rtc_pc = rtc::RTCPeerConnection::new(config)?;
+
+// Just wrap with different runtime
+let pc_tokio = webrtc::PeerConnection::new(rtc_pc.clone(), TokioRuntime);
+let pc_smol = webrtc::PeerConnection::new(rtc_pc.clone(), SmolRuntime);
+</code></pre>
+<h3>3. Superior Testing</h3>
+<p><strong>Pure protocol tests</strong>:</p>
+<pre><code class="language-rust">
+#[test]
+fn test_ice_state_machine() {
+    let mut pc = rtc::RTCPeerConnection::new(config)?;
+    
+    // No networking, no async runtime needed
+    let packet = create_stun_binding_request();
+    pc.handle_read(&amp;packet, peer_addr, Instant::now())?;
+    
+    let response = pc.poll_write().unwrap();
+    assert!(is_stun_binding_response(&amp;response.data));
+}
+</code></pre>
+<p><strong>Deterministic time</strong>:</p>
+<pre><code class="language-rust">
+#[test]
+fn test_ice_timeout() {
+    let fixed_time = Instant::now();
+    
+    pc.handle_timeout(fixed_time)?;
+    pc.handle_timeout(fixed_time + Duration::from_secs(5))?;
+    
+    // Fully deterministic, no flaky timing
+}
+</code></pre>
+<h3>4. Better Performance</h3>
+<p><strong>Optimizations at two levels</strong>:</p>
+<ul>
+<li><strong>Protocol layer</strong>: Optimize state machines, packet processing</li>
+<li><strong>I/O layer</strong>: Optimize for specific runtime characteristics</li>
+</ul>
+<p><strong>Zero-cost abstractions</strong>:</p>
+<ul>
+<li>Trait object vtable indirection is minimal</li>
+<li>No hidden allocations in hot paths</li>
+<li>Compiler can optimize through trait boundaries</li>
+</ul>
+<h3>5. Ecosystem Alignment</h3>
+<p><strong>Modern Rust patterns</strong>:</p>
+<ul>
+<li>✅ Stable <code>async fn in trait</code></li>
+<li>✅ Builder pattern for configuration</li>
+<li>✅ Type-safe error handling</li>
+<li>✅ Zero-cost abstractions</li>
+</ul>
+<p><strong>Framework integration</strong>:</p>
+<ul>
+<li>Works with Actix Web, Axum, Warp, Rocket</li>
+<li>Compatible with any Tokio-based framework</li>
+<li>Integrates with async-std ecosystem</li>
+</ul>
+<hr>
+<h2>Development Roadmap</h2>
+<h3>Phase 1: Foundation (Q1 2026) ✅ In Progress</h3>
+<p><strong>Goal</strong>: Complete Sans-I/O core and design async API</p>
+<p><strong>Completed:</strong></p>
+<ul>
+<li>[x] <code>rtc</code> crate feature parity with <code>webrtc</code></li>
+<li>[x] W3C WebRTC API compliance (95%+)</li>
+<li>[x] Complete protocol stack</li>
+<li>[x] Interceptor framework</li>
+<li>[x] Stats API</li>
+</ul>
+<p><strong>In Progress:</strong></p>
+<ul>
+<li>[ ] Runtime trait abstraction design</li>
+<li>[ ] Event handling API design (trait-based vs stream-based discussion)</li>
+<li>[ ] API design RFC and community feedback</li>
+<li>[ ] Proof-of-concept with Tokio</li>
+</ul>
+<p><strong>Deliverables:</strong></p>
+<ul>
+<li>Design RFC for async-friendly API</li>
+<li>Community feedback and design iteration</li>
+<li>Proof-of-concept implementation</li>
+</ul>
+<hr>
+<h3>Phase 2: API Design & Runtime Implementation (Q2 2026)</h3>
+<p><strong>Goal</strong>: Finalize API design and implement runtime adapters</p>
+<p><strong>Tasks:</strong></p>
+<p>1. <strong>Runtime Trait Finalization</strong></p>
+<p>   - [ ] Define <code>Runtime</code> trait</p>
+<p>   - [ ] Define <code>AsyncUdpSocket</code> trait</p>
+<p>   - [ ] Define <code>AsyncTimer</code> trait</p>
+<p>   - [ ] Type-erased wrappers</p>
+<p>2. <strong>Tokio Runtime</strong> (default)</p>
+<p>   - [ ] Implement <code>TokioRuntime</code></p>
+<p>   - [ ] UDP socket wrapper</p>
+<p>   - [ ] Timer wrapper</p>
+<p>   - [ ] Examples and tests</p>
+<p>3. <strong>Additional Runtimes</strong></p>
+<p>   - [ ] <code>AsyncStdRuntime</code></p>
+<p>   - [ ] <code>SmolRuntime</code></p>
+<p>   - [ ] Documentation for custom runtimes</p>
+<p>4. <strong>API Design</strong></p>
+<p>   - [ ] Trait-based event handlers</p>
+<p>   - [ ] Builder pattern</p>
+<p>   - [ ] Error types</p>
+<p>   - [ ] Configuration types</p>
+<p><strong>Deliverables:</strong></p>
+<ul>
+<li>Finalized API design</li>
+<li>Runtime trait specification</li>
+<li><code>webrtc</code> v0.20.0-alpha</li>
+</ul>
+<hr>
+<h3>Phase 3: Core Implementation (Q3 2026)</h3>
+<p><strong>Goal</strong>: Complete async-friendly webrtc crate</p>
+<p><strong>Tasks:</strong></p>
+<p>1. <strong>PeerConnection API</strong></p>
+<p>   - [ ] Wrap <code>rtc::RTCPeerConnection</code></p>
+<p>   - [ ] I/O loop implementation</p>
+<p>   - [ ] Async operations: <code>create_offer</code>, <code>create_answer</code>, etc.</p>
+<p>   - [ ] Track management</p>
+<p>   - [ ] Data channel creation</p>
+<p>2. <strong>DataChannel</strong></p>
+<p>   - [ ] Async send/recv</p>
+<p>   - [ ] Backpressure handling</p>
+<p>   - [ ] Stream-based API (future)</p>
+<p>3. <strong>Media Tracks</strong></p>
+<p>   - [ ] Track sender with media pipeline</p>
+<p>   - [ ] Track receiver</p>
+<p>   - [ ] RTP/RTCP handling</p>
+<p>4. <strong>Event Handling</strong></p>
+<p>   - [ ] Trait-based handler dispatch</p>
+<p>   - [ ] Proper lifetime management</p>
+<p>   - [ ] No memory leaks</p>
+<p><strong>Deliverables:</strong></p>
+<ul>
+<li><code>webrtc</code> v0.20.0-beta</li>
+<li>Complete API implementation</li>
+<li>Examples for all runtimes</li>
+</ul>
+<hr>
+<h3>Phase 4: Browser Interoperability & Testing (Q3-Q4 2026)</h3>
+<p><strong>Goal</strong>: Production-ready quality</p>
+<p><strong>Test Matrix:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Browser</th>
+      <th>Data Channels</th>
+      <th>Audio</th>
+      <th>Video</th>
+      <th>Simulcast</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Chrome</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+    </tr>
+    <tr>
+      <td>Firefox</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+    </tr>
+    <tr>
+      <td>Safari</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+    </tr>
+    <tr>
+      <td>Edge</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+      <td>☐</td>
+    </tr>
+  </tbody>
+</table>
+<p><strong>Automated Testing:</strong></p>
+<ul>
+<li>[ ] GitHub Actions workflow</li>
+<li>[ ] Selenium/Playwright tests</li>
+<li>[ ] Cross-platform (Linux, macOS, Windows)</li>
+<li>[ ] Performance benchmarks</li>
+<li>[ ] Memory leak detection</li>
+</ul>
+<p><strong>Deliverables:</strong></p>
+<ul>
+<li>Browser compatibility report</li>
+<li>Automated test suite in CI</li>
+<li><code>webrtc</code> v0.20.0-rc</li>
+</ul>
+<hr>
+<h3>Phase 5: Production Release & Documentation (Q4 2026)</h3>
+<p><strong>Goal</strong>: Stable release with comprehensive docs</p>
+<p><strong>Documentation:</strong></p>
+<ul>
+<li>[ ] Getting Started guide</li>
+<li>[ ] Migration guide from v0.17.x</li>
+<li>[ ] Runtime selection guide</li>
+<li>[ ] API reference (rustdoc)</li>
+<li>[ ] Architecture overview</li>
+<li>[ ] Performance tuning guide</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<ul>
+<li>[ ] Simple peer-to-peer data channel</li>
+<li>[ ] Audio/video streaming</li>
+<li>[ ] Multi-party conferencing</li>
+<li>[ ] File transfer</li>
+<li>[ ] Game networking</li>
+</ul>
+<p><strong>Deliverables:</strong></p>
+<ul>
+<li><code>webrtc</code> v0.20.0 (stable)</li>
+<li>Complete documentation</li>
+<li>10+ working examples</li>
+<li>Migration guide and tools</li>
+</ul>
+<hr>
+<h2>Migration from v0.17.x</h2>
+<h3>Timeline</h3>
+<p><strong>Q2 2026</strong>: Preparation</p>
+<ul>
+<li>Pin to <code>webrtc = "0.17.x"</code></li>
+<li>Review migration guide</li>
+<li>Experiment with v0.20.0-alpha</li>
+</ul>
+<p><strong>Q3-Q4 2026</strong>: Gradual migration</p>
+<ul>
+<li>Update to v0.20.0-beta</li>
+<li>Migrate one module at a time</li>
+<li>Replace callbacks with async streams</li>
+<li>Test thoroughly</li>
+</ul>
+<p><strong>2027</strong>: Adopt new architecture</p>
+<ul>
+<li>Update to v0.20.0 stable</li>
+<li>Remove compatibility shims</li>
+<li>Optimize for new patterns</li>
+</ul>
+<h3>API Comparison</h3>
+<p><strong>v0.17.x (old)</strong>:</p>
+<pre><code class="language-rust">
+let api = APIBuilder::new().build();
+let pc = Arc::new(api.new_peer_connection(config).await?);
+
+let pc_clone = pc.clone();
+pc.on_peer_connection_state_change(Box::new(move |s| {
+    let pc = pc_clone.clone();  // More cloning...
+    Box::pin(async move {
+        println!(&quot;State: {s}&quot;);
+    })
+}));
+</code></pre>
+<p><strong>v0.20.0 (new)</strong>:</p>
+<pre><code class="language-rust">
+use tokio_stream::StreamExt;
+
+let pc = PeerConnection::builder()
+    .runtime(TokioRuntime)
+    .build()
+    .await?;
+
+// Handle events via streams - no cloning needed!
+tokio::spawn(async move {
+    let mut states = pc.connection_states();
+    while let Some(state) = states.next().await {
+        println!(&quot;State: {state}&quot;);
+    }
+});
+</code></pre>
+<h3>Compatibility Promise</h3>
+<ul>
+<li><strong>v0.17.x</strong>: Bug fixes through 2026</li>
+<li><strong>v0.20.0</strong>: Migration guide provided</li>
+<li><strong>Compatibility layer</strong>: 6 months after release</li>
+<li><strong>Breaking changes</strong>: Well documented</li>
+</ul>
+<hr>
+<h2>Success Metrics</h2>
+<h3>Technical Goals</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>v0.17.x</th>
+      <th>v0.20.0 Target</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Memory leak per connection</td>
+      <td>~109 KiB</td>
+      <td>0 KiB</td>
+    </tr>
+    <tr>
+      <td>Supported runtimes</td>
+      <td>1 (Tokio)</td>
+      <td>4+</td>
+    </tr>
+    <tr>
+      <td>Browser interop</td>
+      <td>Partial</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td>Connection setup time</td>
+      <td>~2s</td>
+      <td>&lt;1s</td>
+    </tr>
+    <tr>
+      <td>DataChannel throughput</td>
+      <td>~300 Mbps</td>
+      <td>&gt;500 Mbps</td>
+    </tr>
+    <tr>
+      <td>Test coverage</td>
+      <td>~60%</td>
+      <td>&gt;80%</td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+<h2>Get Involved</h2>
+<p>We're actively working on this and would love your input:</p>
+<p><strong>Current Phase (Q1 2026):</strong></p>
+<ul>
+<li>Review API design RFC</li>
+<li>Provide feedback on architecture</li>
+<li>Test experimental implementations</li>
+<li>Report bugs in v0.17.x</li>
+</ul>
+<p><strong>How to Contribute:</strong></p>
+<ul>
+<li><strong>Design</strong>: Comment on API design discussions</li>
+<li><strong>Implementation</strong>: Help implement runtime adapters</li>
+<li><strong>Testing</strong>: Browser interoperability testing</li>
+<li><strong>Documentation</strong>: Write guides and examples</li>
+</ul>
+<p><strong>Communication:</strong></p>
+<ul>
+<li><strong>GitHub Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Blog</strong>: Regular progress updates</li>
+</ul>
+<hr>
+<h2>Conclusion</h2>
+<p>The shift to an async-friendly architecture represents the next evolution for webrtc-rs. This design proposal:</p>
+<p>1. <strong>Learns from Quinn</strong> - Adopts proven runtime abstraction patterns</p>
+<p>2. <strong>Builds on Sans-I/O</strong> - Leverages our complete <code>rtc</code> protocol core</p>
+<p>3. <strong>Supports multiple runtimes</strong> - Via clean trait abstraction</p>
+<p>4. <strong>Proposes the right pattern</strong> - Trait-based handlers fit WebRTC's complex event model</p>
+<p>5. <strong>Uses modern async patterns</strong> - Native async trait methods, builder APIs</p>
+<p>6. <strong>Eliminates callback hell</strong> - Clean ownership and lifecycle management</p>
+<p>We're designing a truly world-class WebRTC implementation in Rust that will be:</p>
+<ul>
+<li><strong>Runtime agnostic</strong> - Works anywhere Rust runs (Tokio, async-std, smol, embassy)</li>
+<li><strong>Memory safe</strong> - No leaks, clear ownership semantics</li>
+<li><strong>Performant</strong> - Zero-cost abstractions over Sans-I/O core</li>
+<li><strong>Ergonomic</strong> - Clean, intuitive APIs for complex WebRTC use cases</li>
+<li><strong>Well tested</strong> - Comprehensive browser interop and deterministic testing</li>
+</ul>
+<p><strong>This is a design proposal—we welcome your feedback!</strong> Join the discussion on <a href="https://github.com/webrtc-rs/webrtc">GitHub</a> or our <a href="https://discord.gg/4Ju8UHdXMs">Discord</a>.</p>
+<p>The future of webrtc-rs will be async-friendly, runtime-agnostic, and built on solid Sans-I/O foundations with APIs designed specifically for WebRTC's complexity. 🦀</p>
+<hr>
+<h2>References</h2>
+<ul>
+<li><strong>Quinn</strong>: https://github.com/quinn-rs/quinn</li>
+<li><strong>rtc crate</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Sans-I/O pattern</strong>: https://sans-io.readthedocs.io/</li>
+<li><strong>W3C WebRTC</strong>: https://www.w3.org/TR/webrtc/</li>
+<li><strong>webrtc v0.17.0 release</strong>: https://github.com/webrtc-rs/webrtc/releases/tag/v0.17.0</li>
+</ul>
+<hr>
+<p><em>Follow webrtc-rs development on <a href="https://github.com/webrtc-rs/webrtc">GitHub</a> and join our <a href="https://discord.gg/4Ju8UHdXMs">Discord</a> community!</em></p>
+
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
