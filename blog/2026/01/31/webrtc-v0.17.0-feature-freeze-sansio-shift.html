@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="webrtc v0.17.0: Feature Freeze and Shifting to Build Async-Friendly API on Sans-I/O rtc Crate">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content table th,
+    .blog-content table td {
+      border: 1px solid #dbdbdb;
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>webrtc v0.17.0: Feature Freeze and Shifting to Build Async-Friendly API on Sans-I/O rtc Crate | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1><code>webrtc</code> v0.17.0: Feature Freeze and Shifting to Build Async-Friendly API on Sans-I/O <code>rtc</code> Crate</h1>
+            <div class="blog-meta">
+              <span>January 31, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/01/31/webrtc-v0.17.0-feature-freeze-sansio-shift.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+            <p>We're announcing a significant transition for the webrtc-rs project. <code>webrtc</code> <strong>v0.17.0</strong> marks the <strong>final feature release</strong> of the Tokio-coupled async WebRTC implementation. This isn't an ending—it's a strategic evolution toward a more sustainable, flexible, and robust architecture.</p>
+
+            <h2>What This Means</h2>
+
+            <p><strong>v0.17.x branch</strong>: Will receive <strong>bug fixes only</strong>. No new features will be added.</p>
+
+            <p><strong>Master branch</strong>: Will transition to a <strong>Sans-I/O architecture</strong> built on top of <a href="https://github.com/webrtc-rs/rtc"><code>rtc</code></a> crate.</p>
+
+            <p>This new architecture will:</p>
+
+            <ul>
+              <li>✅ Support multiple async runtimes (Tokio, smol, async-std, embassy, etc.)</li>
+              <li>✅ Provide a clean, protocol-centric Sans-I/O core via webrtc-rs/rtc</li>
+              <li>✅ Enable a truly runtime-agnostic, async-friendly WebRTC implementation in Rust</li>
+            </ul>
+
+            <hr>
+
+            <h2>Why This Fundamental Shift?</h2>
+
+            <p>Over several years of building and maintaining webrtc-rs, we've learned valuable lessons from production deployments. While the current Tokio-based implementation has served the community well, we've encountered <strong>fundamental architectural challenges</strong> that cannot be adequately addressed through incremental improvements.</p>
+
+            <h3>Critical Issue: Resources Leak</h3>
+
+            <p>One of the most serious problems plaguing the current architecture is <strong>systematic resource leakage through callback handlers</strong> (<a href="https://github.com/webrtc-rs/webrtc/issues/772">#772</a>, <a href="https://github.com/webrtc-rs/webrtc/issues/406">#406</a>).</p>
+
+            <p>The current callback-based event handling API looks like this:</p>
+
+            <pre><code class="language-rust">pc.on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
+    Box::pin(async { /* ... */ })
+}));</code></pre>
+
+            <p><strong>The Problem</strong>: When a <code>PeerConnection</code> is dropped and closed, these <code>Box</code>ed callbacks are <strong>not properly released</strong>. Community testing has revealed the severity:</p>
+
+            <ul>
+              <li><strong>~109 KiB leaked per connection</strong> in typical usage scenarios</li>
+              <li>Callbacks remain in memory for minutes (or indefinitely) after peer connections are closed</li>
+              <li>No API exists to manually clear handlers or force cleanup</li>
+              <li>The <code>is_closed: Arc&lt;AtomicBool&gt;</code> flag prevents connection reuse, forcing memory leaks with each new connection</li>
+            </ul>
+
+            <p>Community member <a href="https://github.com/Ddystopia">@Ddystopia</a> created a <a href="https://github.com/Ddystopia/webrtc_leak">test repository</a> demonstrating the leak with empirical data:</p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Connections</th>
+                  <th>Memory Leaked</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>283 KiB</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>620 KiB</td>
+                </tr>
+                <tr>
+                  <td>21</td>
+                  <td>2.5 MiB</td>
+                </tr>
+                <tr>
+                  <td>40</td>
+                  <td>4.6 MiB</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>Linear regression analysis: <strong><code>leak = 111 KiB × connections + 172 KiB</code></strong></p>
+
+            <p>This demonstrates a <strong>systematic, linear memory leak pattern</strong> that accumulates with every peer connection created. For long-running servers handling hundreds or thousands of connections, this becomes a critical production issue.</p>
+
+            <h3>Deep Architectural Problems</h3>
+
+            <p>The callback memory leak is just a symptom of deeper structural issues:</p>
+
+            <h4>1. Unclear Ownership and Lifecycle Management</h4>
+
+            <p>The <code>Box&lt;dyn Fn&gt;</code> callback pattern creates ambiguous ownership semantics:</p>
+
+            <ul>
+              <li>Who owns the callback? The caller? The library?</li>
+              <li>When should it be freed? On connection close? Never?</li>
+              <li>How do circular references get broken?</li>
+            </ul>
+
+            <p>The lack of explicit lifecycle management has led to resource leaks that are extremely difficult to debug and fix within the current design. These aren't simple bugs—they're architectural problems baked into the foundation.</p>
+
+            <h4>2. Tight Tokio Coupling</h4>
+
+            <p>The current implementation deeply integrates with Tokio's runtime:</p>
+
+            <pre><code class="language-rust">// Current webrtc crate - Tokio everywhere
+async fn do_something(&self) -> Result<()> {
+    tokio::spawn(async move { ... });  // Hidden task spawning
+    tokio::time::sleep(duration).await; // Tokio-specific timers
+    // ...
+}</code></pre>
+
+            <p><strong>Consequences:</strong></p>
+
+            <ul>
+              <li><strong>No other runtimes</strong>: Cannot use with async-std, smol, or embedded runtimes like embassy</li>
+              <li><strong>Hidden behavior</strong>: Background tasks and timers you don't control</li>
+              <li><strong>Testing complexity</strong>: Requires Tokio runtime even for protocol-only tests</li>
+              <li><strong>Platform limitations</strong>: Limits deployment to platforms where Tokio works well</li>
+            </ul>
+
+            <p>For embedded systems, game engines with custom schedulers, or applications already using a different runtime, this coupling is a dealbreaker.</p>
+
+            <h4>3. Missed Opportunity: Async Traits</h4>
+
+            <p>The callback-based API predates Rust's stable <code>async fn in trait</code> (stabilized in 1.75). As noted in <a href="https://github.com/webrtc-rs/webrtc/issues/522">#522</a>, a trait-based event handling system would provide:</p>
+
+            <ul>
+              <li><strong>Better ergonomics</strong>: Single trait instead of multiple callback registrations</li>
+              <li><strong>Fewer allocations</strong>: No <code>Box::new()</code> for every handler</li>
+              <li><strong>Clearer ownership</strong>: Explicit lifecycle tied to trait implementor</li>
+              <li><strong>Modern Rust patterns</strong>: Alignment with ecosystem evolution</li>
+            </ul>
+
+            <p>Example of what could have been:</p>
+
+            <pre><code class="language-rust">trait PeerConnectionEventHandler {
+    async fn on_connection_state_change(&mut self, state: RTCPeerConnectionState) {}
+    async fn on_ice_candidate(&mut self, candidate: Option<RTCIceCandidate>) {}
+    async fn on_track(&mut self, track: Arc<RTCTrack>) {}
+    // ...
+}
+
+// Single registration, clear ownership
+pc.with_handler(MyHandler { ... });</code></pre>
+
+            <h4>4. Deadlock Potential</h4>
+
+            <p><a href="https://github.com/webrtc-rs/webrtc/issues/121">#121</a> highlights how <code>Box&lt;dyn Fn&gt;</code> callbacks can lead to deadlocks. The callbacks hold locks, call async functions, and can create cycles. Moving to <code>Arc&lt;dyn Fn&gt;</code> helps, but it's another band-aid on a fundamentally flawed design.</p>
+
+            <h4>5. Protocol Logic Entangled with I/O</h4>
+
+            <p>The current codebase mixes WebRTC protocol state machines with Tokio-specific I/O operations:</p>
+
+            <pre><code class="language-rust">// Protocol logic mixed with I/O - hard to test, hard to port
+async fn handle_rtcp(&self, conn: &Arc<UdpSocket>) -> Result<()> {
+    let mut buf = vec![0u8; 1500];
+    let n = conn.recv(&mut buf).await?;  // Tokio-specific I/O
+    // Process RTCP packet...
+    // More Tokio I/O...
+}</code></pre>
+
+            <p>This makes it difficult to:</p>
+
+            <ul>
+              <li>Test protocol logic in isolation (requires mocking Tokio primitives)</li>
+              <li>Port to different runtimes (Tokio assumptions everywhere)</li>
+              <li>Reason about correctness (I/O errors mixed with protocol errors)</li>
+              <li>Optimize independently (protocol and I/O performance coupled)</li>
+            </ul>
+
+            <hr>
+
+            <h2>The Sans-I/O Solution</h2>
+
+            <p>Sans-I/O (without I/O) is a proven architectural pattern that <strong>separates protocol logic from I/O operations</strong>. This isn't a new idea—it's successfully used in:</p>
+
+            <ul>
+              <li><strong>Python</strong>: <code>h11</code> (HTTP/1.1), <code>h2</code> (HTTP/2), <code>wsproto</code> (WebSocket)</li>
+              <li><strong>Rust</strong>: <code>quinn</code> (QUIC), various embedded networking stacks</li>
+              <li><strong>Embedded</strong>: Many RTOS networking implementations</li>
+            </ul>
+
+            <h3>How Sans-I/O Works</h3>
+
+            <p><strong>Traditional approach</strong> (protocol + I/O coupled):</p>
+
+            <pre><code class="language-rust">// OLD: Protocol + I/O mixed together
+async fn handle_rtcp(conn: &TokioUdpSocket) -> Result<()> {
+    let mut buf = vec![0u8; 1500];
+    let n = conn.recv(&mut buf).await?;  // Tokio-specific I/O
+    // Process RTCP packet... (protocol logic)
+}</code></pre>
+
+            <p><strong>Sans-I/O approach</strong> (protocol and I/O separated):</p>
+
+            <pre><code class="language-rust">// NEW: Pure protocol logic (webrtc-rs/rtc)
+fn process_rtcp(packet: &[u8]) -> Result<ProtocolAction> {
+    // Pure protocol logic, no I/O, no async
+    // Returns what actions to take (send packets, notify app, etc.)
+}
+
+// Separate: Tokio-specific I/O wrapper (webrtc-rs/webrtc)
+async fn io_loop_tokio(socket: TokioUdpSocket, protocol: &mut RtcState) {
+    let mut buf = vec![0u8; 2000];
+    loop {
+        // Your Tokio I/O
+        let (n, peer_addr) = socket.recv_from(&mut buf).await?;
+        
+        // Drive protocol state machine
+        protocol.handle_read(&buf[..n], peer_addr, Instant::now())?;
+        
+        // Send outgoing packets
+        while let Some(msg) = protocol.poll_write() {
+            socket.send_to(&msg.data, msg.addr).await?;
+        }
+    }
+}
+
+// Alternative: async-std I/O wrapper (same protocol core!)
+async fn io_loop_async_std(socket: AsyncStdUdpSocket, protocol: &mut RtcState) {
+    // async-std I/O, but identical protocol logic
+}</code></pre>
+
+            <p>The protocol core (<code>rtc</code> crate) knows <strong>nothing about I/O</strong>. It just processes bytes and tells you what to send. You control all I/O operations.</p>
+
+            <h3>Concrete Benefits</h3>
+
+            <h4>✅ Multiple Async Runtime Support</h4>
+
+            <p><strong>First-class support for:</strong></p>
+
+            <ul>
+              <li><strong>Tokio</strong> — Production servers, web services</li>
+              <li><strong>async-std</strong> — Alternative async runtime</li>
+              <li><strong>smol</strong> — Lightweight async runtime</li>
+              <li><strong>embassy</strong> — Embedded async runtime (no_std)</li>
+              <li><strong>Synchronous I/O</strong> — Blocking sockets for special use cases</li>
+            </ul>
+
+            <p>The same protocol core works with all of them. Just write a different I/O adapter.</p>
+
+            <h4>✅ Clean Protocol-Centric Core</h4>
+
+            <ul>
+              <li><strong>Pure Rust protocol logic</strong> in <a href="https://github.com/webrtc-rs/rtc">webrtc-rs/rtc</a></li>
+              <li><strong>No I/O dependencies</strong> — easier to audit, test, and reason about</li>
+              <li><strong>Better performance</strong> — optimize protocol logic and I/O independently</li>
+              <li><strong>Easier to maintain</strong> — clear separation of concerns</li>
+            </ul>
+
+            <h4>✅ Proper Resource Management</h4>
+
+            <pre><code class="language-rust">// Sans-I/O: Clear ownership, explicit lifecycle
+struct MyApp {
+    pc: RTCPeerConnection,  // You own it
+    socket: UdpSocket,      // You own it
+}
+
+impl Drop for MyApp {
+    fn drop(&mut self) {
+        self.pc.close();  // Explicit cleanup
+        // Everything is freed properly - no leaks
+    }
+}</code></pre>
+
+            <ul>
+              <li><strong>Clear ownership semantics</strong> — you own the state machine</li>
+              <li><strong>Explicit lifecycle</strong> — you control when things are created and destroyed</li>
+              <li><strong>No hidden callbacks</strong> — no leaked closures or circular references</li>
+              <li><strong>Predictable memory usage</strong> — allocations are visible and controllable</li>
+            </ul>
+
+            <h4>✅ Modern Rust Patterns</h4>
+
+            <ul>
+              <li>Leverage stable <code>async fn in trait</code> for event handling</li>
+              <li>Use modern zero-cost abstractions</li>
+              <li>Better alignment with Rust ecosystem evolution</li>
+              <li>No legacy design decisions holding us back</li>
+            </ul>
+
+            <h4>✅ Superior Testing</h4>
+
+            <p><strong>Protocol logic without I/O:</strong></p>
+
+            <pre><code class="language-rust">#[test]
+fn test_ice_state_machine() {
+    let mut pc = RTCPeerConnection::new(config)?;
+    
+    // Pure protocol test - no networking, no async runtime
+    let packet = create_stun_binding_request();
+    pc.handle_read(&packet, peer_addr, Instant::now())?;
+    
+    // Check what to send
+    let response = pc.poll_write().unwrap();
+    assert!(is_stun_binding_response(&response.data));
+}</code></pre>
+
+            <p><strong>Deterministic time:</strong></p>
+
+            <pre><code class="language-rust">#[test]
+fn test_ice_timeout() {
+    let fixed_time = Instant::now();
+    
+    pc.handle_timeout(fixed_time)?;
+    pc.handle_timeout(fixed_time + Duration::from_secs(5))?;
+    
+    // Fully deterministic, no flaky timing
+}</code></pre>
+
+            <ul>
+              <li><strong>No network required</strong> — test protocol logic in isolation</li>
+              <li><strong>Deterministic</strong> — control time, no race conditions</li>
+              <li><strong>Faster</strong> — no async overhead in tests</li>
+              <li><strong>Easier fuzzing</strong> — pure functions are easy to fuzz</li>
+            </ul>
+
+            <h4>✅ Future-Proof</h4>
+
+            <ul>
+              <li>Not locked to any runtime's evolution</li>
+              <li>Can adopt new async patterns as they emerge</li>
+              <li>Easier to optimize for specific platforms</li>
+              <li>Ready for <code>no_std</code> embedded systems</li>
+            </ul>
+
+            <hr>
+
+            <h2>What's New in v0.17.0</h2>
+
+            <p>Despite being the final feature release, v0.17.0 includes important improvements:</p>
+
+            <p><strong>Features:</strong></p>
+
+            <ul>
+              <li>Multi-codec negotiation support (<a href="https://github.com/webrtc-rs/webrtc/pull/741">#741</a>)</li>
+              <li>H.264 High Profile codec support (<a href="https://github.com/webrtc-rs/webrtc/pull/768">#768</a>)</li>
+              <li>AES CM 256 crypto profiles for SRTP (<a href="https://github.com/webrtc-rs/webrtc/pull/764">#764</a>)</li>
+              <li>Async-capable PSK callbacks (<a href="https://github.com/webrtc-rs/webrtc/pull/751">#751</a>)</li>
+            </ul>
+
+            <p><strong>Performance:</strong></p>
+
+            <ul>
+              <li>Improved RR/SR ticker behavior to prevent catchup bursts (<a href="https://github.com/webrtc-rs/webrtc/pull/745">#745</a>)</li>
+            </ul>
+
+            <p><strong>Quality:</strong></p>
+
+            <ul>
+              <li>Better SDP parsing per RFC 8866 (<a href="https://github.com/webrtc-rs/webrtc/pull/770">#770</a>)</li>
+              <li>DTLS refactoring replacing bincode with rkyv (<a href="https://github.com/webrtc-rs/webrtc/pull/767">#767</a>)</li>
+              <li>Removed <code>Seek</code> requirement for some writers (<a href="https://github.com/webrtc-rs/webrtc/pull/743">#743</a>)</li>
+            </ul>
+
+            <p><strong>Documentation:</strong></p>
+
+            <ul>
+              <li>Feature flags documented in lib.rs (<a href="https://github.com/webrtc-rs/webrtc/pull/759">#759</a>)</li>
+              <li>Basic WebRTC explanatory markdown files (<a href="https://github.com/webrtc-rs/webrtc/pull/756">#756</a>)</li>
+            </ul>
+
+            <p><strong>Full changelog</strong>: <a href="https://github.com/webrtc-rs/webrtc/compare/v0.14.0...v0.17.0">v0.14.0...v0.17.0</a></p>
+
+            <hr>
+
+            <h2>Timeline and Migration Path</h2>
+
+            <h3>Q1 2026 (Now)</h3>
+
+            <ul>
+              <li>✅ v0.17.0 released with feature freeze</li>
+              <li>✅ v0.17.x branch created for bug fixes</li>
+              <li>🔄 Master branch begins Sans-I/O refactoring</li>
+              <li>🔄 Early adopters can experiment with <a href="https://github.com/webrtc-rs/rtc">webrtc-rs/rtc</a></li>
+            </ul>
+
+            <h3>Q2-Q3 2026</h3>
+
+            <ul>
+              <li>Core protocol implementations stabilize in <code>rtc</code> crate</li>
+              <li>Runtime adapters for Tokio, smol, async-std published</li>
+              <li>Migration guide and examples published</li>
+              <li>Browser interoperability testing</li>
+            </ul>
+
+            <h3>Q4 2026+</h3>
+
+            <ul>
+              <li>v0.20.0 release with Sans-I/O architecture</li>
+              <li>Comprehensive documentation and tutorials</li>
+              <li>Deprecation timeline for v0.17.x (with ample notice)</li>
+            </ul>
+
+            <hr>
+
+            <h2>For Current Users</h2>
+
+            <h3>Should I upgrade to v0.17.0?</h3>
+
+            <p><strong>Yes, if you're on an older version.</strong> v0.17.0 includes important fixes and features.</p>
+
+            <p><strong>Pin to the <code>v0.17.x</code> branch</strong> if you need stability and critical bug fixes.</p>
+
+            <h3>Will v0.17.x be supported?</h3>
+
+            <p><strong>Yes</strong>, with critical bug fixes for a reasonable transition period. The exact timeline will be communicated as v0.20.0 stabilizes.</p>
+
+            <p>We're committed to giving users ample time to migrate.</p>
+
+            <h3>What about my existing code?</h3>
+
+            <ul>
+              <li>Code using v0.17.x will continue to work</li>
+              <li>Migration guides will be provided <strong>well in advance</strong> of v0.20.0</li>
+              <li>We're committed to making the transition as smooth as possible</li>
+              <li>Breaking changes will be clearly documented</li>
+            </ul>
+
+            <h3>Why not just fix the memory leaks?</h3>
+
+            <p>We tried. The memory leak issue is a symptom of deeper architectural problems—unclear ownership, tight runtime coupling, and protocol/I/O entanglement. Band-aid fixes would just create more technical debt. A clean architectural foundation is necessary for long-term sustainability.</p>
+
+            <hr>
+
+            <h2>Get Involved</h2>
+
+            <p>This is an exciting evolution for webrtc-rs, and we'd love your help:</p>
+
+            <ul>
+              <li><strong>Try the new architecture</strong>: Experiment with <a href="https://github.com/webrtc-rs/rtc">webrtc-rs/rtc</a></li>
+              <li><strong>Provide feedback</strong>: Share your use cases and requirements</li>
+              <li><strong>Contribute</strong>: Help build runtime adapters for your preferred async runtime</li>
+              <li><strong>Report issues</strong>: Help us identify and fix bugs in v0.17.x</li>
+            </ul>
+
+            <p>Join our discussions:</p>
+
+            <ul>
+              <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+              <li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+              <li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+            </ul>
+
+            <hr>
+
+            <h2>Conclusion</h2>
+
+            <p>The shift to Sans-I/O architecture represents webrtc-rs <strong>growing up</strong>. We've learned from years of production use, listened to community feedback about memory leaks and runtime coupling, and are making the hard but necessary architectural changes to build a truly world-class WebRTC implementation in Rust.</p>
+
+            <p><strong>Version 0.17.0</strong> marks the culmination of the Tokio-coupled era—a solid foundation that served us well. <strong>Version 0.20.0</strong> will open the door to a more flexible, efficient, and maintainable future.</p>
+
+            <p>The Sans-I/O architecture provides:</p>
+
+            <ul>
+              <li><strong>No memory leaks</strong> — clear ownership, no hidden callbacks</li>
+              <li><strong>Runtime freedom</strong> — use any async runtime or none at all</li>
+              <li><strong>Better testing</strong> — deterministic, fast, no network required</li>
+              <li><strong>Future-proof</strong> — ready for new patterns and platforms</li>
+            </ul>
+
+            <p>Thank you to all contributors who made v0.17.0 possible, and to everyone who will help shape the Sans-I/O future of webrtc-rs. 🦀</p>
+
+            <hr>
+
+            <h2>Links</h2>
+
+            <ul>
+              <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+              <li><strong>rtc (Sans-I/O)</strong>: https://github.com/webrtc-rs/rtc</li>
+              <li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+              <li><strong>Docs</strong>: https://docs.rs/webrtc</li>
+              <li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+            </ul>
+
+            <hr>
+
+            <h2>Further Reading</h2>
+
+            <ul>
+              <li><a href="/blog/2026/01/04/announcing-rtc-v0.3.0">Announcing rtc 0.3.0: Sans-I/O WebRTC Stack for Rust</a></li>
+              <li><a href="/blog/2026/01/04/building-webrtc-pipeline-with-sansio">Building WebRTC's Pipeline with sansio::Protocol</a></li>
+              <li><a href="/blog/2026/01/18/rtc-feature-complete-whats-next">RTC Feature Complete: What's Next</a></li>
+            </ul>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>

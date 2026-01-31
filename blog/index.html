@@ -79,7 +79,17 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
-              <h2><a href="./2026/01/24/webrtc-api-compliance.html">WebRTC API Compliance: Sans-I/O rtc vs W3C Spec</a></h2>
+              <h2><a href="./2026/01/31/webrtc-v0.17.0-feature-freeze-sansio-shift.html"><code>webrtc</code> v0.17.0: Feature Freeze and Shifting to Build Async-Friendly API on Sans-I/O <code>rtc</code> Crate</a></h2>
+              <div class="date">January 31, 2026</div>
+              <div class="excerpt">
+                <p><code>webrtc</code> <strong>v0.17.0</strong> marks the <strong>final feature release</strong> of the Tokio-coupled async WebRTC implementation. This isn't an ending—it's a strategic evolution toward a more sustainable, flexible, and robust architecture built on <strong>Sans-I/O</strong> <code>rtc</code>.</p>
+                <p>We discuss the critical issues driving this shift, including systematic memory leaks (~109 KiB per connection), tight Tokio coupling, and protocol/I/O entanglement. The new architecture provides runtime independence, proper resource management, and superior testing capabilities.</p>
+              </div>
+              <a href="./2026/01/31/webrtc-v0.17.0-feature-freeze-sansio-shift.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
+              <h2><a href="./2026/01/24/webrtc-api-compliance.html">WebRTC API Compliance: Sans-I/O <code>rtc</code> vs W3C Spec</a></h2>
               <div class="date">January 24, 2026</div>
               <div class="excerpt">
                 <p>How does a <strong>Sans-I/O WebRTC implementation</strong> in Rust compare to the browser-based W3C WebRTC API? We conducted a comprehensive compliance analysis and found <strong>95%+ compliance</strong> despite fundamental architectural differences.
