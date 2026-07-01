@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing webrtc v0.20.0-rc.1 — the first release candidate for stable async WebRTC built on Sans-I/O rtc core. Full feature parity, ICE TCP, mDNS, and TURN support.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly WebRTC Built on Sans-I/O | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/webrtc"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/rtc"><img src="../../../../res/rtc.ico" width="28" height="28"><strong>&nbsp; RTC</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sfu"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp; SFU</strong></a>
+        <a class="navbar-item" href="https://github.com/webrtc-rs/sansio"><img src="../../../../res/sansio.ico" width="28" height="28"><strong>&nbsp; SansIO</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly <code>webrtc</code> Built on Sans-I/O <code>rtc</code></h1>
+            <div class="blog-meta">
+              <span>June 30, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+<p>We're excited to announce <strong>webrtc v0.20.0-rc.1</strong>, released on <strong>June 30, 2026</strong>. This release candidate is the milestone we were aiming for when we shipped <strong>v0.20.0-alpha.1</strong> in March: the async <code>webrtc</code> crate now reaches <strong>feature parity with the Sans-I/O <code>rtc</code> crate</strong>, and the async example suite now matches the <code>rtc</code> examples wherever an async/networked wrapper makes sense.</p>
+<p>Since <code>v0.20.0-alpha.1</code>, we've added mDNS support, TURN relay support, ICE TCP support, stronger socket error handling, more integration tests, and a much broader example set. The result is a far more complete, resilient, and practical async WebRTC stack for Rust.</p>
+<hr />
+<h2>What's New</h2>
+<p><strong>v0.20.0-rc.1</strong> is the feature-complete release candidate for the new async <code>webrtc</code> architecture. Rather than introducing another large architectural shift, this release focuses on closing the remaining feature gaps between the async crate and the Sans-I/O <code>rtc</code> core.</p>
+<h3>✅ Async <code>webrtc</code> Reaches Feature Parity with Sans-I/O <code>rtc</code></h3>
+<p>With <strong>v0.20.0-rc.1</strong>, the async layer is no longer just a thin rewrite of the old API surface. It now exposes the same practical capabilities as the underlying Sans-I/O core:</p>
+<ul>
+<li>mDNS query-and-gather</li>
+<li>TURN relay candidate gathering</li>
+<li>ICE TCP, including active/passive flows</li>
+<li>full Trickle ICE variants</li>
+<li>stats collection</li>
+<li>richer media and codec examples</li>
+</ul>
+<p>In other words: if you can build it with the Sans-I/O <code>rtc</code> crate, you can now build it with the async <code>webrtc</code> crate too.</p>
+<h3>✅ Example Parity: 20 to 33 Runnable Cargo Examples</h3>
+<p>At <strong>v0.20.0-alpha.1</strong>, the async crate shipped with 20 examples, mostly covering the old v0.17.x surface area. For <strong>rc.1</strong>, the examples in <code>Cargo.toml</code> have grown to <strong>33 runnable examples</strong>, bringing the async crate in line with the Sans-I/O example set.</p>
+<p>New async examples added since alpha.1 include:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ICE / Connectivity</strong></td>
+<td><code>mdns-query-and-gather</code>, <code>trickle-ice</code>, <code>trickle-ice-host</code>, <code>trickle-ice-srflx</code>, <code>trickle-ice-relay</code>, <code>ice-tcp</code>, <code>ice-tcp-active-offer</code>, <code>ice-tcp-passive-answer</code></td>
+</tr>
+<tr>
+<td><strong>Media / Control</strong></td>
+<td><code>rtcp-processing</code>, <code>save-to-disk-av1</code>, <code>play-from-disk-playlist-control</code>, <code>simulcast_add_transceiver_from_kind</code></td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td><code>stats</code></td>
+</tr>
+</tbody>
+</table>
+<p>This is an important milestone for users migrating from Sans-I/O <code>rtc</code> prototypes to production async applications: the async crate is no longer missing the advanced scenarios.</p>
+<h3>✅ mDNS Support for Privacy-Friendly Host Candidates</h3>
+<p>The async driver now supports <strong>mDNS-based candidate gathering and resolution</strong>, allowing local host candidates to be advertised through <code>.local</code> names instead of leaking raw LAN IP addresses.</p>
+<p>This brings the async crate up to date with modern browser behavior and makes local-network interop much more realistic. The new support includes both:</p>
+<ul>
+<li><strong>gather</strong>: publishing local host candidates as mDNS names</li>
+<li><strong>query</strong>: resolving remote mDNS candidates during connection setup</li>
+</ul>
+<p>The new <code>mdns-query-and-gather</code> example and dedicated integration tests exercise this flow end-to-end.</p>
+<h3>✅ ICE Relay Support via TURN</h3>
+<p>The async stack now supports <strong>relay candidate gathering</strong> through TURN servers.</p>
+<p>Under the hood, the new TURN relayer manages allocation, permission creation, channel data handling, and relay candidate publication, then feeds the decapsulated packets back into the peer connection driver. This is a major step for users operating behind restrictive NATs or firewalls where direct host or server-reflexive connectivity is not enough.</p>
+<p>The new <code>trickle-ice-relay</code> example demonstrates relay-only gathering with <code>RTCIceTransportPolicy::Relay</code>.</p>
+<h3>✅ ICE TCP Support, Including Active/Passive Mode</h3>
+<p>Async <code>webrtc</code> now supports <strong>ICE over TCP</strong>.</p>
+<p>That includes:</p>
+<ul>
+<li>passive TCP candidates gathered from local listeners</li>
+<li>active TCP candidates for dialing remote passive endpoints</li>
+<li>TCP packet framing/decoding inside the async transport layer</li>
+<li>driver support for mixed UDP/TCP connectivity paths</li>
+</ul>
+<p>This matters for deployments where UDP is blocked or unreliable. The new <code>ice-tcp</code>, <code>ice-tcp-active-offer</code>, and <code>ice-tcp-passive-answer</code> examples show how to bring up a WebRTC data channel over TCP and how to handle active/passive negotiation correctly.</p>
+<h3>✅ Better Handling for Socket Write and Receive Errors</h3>
+<p>One of the rough edges called out after alpha.1 was error handling in the background driver. A transient socket problem could stop gathering progress or destabilize the event loop.</p>
+<p>That has been tightened up significantly:</p>
+<ul>
+<li>retryable receive errors such as <code>Interrupted</code>, <code>WouldBlock</code>, <code>ConnectionRefused</code>, <code>ConnectionReset</code>, and <code>TimedOut</code> are now handled explicitly</li>
+<li>STUN and TURN gathering paths react to socket write failures without tearing down unrelated driver state</li>
+<li>TCP read failures are isolated to the affected stream instead of poisoning the whole connection path</li>
+</ul>
+<p>This makes long-lived peer connections much more resilient in real networks, especially when probing STUN/TURN infrastructure or dealing with lossy TCP/UDP environments.</p>
+<hr />
+<h2>Architecture: How It Works</h2>
+<p>The async architecture introduced in alpha.1 is still the same: a clean user-facing <code>PeerConnection</code> API backed by a background <code>PeerConnectionDriver</code> that bridges the Sans-I/O <code>rtc</code> core and the selected async runtime.</p>
+<p>A lot of the work since alpha.1 was not just "adding features", but making that driver cleaner and more robust as those features landed.</p>
+<p>The <code>PeerConnectionDriver</code> is now structured around clearer phases:</p>
+<ol>
+<li><code>poll_writes()</code></li>
+<li><code>poll_events()</code></li>
+<li><code>poll_reads()</code></li>
+<li><code>poll_timeout()</code> / <code>handle_timeout()</code></li>
+</ol>
+<p>The transport-specific responsibilities were also separated out more cleanly:</p>
+<ul>
+<li><code>RTCStunGatherer</code> for STUN-based gathering</li>
+<li><code>RTCTurnRelayer</code> for TURN allocations and relay traffic</li>
+<li><code>RTCTcpTransport</code> for ICE TCP listener/stream management</li>
+</ul>
+<p>That split made it possible to add mDNS, TURN relay, and TCP support without turning the driver into a monolith.</p>
+<p>It also reduced the amount of lock churn in the hot path by draining core writes, events, and reads into local vectors before processing them asynchronously.</p>
+<hr />
+<h2>Configuring mDNS, TURN, and TCP in Async <code>webrtc</code></h2>
+<p>The builder surface remains the same clean async API introduced in alpha.1, but it now drives a much richer transport stack:</p>
+<pre><code class="language-rust">use std::sync::Arc;
+use std::time::Duration;
+
+use rtc::ice::mdns::MulticastDnsMode;
+use webrtc::peer_connection::{
+    PeerConnectionBuilder, PeerConnectionEventHandler, RTCConfigurationBuilder,
+    RTCIceServer, SettingEngine,
+};
+
+#[derive(Clone)]
+struct MyHandler;
+
+#[async_trait::async_trait]
+impl PeerConnectionEventHandler for MyHandler {}
+
+let mut setting_engine = SettingEngine::default();
+setting_engine.set_multicast_dns_mode(MulticastDnsMode::QueryAndGather);
+setting_engine.set_multicast_dns_timeout(Some(Duration::from_secs(5)));
+
+let pc = PeerConnectionBuilder::new()
+    .with_configuration(
+        RTCConfigurationBuilder::default()
+            .with_ice_servers(vec![RTCIceServer {
+                urls: vec![&quot;turn:turn.example.com:3478?transport=udp&quot;.to_owned()],
+                username: &quot;user&quot;.to_owned(),
+                credential: &quot;pass&quot;.to_owned(),
+            }])
+            .build(),
+    )
+    .with_setting_engine(setting_engine)
+    .with_handler(Arc::new(MyHandler))
+    .with_udp_addrs(vec![&quot;0.0.0.0:0&quot;])
+    .with_tcp_addrs(vec![&quot;0.0.0.0:8443&quot;])
+    .build()
+    .await?;
+</code></pre>
+<p>The same async builder now covers the advanced connectivity options that previously only existed in the Sans-I/O layer.</p>
+<hr />
+<h2>Browser Interop and AppRTC</h2>
+<p>Another useful piece of the ecosystem is now available again: <strong><a href="https://appr.tc">https://appr.tc</a></strong> is online as a public peer-to-peer signaling service.</p>
+<p>Its implementation lives in the <code>apprtc</code> codebase in the webrtc-rs ecosystem, and it is especially helpful for <strong>browser interoperability testing</strong>. With AppRTC infrastructure available, it is much easier to test async <code>webrtc</code> implementations against real browsers such as:</p>
+<ul>
+<li>Chrome</li>
+<li>Safari</li>
+<li>other standards-compliant WebRTC browsers</li>
+</ul>
+<p>For anyone validating P2P signaling and connection setup outside of local toy examples, this makes rc.1 much easier to evaluate in realistic browser-to-Rust scenarios.</p>
+<hr />
+<h2>On the Road to Stable</h2>
+<p>With <strong>v0.20.0-rc.1</strong>, the big missing async features are in place. The focus from here to stable is much narrower:</p>
+<ol>
+<li>bug fixing and interoperability polish</li>
+<li>broader browser validation</li>
+<li>performance tuning and cleanup</li>
+</ol>
+<p>That is exactly what an RC should represent: not a moving target, but a feature-complete release candidate that is ready for hardening.</p>
+<hr />
+<h2>Try It Out</h2>
+<p>Update your <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+webrtc = &quot;0.20.0-rc.1&quot;
+</code></pre>
+<p>Or with <code>smol</code>:</p>
+<pre><code class="language-toml">[dependencies]
+webrtc = { version = &quot;0.20.0-rc.1&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+</code></pre>
+<p>Then explore the <a href="https://github.com/webrtc-rs/webrtc/tree/master/examples">examples</a>, especially:</p>
+<ul>
+<li><code>mdns-query-and-gather</code></li>
+<li><code>trickle-ice-relay</code></li>
+<li><code>ice-tcp</code></li>
+<li><code>ice-tcp-active-offer</code> / <code>ice-tcp-passive-answer</code></li>
+<li><code>stats</code></li>
+</ul>
+<p>Check out the <a href="https://github.com/webrtc-rs/webrtc/tree/master/examples">examples</a>, run the new networking scenarios, and try browser interop testing with AppRTC. We'd love feedback while the release is still in RC.</p>
+<hr />
+<h2>Get Involved</h2>
+<p>This is still the best time to shake out edge cases before the stable release:</p>
+<ul>
+<li><strong>Try the RC</strong>: Run the new mDNS, TURN, and ICE TCP examples in your environment</li>
+<li><strong>Test interoperability</strong>: Validate behavior against Chrome, Safari, and other WebRTC implementations</li>
+<li><strong>File issues</strong>: Help us catch bugs in real network conditions</li>
+<li><strong>Contribute</strong>: Tests, docs, examples, and runtime improvements are all welcome</li>
+</ul>
+<p>Join our community:</p>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>Sans-I/O core (<code>rtc</code>)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p><strong>v0.20.0-rc.1</strong> brings the async <code>webrtc</code> crate to the point we set out to reach in March:</p>
+<ul>
+<li><strong>Feature parity with Sans-I/O <code>rtc</code></strong></li>
+<li><strong>Example parity for async-supported scenarios</strong></li>
+<li><strong>mDNS, TURN relay, and ICE TCP support</strong></li>
+<li><strong>Much stronger socket and transport error handling</strong></li>
+<li><strong>A cleaner, more modular driver architecture</strong></li>
+</ul>
+<p>The async-friendly, runtime-agnostic WebRTC design is no longer just a promising rewrite — it is now approaching stable as a complete implementation.</p>
+<p>Thank you to everyone who tested the alpha and beta releases and helped push async <code>webrtc</code> to this point. 🦀</p>
+<hr />
+<h2>Links</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>rtc (Sans-I/O)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Examples</strong>: https://github.com/webrtc-rs/webrtc/tree/master/examples</li>
+<li><strong>Docs</strong>: https://docs.rs/webrtc</li>
+<li><strong>AppRTC</strong>: https://appr.tc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+</ul>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="/blog/2026/01/31/async-friendly-webrtc-architecture">Building Async-Friendly webrtc on Sans-I/O rtc: Architecture Design and Roadmap</a></li>
+<li><a href="/blog/2026/03/01/webrtc-v0.20.0-alpha.1-async-webrtc-on-sansio">WebRTC v0.20.0-alpha.1: Async-Friendly webrtc Built on Sans-I/O rtc</a></li>
+</ul>
+
+            <hr>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
