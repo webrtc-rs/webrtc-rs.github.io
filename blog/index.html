@@ -78,6 +78,15 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/07/13/announcing-sfu-v0.20.0-rc.3.html">Announcing <code>sfu</code> v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</a></h2>
+              <div class="date">July 13, 2026</div>
+              <div class="excerpt">
+                <p>Meet a new member of the WebRTC.rs family: <strong><code>sfu</code></strong>, a Selective Forwarding Unit built on the Sans-I/O <code>rtc</code> core. The library crate has <strong>no sockets, no threads, and no clock of its own</strong> — it is a pure state machine, and the caller owns all I/O. Inside: three nested Sans-I/O layers (<code>Sfu</code> → <code>Room</code> → <code>Client</code>), ICE-lite ufrag demuxing over one shared socket, RTP fan-out with per-hop payload-type translation, RTCP keyframe relay, a live demo at <a href="https://sfu.rs">sfu.rs</a>, and the roadmap toward simulcast, pub/sub, TWCC, and AppRTC-based P2P + SFU signaling.</p>
+              </div>
+              <a href="./2026/07/13/announcing-sfu-v0.20.0-rc.3.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc.html">WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly <code>webrtc</code> Built on Sans-I/O <code>rtc</code></a></h2>
               <div class="date">June 30, 2026</div>
               <div class="excerpt">

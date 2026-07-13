@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Announcing sfu v0.20.0-rc.3 — a Selective Forwarding Unit in Rust built on the Sans-I/O rtc core: no sockets, no threads, no clock, just a pure state machine.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing SFU v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <a class="navbar-item" href="https://sfu.rs"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp;SFU</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Announcing SFU v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</h1>
+            <div class="blog-meta">
+              <span>July 13, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/13/announcing-sfu-v0.20.0-rc.3.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+<p>We're excited to introduce a new member of the WebRTC.rs family: <strong><a href="https://github.com/webrtc-rs/sfu"><code>sfu</code></a></strong>, released today as <strong>v0.20.0-rc.3</strong> and versioned in lockstep with the <code>rtc</code> and <code>webrtc</code> crates.</p>
+<p>Up to now, webrtc-rs has been about <em>endpoints</em>: the Sans-I/O <code>rtc</code> protocol core, and the async <code>webrtc</code> crate built on top of it. <code>sfu</code> is the first <em>server</em> in the family — a <strong>Selective Forwarding Unit</strong> that terminates WebRTC from many browsers in a room and forwards each publisher's media to every subscriber, without decoding or re-encoding a single frame.</p>
+<p>And, like everything else we've built since the Sans-I/O shift: <strong>the library crate contains no sockets, no threads, and no clock of its own.</strong></p>
+<hr />
+<h2>What Is an SFU, and Why Sans-I/O?</h2>
+<p>A peer-to-peer mesh does not scale: with <em>N</em> participants, every browser uploads <em>N-1</em> copies of its own video. An SFU fixes the upload problem by putting a server in the middle — each client uploads <strong>once</strong>, and the server selectively forwards those RTP streams to everyone else. It is the architecture behind essentially every modern group-calling product.</p>
+<p>Traditionally, an SFU is written <em>as a server</em>: sockets, thread pools, timers, and protocol logic all tangled together. That makes the interesting part — the forwarding state machine — the hardest part to test, and it welds your media core to one runtime, one threading model, and one deployment shape.</p>
+<p><code>sfu</code> takes the opposite approach. The library is a <strong>pure state machine</strong>. The caller owns all I/O: it feeds datagrams and signaling in, and drains datagrams and signaling out. The bundled <a href="https://github.com/webrtc-rs/sfu/blob/master/examples/chat.rs"><code>chat</code></a> example provides one such I/O layer — an HTTPS / WebSocket signaling server plus a UDP media socket — but it is <em>an</em> I/O layer, not <em>the</em> I/O layer. Swap it for <code>tokio</code>, for <code>smol</code>, for a thread-per-core io_uring loop, or for a deterministic simulated network in a test, and the forwarding core never notices.</p>
+<hr />
+<h2>The Sans-I/O Core</h2>
+<p><code>Sfu</code> is the public entry point, and it implements <a href="https://docs.rs/sansio"><code>sansio::Protocol&lt;TaggedBytesMut, Infallible, SFUEvent&gt;</code></a> — the same <code>Protocol</code> trait the <code>rtc</code> crate is built on:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Plane</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>handle_read(TaggedBytesMut)</code> / <code>poll_write() -&gt; TaggedBytesMut</code></td>
+<td>media</td>
+<td>push an incoming UDP datagram in / drain an outgoing datagram</td>
+</tr>
+<tr>
+<td><code>handle_event(SFUEvent)</code> / <code>poll_event() -&gt; SFUEvent</code></td>
+<td>signaling</td>
+<td>push a signaling request in / drain a signaling response or server-initiated event</td>
+</tr>
+<tr>
+<td><code>handle_timeout(Instant)</code> / <code>poll_timeout() -&gt; Instant</code></td>
+<td>clock</td>
+<td>advance the caller-supplied clock / ask for the next deadline</td>
+</tr>
+</tbody>
+</table>
+<p>Three planes, six methods, no I/O. The read/write planes carry raw datagrams: an inbound datagram is demultiplexed to a client and fed into that client's <code>RTCPeerConnection</code>, and the datagrams every client produces are drained back out.</p>
+<p>The application plane is deliberately <strong>unused</strong> (<code>Rout = Win = Infallible</code>). There is no payload <em>above</em> an SFU: inbound media (RTP) and keyframe requests (RTCP PLI/FIR) are forwarded <em>internally</em> between clients, never surfaced to the caller. Encoding that in the type system is one of the small pleasures of Sans-I/O — <code>poll_read()</code> returning <code>Option&lt;Infallible&gt;</code> is a compile-time statement that an SFU forwards, it does not consume.</p>
+<p><strong>All signaling is the event plane.</strong> <code>SFUEvent</code> is the unified currency: <code>Join</code>, <code>SessionDescription</code>, <code>IceCandidate</code>, <code>Leave</code>, plus <code>Ok</code> / <code>Err</code> replies. Every variant carries a <code>request_id</code>, <code>room_id</code>, and <code>client_id</code>, which is how the engine routes it.</p>
+<hr />
+<h2>Architecture: Three Nested Sans-I/O Layers</h2>
+<p><code>Sfu</code>, <code>Room</code>, and <code>Client</code> each implement the <em>same</em> <code>Protocol</code> trait, so signaling is simply routed down and events bubble back up:</p>
+<pre><code>Sfu   ── owns rooms: HashMap&lt;RoomId, Room&gt;, a Demuxer, the local_addr, transmits/events
+ └─ Room   ── owns clients: HashMap&lt;ClientId, Client&gt; and its own Demuxer
+     └─ Client ── wraps exactly one rtc RTCPeerConnection
+</code></pre>
+<p><code>Sfu::poll_write()</code> is nothing more than a drain of every room's <code>poll_write()</code>; <code>Sfu::poll_timeout()</code> is the <code>min</code> of every room's deadline. The composition is uniform all the way down, and each layer is independently testable in memory.</p>
+<p>Three pieces do the real work:</p>
+<h3><code>Demuxer</code> — one socket, many clients</h3>
+<p>Every client is multiplexed over the same UDP socket, so the SFU has to tell datagrams apart before ICE has even completed. Each client is built in <strong>ICE-lite</strong> mode with a <em>local ufrag that encodes its address</em>: <code>"{room_id}/{client_id}+{random}"</code>. A browser's STUN binding request carries <code>USERNAME = local_ufrag:remote_ufrag</code>, so the <code>Demuxer</code> recovers <code>(room_id, client_id)</code> straight out of the ufrag, then caches the 4-tuple for the DTLS/SRTP phase that follows. <code>Sfu</code> holds one demuxer to pick the room; <code>Room</code> holds one to pick the client.</p>
+<h3><code>ForwardTable</code> — the media routing graph</h3>
+<p>Owned by <code>Room</code>, keyed by <code>ForwardKey { publisher, mid }</code>. Note what the key is <strong>not</strong>: it is not the SSRC. The publisher's m-line <strong>mid</strong> is the stable dedup key across renegotiations, with a separate SSRC index used for routing inbound RTP. <code>Room::reconcile</code> diffs the desired forwarding matrix whenever membership or published tracks change — adding a sendonly transceiver per new subscriber, tearing down the stale ones — which is what turns "someone joined" into "everyone sees them".</p>
+<p>Because a subscriber leg is a <em>different</em> peer connection from the publisher leg, forwarding a packet is not a memcpy. The negotiated payload types and RTP header extension IDs can differ between the two legs, so <code>sfu</code> translates them per hop — remapping the payload type to the subscriber's codec and rewriting extension IDs into the subscriber's namespace — before the packet goes out.</p>
+<h3><code>RtcpForwarderInterceptor</code> — keyframes on demand</h3>
+<p>Installed as the outermost interceptor on every client, so a subscriber's keyframe requests (RTCP <strong>PLI/FIR</strong>) about a forwarded stream reach the application instead of dying in the receiver. <code>Room</code> relays them to the publisher, which is what makes a newly-subscribed track light up promptly rather than after the next scheduled keyframe.</p>
+<hr />
+<h2>What the Caller Actually Writes</h2>
+<p>Here's the shape of the media loop from the <code>chat</code> example — this is the <em>entire</em> contract between the SFU and the network:</p>
+<pre><code class="language-rust">let mut sfu = Sfu::new(random(), local_addr);
+
+loop {
+    // 1. drain outbound datagrams to the socket
+    while let Some(transmit) = sfu.poll_write() {
+        socket.send_to(&amp;transmit.message, transmit.transport.peer_addr)?;
+    }
+
+    // 2. push signaling in (join / offer / candidate / leave from the WebSocket)
+    if let Ok(command) = rx.try_recv() {
+        handle_command(&amp;mut sfu, command, &amp;mut subscribers);
+    }
+
+    // 3. drain signaling out (answers and server-initiated subscribe re-offers)
+    drain_sfu_events(&amp;mut sfu, &amp;mut subscribers);
+
+    // 4. wait until the SFU's next deadline, or until a datagram arrives
+    let eto = sfu.poll_timeout().unwrap_or(Instant::now() + Duration::from_millis(100));
+    socket.set_read_timeout(Some(eto.saturating_duration_since(Instant::now())))?;
+    if let Some(packet) = recv_from(&amp;socket, &amp;mut buf) {
+        sfu.handle_read(packet)?;
+    }
+
+    // 5. advance the caller-supplied clock
+    sfu.handle_timeout(Instant::now())?;
+}
+</code></pre>
+<p>That's it. No async, no tasks, no channels required — the example happens to use a blocking <code>UdpSocket</code> and a plain thread per media port, precisely because it <em>can</em>. Your deployment is free to make a completely different choice.</p>
+<p>The full flow it drives: an <code>SFUEvent::Join</code> creates the room and client; an <code>SFUEvent::SessionDescription</code> offer is answered (<code>set_remote_description</code> → add the host candidate synthesized from <code>local_addr</code> → <code>create_answer</code> → <code>set_local_description</code>) and the answer is emitted back through <code>poll_event</code>; publishing a track prompts <strong>server-initiated subscribe re-offers</strong> to the other clients in the room; an <code>SFUEvent::Leave</code> tears the client down, prunes its forwarding entries, and reaps the room once empty.</p>
+<hr />
+<h2>Testing: The Sans-I/O Dividend</h2>
+<p>Because the core has no I/O, <code>cargo test --lib</code> drives join → offer/answer → publish → forward <strong>entirely in memory</strong>, with no sockets and no wall clock. Those are the tests you want to be fast and deterministic, and they are.</p>
+<p>On top of that, <code>tests/</code> drives the whole thing end-to-end: each integration test is a headless WebRTC client — built on the async <a href="https://github.com/webrtc-rs/webrtc"><code>webrtc</code></a> crate, which is a nice demonstration that the family composes — speaking the chat server's TLS-WebSocket signaling protocol. <code>data_channel_test</code> covers register/connect/data-channel; <code>media_test</code> publishes VP8 tracks and asserts the SFU forwards RTP, intact and in order, to every other peer in the room; and there are dedicated tests for payload-type and RTP header-extension-ID translation across legs. CI boots the <code>chat</code> server and runs the suite against it in a container.</p>
+<hr />
+<h2>Try It Out</h2>
+<p>The <code>chat</code> example is <strong>deployed and live at <a href="https://sfu.rs">https://sfu.rs</a></strong> — open it in a couple of browser tabs (or send the link to a friend), join a room, and you are talking through a Sans-I/O SFU written in Rust. No build required.</p>
+<p>To run it yourself:</p>
+<pre><code class="language-bash">git clone https://github.com/webrtc-rs/sfu &amp;&amp; cd sfu
+git submodule update --init --recursive
+
+# HTTPS with a self-signed cert, on loopback
+cargo run --example chat -- --force-local-loop
+</code></pre>
+<p>Or depend on the library and bring your own I/O:</p>
+<pre><code class="language-toml">[dependencies]
+sfu = &quot;0.20.0-rc.3&quot;
+</code></pre>
+<hr />
+<h2>Roadmap</h2>
+<p>This is an <strong>rc.3</strong>, and it is honest about what it is: the architecture is fully operational end-to-end — signaling, datagram routing, RTP fan-out, RTCP keyframe relay — and there is real work left before it is the SFU we want to run in production.</p>
+<h3>In the media engine</h3>
+<ol>
+<li><strong>Simulcast support</strong> — the <code>ForwardTable</code> is already keyed by mid rather than SSRC, so multiple encodings of one track bind to the same key. Layer selection and per-subscriber switching build on that.</li>
+<li><strong>A full publish/subscribe model</strong> — today a room forwards every publisher to every subscriber. The next step is explicit subscription control over SDP m-line directions, so a large call forwards only the tiles each client actually renders.</li>
+<li><strong>Better congestion control</strong> — TWCC on both the uplink and the downlink, so the SFU can react to what each leg can actually carry, instead of forwarding hopefully.</li>
+<li><strong>RTX / NACK per hop</strong> — retransmission handled between client and server on each leg independently, rather than letting loss on one hop propagate end-to-end.</li>
+<li><strong>Quality improvements</strong> — demuxer affinity expiry and eviction policies, more interop coverage, and performance work.</li>
+</ol>
+<h3>In signaling: AppRTC becomes the front door</h3>
+<p>The <code>chat</code> example carries its own WebSocket signaling, which is fine for a demo and not what you want to build a product on. The plan is to give the family <strong>one signaling plane that serves both P2P and SFU calls</strong>, and that plane is the new <strong><a href="https://github.com/webrtc-rs/apprtc"><code>apprtc</code></a></strong> crate — the Rust replacement for the legacy Python Room Server and Go Collider.</p>
+<p>The shape we're building toward:</p>
+<ul>
+<li><strong>≤ 2 participants stay peer-to-peer.</strong> A 1:1 call never touches the SFU — there is no reason to pay for a hop that buys nothing.</li>
+<li><strong>On the 3rd joiner, the room upgrades P2P → SFU.</strong> Each client publishes its tracks, and the SFU offers back the others': browser ⇄ SFU ⇄ browser.</li>
+<li><strong>The SFU boundary never changes.</strong> How signaling bytes reach the state machine — an in-process channel, a localhost WebSocket, a cross-host WebSocket — is a <em>driver</em> detail. That is precisely what Sans-I/O buys us here.</li>
+</ul>
+<p>A demo is already online at <strong><a href="https://appr.tc">https://appr.tc</a></strong>, though today it only speaks the <strong>P2P</strong> half of that story. Wiring it to the SFU for group calls is the next big milestone.</p>
+<p>If any of this is the itch you've been meaning to scratch, this is a very good moment to jump in: the codebase is small (the core library is under 3,000 lines), the boundaries are clean, and Sans-I/O means you can write a test for your change without a network.</p>
+<hr />
+<h2>Get Involved</h2>
+<ul>
+<li><strong>Try it</strong>: open <a href="https://sfu.rs">https://sfu.rs</a>, or point your own signaling at the SFU state machine</li>
+<li><strong>Break it</strong>: browser interop, lossy networks, big rooms — we want the bug reports</li>
+<li><strong>Build it</strong>: simulcast, pub/sub, TWCC, RTX/NACK, and the AppRTC signaling plane are all open and all well-scoped</li>
+<li><strong>Discuss it</strong>: tell us what an SFU needs to be useful to <em>you</em></li>
+</ul>
+<p>Join our community:</p>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/sfu</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p><code>sfu</code> v0.20.0-rc.3 is the first release of a Selective Forwarding Unit built the way we've been building everything since the Sans-I/O shift:</p>
+<ul>
+<li><strong>A pure state machine</strong> — no sockets, no threads, no clock in the library</li>
+<li><strong>Three nested Sans-I/O layers</strong> — <code>Sfu</code> → <code>Room</code> → <code>Client</code>, each implementing the same <code>Protocol</code></li>
+<li><strong>Real media forwarding</strong> — RTP fan-out with per-hop payload-type and header-extension translation, plus RTCP PLI/FIR relay</li>
+<li><strong>You own the I/O</strong> — the <code>chat</code> example is one deployment shape, not the only one</li>
+<li><strong>Tests without a network</strong> — the interesting logic is testable in memory</li>
+</ul>
+<p>The Sans-I/O core made the async <code>webrtc</code> crate possible. It turns out it makes a SFU server possible too. 🦀</p>
+<hr />
+<h2>Links</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/sfu</li>
+<li><strong>Homepage / live demo</strong>: https://sfu.rs</li>
+<li><strong>Docs</strong>: https://docs.rs/sfu</li>
+<li><strong>Crate</strong>: https://crates.io/crates/sfu</li>
+<li><strong>rtc (Sans-I/O core)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>webrtc (async)</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>apprtc (signaling)</strong>: https://github.com/webrtc-rs/apprtc — live demo at https://appr.tc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+</ul>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="/blog/2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc">WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly WebRTC Built on Sans-I/O</a></li>
+<li><a href="/blog/2026/03/01/webrtc-v0.20.0-alpha.1-async-webrtc-on-sansio">WebRTC v0.20.0-alpha.1: Async-Friendly WebRTC Built on Sans-I/O</a></li>
+<li><a href="/blog/2026/01/04/building-webrtc-pipeline-with-sansio">Building a WebRTC Pipeline with Sans-I/O</a></li>
+</ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
