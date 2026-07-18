@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Guest post by Stefano Di Martino (StefanoD): how eighteen PRs took webrtc-rs data-channel throughput from a 44× deficit against Pion to a decisive lead — and the measurement harness that kept an AI coding agent honest along the way.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f5f5f5;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      font-style: italic;
+      color: #555;
+    }
+
+    .blog-content blockquote p {
+      margin-bottom: 0;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>From 13 Mbps to Beating Pion: How We Made webrtc-rs Data Channels Fast (with AI on a Short Leash) | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <a class="navbar-item" href="https://sfu.rs"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp;SFU</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>From 13 Mbps to Beating Pion: How We Made webrtc-rs Data Channels Fast (with AI on a Short Leash)</h1>
+            <div class="blog-meta">
+              <span>July 18, 2026</span>
+              <span>by <a href="https://github.com/StefanoD">Stefano Di Martino (StefanoD)</a> — guest post</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/18/from-13-mbps-to-beating-pion.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+<blockquote>
+<p><em>This is a guest post by <a href="https://github.com/StefanoD">Stefano Di Martino (StefanoD)</a>, who led the data-channel performance work tracked in <a href="https://github.com/webrtc-rs/webrtc/issues/101">issue #101</a> — eighteen merged PRs across <code>webrtc</code> and <code>rtc</code> that took webrtc-rs data-channel throughput from a 44× deficit against Pion to a decisive lead. This post covers both the optimizations and the AI-assisted workflow that produced them. We're delighted to share it here.</em></p>
+</blockquote>
+<p>When <a href="https://github.com/webrtc-rs/webrtc/issues/101">issue #101</a> was opened, the numbers were
+brutal. The exact same <code>data-channels-flow-control</code> example ran at <strong>~570 Mbps on Pion</strong> and
+<strong>~13 Mbps on webrtc-rs</strong>. A 44× gap on a data channel — the one part of WebRTC where you'd hope a
+systems language would shine.</p>
+<p>That gap is gone. On my machine today, webrtc-rs data-channel throughput <strong>beats Pion's</strong> — decisively
+in multi-connection aggregate (roughly 2–3×), and single-connection too <strong>once you enable the opt-in
+dedicated reactor thread</strong>. And for the <em>same bytes transferred</em>, webrtc-rs burns <strong>50–75% fewer CPU
+cycles, instructions, and cache/branch misses than Pion</strong> across every case I measured — that
+per-byte efficiency is the most robust part of the result. I'll show the full <code>poop</code> tables below,
+including the case where webrtc-rs's <em>plain default</em> still loses to Pion, because that nuance is the
+honest version of the story. The maintainer
+<a href="https://github.com/webrtc-rs/webrtc/issues/101#issuecomment-5008312490">asked me</a> whether I'd write
+up how we got here. This is that write-up.</p>
+<p>I want to be honest about one thing up front, because it's the more interesting story: <strong>most of
+this work was done with an AI coding agent.</strong> Not "I asked a chatbot for tips" — the agent read the
+code, formed hypotheses, wrote the patches, and drafted the PRs. What made that produce real,
+mergeable, correct optimizations instead of plausible-sounding garbage was <strong>the harness I built
+around it</strong>: a set of hard, external ground-truth checks the AI was not allowed to argue with.
+<code>poop</code>, <code>perf</code>, and <code>bpftrace</code> weren't just how I measured — they were how I kept the AI honest.</p>
+<p>Let me tell both stories at once: what we changed, and how we worked.</p>
+<hr />
+<h2>The Rule That Mattered Most: Measure, Don't Reason</h2>
+<p>An AI agent is a fluent, confident hypothesis machine. Ask it why some code is slow and it will give
+you a beautifully-argued answer. It might even be right. The problem is you can't tell the difference
+between "right" and "confidently wrong" from the prose — and in performance work, confidently wrong
+is the default. The received wisdom about what's slow is almost always out of date or was measured on
+someone else's hardware.</p>
+<p>So the first harness was simple: <strong>no optimization is real until <code>poop</code> says it is.</strong></p>
+<p><a href="https://github.com/andrewrk/poop"><code>poop</code></a> ("Performance Optimizer Observation Platform") runs two
+binaries head-to-head and reports the deltas in wall-time, instructions, cycles, cache-misses,
+branch-misses and peak RSS — <em>with statistical significance markers</em>, so it tells you when a
+difference is just noise. Every single change in this project had to survive an A/B <code>poop</code> run
+against the exact commit before it. If the agent claimed "this removes an allocation on the hot
+path," fine — prove it: build both, <code>poop</code> them, show me the instruction-count delta and a <code>perf</code>
+profile where that allocation symbol actually disappears.</p>
+<p>This killed a <em>lot</em> of good-sounding ideas. It also produced the single most useful discovery of the
+whole effort, which I'll get to.</p>
+<p>A concrete example of the discipline: early on, the agent "knew" (from training data) that
+<code>sendmmsg</code>/UDP GSO batching was the obvious win for UDP throughput. It sounded right. I made it
+measure instead. It instrumented the driver's send path and found that on the 1 KB-message
+benchmark, <strong>83% of send bursts were a single packet</strong> — GSO had nothing to batch. We <em>declined</em>
+the optimization and wrote down why. (Weeks later, once other changes had started coalescing sends,
+GSO <em>did</em> become a win — but only because we had the measurement to know when the world had changed.
+More on that below.)</p>
+<hr />
+<h2>The Second Rule: The Loopback Lies to You</h2>
+<p>The very first thing <code>perf</code> told us contradicted the existing diagnosis. There was a handoff
+document from earlier macOS investigation describing a 90-second linear throughput ramp and an SCTP
+receive-window ceiling. On Linux, none of it reproduced. <code>perf</code> showed the machine was ~90% <em>idle</em> —
+only ~1.6 of 16 cores busy. This wasn't a bandwidth problem. It was a <strong>latency</strong> problem: the
+in-process ping-pong between the application task and the driver task was spending tens of
+milliseconds per round trip in the tokio scheduler, not in SCTP.</p>
+<p>That distinction — latency-bound vs CPU-bound vs memory-bound — turned out to be the thing you have
+to get right before any number means anything, and it's exactly where a single benchmark will fool
+you. So the third harness was <strong>A/B testing across deliberately different benchmark regimes</strong>, each
+stressing a different resource:</p>
+<ul>
+<li><strong>Single-connection loopback</strong> — latency-bound. Great for finding scheduling and round-trip
+  overhead; <em>useless</em> for measuring per-byte CPU wins (the CPU is mostly idle, so a 12% instruction
+  cut shows up as ~0% throughput).</li>
+<li><strong>N-connection aggregate (10+ pairs)</strong> — CPU-bound once the cores saturate. This is where per-byte
+  efficiency (allocations, copies, crypto, hashing) actually shows up as throughput.</li>
+<li><strong>Flood / bulk-transfer</strong> — send-bound with buffers under pressure. This is where memory (RSS) and
+  send back-pressure behavior show up, and where a slow allocator hurts.</li>
+<li><strong>Large-message vs 1 KB-message</strong> — changes whether syscall batching (GSO) can engage at all.</li>
+</ul>
+<p>The number of times a change looked like a win in one regime and a wash (or a regression) in another
+is the reason this list exists. A 12% instruction reduction that's "sub-noise on throughput" is
+still worth shipping for an SFU that runs thousands of connections and pays the energy bill — but you
+only know that if you measure both the single-connection wall-clock <em>and</em> the CPU-bound aggregate.
+"Instruction-count deltas overstate wall-clock when the removed work was high-IPC" is now a rule I
+have tattooed on my brain.</p>
+<hr />
+<h2>The Third Rule: Never Quote the RFC from Memory</h2>
+<p>This is the harness I'd recommend to anyone doing protocol work with an AI, and it's the one that
+caught the most subtle bug.</p>
+<p>LLMs will happily "cite" RFC 4960 §6.2 or tell you how Chrome handles a particular SCTP edge case,
+in complete, authoritative-sounding sentences, entirely from memory. Sometimes it's right.
+Sometimes the section number is off by one, or the requirement is subtly inverted, or the browser
+behavior is what the model <em>expects</em> rather than what ships. In a protocol stack that has to
+interoperate with real browsers, that's how you get a bug that passes every unit test and fails
+against Firefox.</p>
+<p>So the rule was absolute: <strong>whenever a change touched a spec requirement or an interop assumption,
+the agent had to fetch the primary source</strong> — <code>curl</code> the actual RFC text from rfc-editor.org, or
+read the actual Pion / libwebrtc / Firefox source — and quote <em>that</em>, not its own recollection.</p>
+<p>Here's what that caught. We rewrote SCTP's FORWARD-TSN generation (more below), and the agent's first
+framing was "this is behavior-preserving." I made it fetch RFC 3758. Reading the actual text of
+<a href="https://www.rfc-editor.org/rfc/rfc3758.txt">§3.2</a> revealed that the <em>original</em> code had a latent
+conformance violation: the Stream-Sequence field "MUST NOT report TSN's corresponding to DATA chunks
+that are marked as unordered," and the old code reported them anyway (harmless only because the
+receiver happened to ignore them). Our rewrite, which only tracked ordered streams, was the
+<em>conformant</em> behavior. The change went from "a refactor we hope is equivalent" to "a fix for a spec
+violation, with the paragraph quoted in the PR." Same for the SACK-piggyback work, where the correct
+requirement lives in RFC 4960 §6.1, not the §6.2 the model first reached for. When you're asking a
+maintainer to trust a protocol change, "here is the RFC paragraph, verbatim" is worth ten paragraphs
+of confident explanation.</p>
+<hr />
+<h2>Knowing the Enemy: Profiling Pion and rustrtc</h2>
+<p>You can't beat what you don't understand, so I pointed the same tools at the competition. This turned
+out to be one of the best uses of the AI: I'd <code>perf</code>/<code>bpftrace</code> Pion and
+<a href="https://github.com/restsend/rustrtc">rustrtc</a> (a from-scratch Rust WebRTC stack that advertises
+~2.8× webrtc-rs), capture <em>what</em> they did differently at the syscall and CPU level, and then hand the
+agent their actual source code and ask "we do X and pay for it — what do they do here, and why is it
+cheaper?"</p>
+<p>That comparison is where several of our best changes came from:</p>
+<ul>
+<li><strong><code>bpftrace</code> on Pion and rustrtc</strong> showed they emitted far fewer SACK-carrying datagrams per byte
+  than we did. Reading rustrtc's source (with the agent) showed <em>why</em>: it batch-drains its receive
+  channel and piggybacks the SACK onto outgoing DATA instead of sending each SACK as its own
+  encrypted datagram. That directly inspired our batch-drain work.</li>
+<li><strong><code>perf</code> normalized per delivered byte</strong> (not per wall-clock second — that's confounded when two
+  stacks deliver different volumes in a fixed window) showed the honest gap to rustrtc was
+  <strong>CPU-work-per-byte, not syscalls</strong>: ~1.6× the instructions per byte, from allocations, copies and
+  crypto. That reframed the whole roadmap away from "clever syscall tricks" and toward "stop copying
+  and allocating on the hot path."</li>
+<li><strong>Reading Pion's allocator behavior</strong> made it clear that Go's per-thread allocator was a real part
+  of its low memory footprint, and that our thread-per-connection reactor model was inflating RSS via
+  glibc per-thread arenas — which set up the reactor-pool and back-pressure work.</li>
+</ul>
+<p>Two honest notes from that comparison, because a blog post that only reports wins is marketing, not
+engineering:</p>
+<ol>
+<li><strong>rustrtc is still leaner than us.</strong> Its from-scratch, single-runtime, tight-buffer architecture
+   uses a fraction of our memory (tens of MB vs hundreds) and is still a bit faster per byte. We
+   closed the throughput gap from ~1.9× to near parity in the bulk regime and cut the per-byte
+   instruction gap from 1.74× to ~1.31×, but "we beat Pion" is the honest headline, not "we beat
+   everything."</li>
+<li><strong>Some of what looked like a Pion advantage was a benchmark artifact.</strong> Pion's original 570 Mbps
+   was on faster 2021 hardware; on a level playing field (same box, same config, steady-state rather
+   than ramp-diluted cumulative averages) the picture is very different, as the numbers below show.</li>
+</ol>
+<hr />
+<h2>The Work, PR by PR</h2>
+<p>Eighteen PRs landed across the two repos (<code>webrtc-rs/webrtc</code>, the runtime/driver, and
+<code>webrtc-rs/rtc</code>, the sans-I/O protocol core). They group into five themes.</p>
+<h3>1. Kill the scheduler overhead — <a href="https://github.com/webrtc-rs/webrtc/pull/813">webrtc#813</a></h3>
+<p>The latency problem <code>perf</code> surfaced. Two changes: a <strong>coalesced wake</strong> (replace a per-message
+blocking channel send that woke the driver once per 1 KB message with an atomic flag that fires at
+most one wakeup per batch — the same trick Pion's <code>awakeWriteLoop</code> uses), and an <strong>opt-in dedicated
+reactor thread</strong> that pins a connection's driver to one thread so the tokio scheduler stops migrating
+it across workers on every wake (context-switches and CPU-migrations were exploding 50–100× at ≥4
+workers). Together: <strong>178 → ~300 Mbps</strong> at the default runtime, closing the Pion gap from ~2× to
+~1.2×. This is the PR that turned "webrtc-rs is hopelessly behind" into "it's a race."</p>
+<h3>2. Batch-drain the receive path — <a href="https://github.com/webrtc-rs/webrtc/pull/815">webrtc#815</a> + <a href="https://github.com/webrtc-rs/rtc/pull/124">rtc#124</a></h3>
+<p>The change directly inspired by profiling rustrtc. The driver now <strong>burst-reads</strong> the UDP socket
+(drains up to 64 already-ready datagrams per wakeup instead of one per <code>select!</code> iteration), and the
+SCTP handler <strong>defers its transmit flush</strong> to one pass per event-loop iteration, so N ingested DATA
+chunks produce <em>one</em> SACK instead of one per two. Neither does much alone; together they roughly
+<strong>doubled</strong> throughput and flipped webrtc-rs from behind Pion to ahead of it. This is the change the
+<a href="https://github.com/webrtc-rs/webrtc/issues/101#issuecomment-4950542200">earlier A/B comment</a>
+documented.</p>
+<h3>3. Stop copying and allocating — the <code>rtc</code> per-byte rounds (<a href="https://github.com/webrtc-rs/rtc/pull/104">#104</a>, <a href="https://github.com/webrtc-rs/rtc/pull/105">#105</a>, <a href="https://github.com/webrtc-rs/rtc/pull/106">#106</a>, <a href="https://github.com/webrtc-rs/rtc/pull/107">#107</a>, <a href="https://github.com/webrtc-rs/rtc/pull/108">#108</a>, <a href="https://github.com/webrtc-rs/rtc/pull/111">#111</a>, <a href="https://github.com/webrtc-rs/rtc/pull/113">#113</a>, <a href="https://github.com/webrtc-rs/rtc/pull/121">#121</a>, <a href="https://github.com/webrtc-rs/rtc/pull/125">#125</a>, <a href="https://github.com/webrtc-rs/rtc/pull/130">#130</a>)</h3>
+<p>The long tail, and where the "CPU-per-byte" insight from the rustrtc comparison paid off. Highlights:</p>
+<ul>
+<li><strong>Zero-copy payloads</strong> on the SCTP send <em>and</em> receive hot paths — the datachannel send path was
+  doing an <code>alloc + memcpy</code> per fragment for a buffer it already owned; the receive path did two
+  copies where one would do (#121, #106).</li>
+<li><strong>Hardware CRC-32C and in-place AEAD</strong>, and running DTLS <strong>AES-GCM on <code>ring</code></strong> with ARMv8 AES/PMULL
+  enabled for the RustCrypto path (#107, #125) — crypto was ~4–6% of per-byte CPU and inherent, so
+  making it hardware-accelerated mattered.</li>
+<li><strong>Algorithmic fixes</strong>, which are the ones I trust most because they're not micro-tuning:
+  O(N²)→O(N) datachannel queues (#106); and the big one, <strong>FORWARD-TSN generation from O(rwnd) to
+  O(streams)</strong> (#113). <code>perf</code> had flagged <code>Association::poll_transmit</code> at ~9% self-time; annotating
+  the hot addresses showed it was almost entirely hashmap probes from a per-SACK linear rescan of the
+  whole in-flight window — with PR-SCTP (no-retransmit) that's the <em>entire</em> receive window, ~99
+  million probes to build a one-entry map on a 512 MB transfer. We replaced it with an incrementally
+  maintained map: <strong>−12.3% instructions</strong>, and <code>poll_transmit</code> dropped from 8.9% to 0.7%. (Pion has
+  the identical O(window) scan, so this is a place we're now <em>ahead</em> of it.) This is also the change
+  the RFC-3758 primary-source rule turned into a conformance fix.</li>
+<li><strong>Marshalling without allocations</strong> for SACK / FORWARD-TSN control chunks (#130) and bulk-copy /
+  preallocate on the RTCP/media/NACK serialization paths (#105, #108).</li>
+</ul>
+<h3>4. Bound the memory — <a href="https://github.com/webrtc-rs/webrtc/pull/817">webrtc#817</a> + <a href="https://github.com/webrtc-rs/rtc/pull/127">rtc#127</a>, <a href="https://github.com/webrtc-rs/webrtc/pull/819">webrtc#819</a> + <a href="https://github.com/webrtc-rs/rtc/pull/129">rtc#129</a></h3>
+<p>Profiling rustrtc and Pion made clear that our peak RSS scaled badly, for two reasons: an unbounded
+send path, and one reactor thread per connection (glibc caches a per-thread arena on each). So:</p>
+<ul>
+<li><strong>Opt-in send back-pressure</strong> (#817/#127): <code>writable().await</code> / <code>try_send()</code> on the data channel,
+  so an application flooding a channel faster than the network drains it blocks (or fails fast)
+  instead of growing memory without bound. In a naive-flood stress test this cut peak RSS by ~50–78%
+  depending on the configured limit, with the happy path unchanged.</li>
+<li><strong>A bounded, shared reactor pool</strong> plus a <strong>configurable SCTP receive window</strong> (#819/#129):
+  replace thread-per-connection with a pool of <code>N</code> reactor threads (default <code>available_parallelism</code>),
+  so thread count — and the RSS that rides on it — stops scaling with connection count. This is a
+  <strong>scale-dependent</strong> tradeoff, and I measured the crossover honestly: below ~cores connections it's
+  a mild loss (correctly off by default), but at SFU scale (50–100 connections) it wins <em>both</em> axes —
+  ~+21% throughput and ~−28% RSS at 50 connections, with RSS that stops growing. Combined with a
+  smaller receive window it's ~−70% RSS versus the default at that scale.</li>
+</ul>
+<h3>5. Batch the syscalls, finally — <a href="https://github.com/webrtc-rs/webrtc/pull/820">webrtc#820</a></h3>
+<p>The GSO idea we <em>declined</em> early, revived once the batch-drain work meant sends actually coalesced.
+UDP <strong>GSO on send</strong> and <strong>GRO on receive</strong> via <code>quinn-udp</code>. The measurement story here is a good
+capstone for the whole "measure everything" theme, because the sign of the result <em>flips</em> by regime:
+on a CPU-bound 10-pair run it's a clean win (−24% instructions, −35% wall on large messages); on a
+single latency-bound connection, send-side batching turns a smooth 1-in-1-out ping-pong into bursty
+N-at-once and <em>regressed</em>. <code>bpftrace</code> root-caused it, and the fix was an <strong>adaptive threshold</strong> —
+only take the GSO <code>sendmsg</code> path when a run has ≥16 datagrams to batch — which makes it a win (or
+neutral) across every regime we measured. No single benchmark would have told us that.</p>
+<hr />
+<h2>The Numbers Today</h2>
+<p>Fresh A/B, run for this post on the same box (AMD Ryzen 7 1700, 8c/16t, Linux, loopback), current
+<code>webrtc-rs</code> master versus <strong>Pion v4.2.16</strong>, both driven through the same flow-control harness: 1 KB
+messages, 512 KB / 1 MB buffered-amount watermarks, per-interval <strong>steady-state</strong> throughput (warmup
+skipped — no ramp-diluted cumulative averages). Two configurations: <strong>unordered / no-retransmit</strong>
+(Pion's own <code>data-channels-flow-control</code> example ships exactly this) and <strong>ordered / reliable</strong> (the
+config the earlier issue-101 comment used). N=10 is ten concurrent connections, aggregate throughput.</p>
+<p><strong>Is this apples-to-apples?</strong> I checked, from source rather than memory, because it's the first thing
+that invalidates a benchmark. The application config is identical on both stacks (ordering,
+reliability, watermarks, 1 KB messages). The parameter that actually caps loopback throughput — the
+SCTP receive window — is <strong>1 MB on both</strong> (<code>INITIAL_RECV_BUF_SIZE</code> in rtc-sctp; <code>initialRecvBufSize</code>
+in Pion's <code>sctp</code> v1.10.3, the version v4.2.16 pins). The one webrtc-rs-specific knob I enable is the
+<strong>opt-in dedicated reactor thread</strong> — so I report webrtc-rs <em>both</em> ways (plain tokio default and
+<code>+dedicated reactor</code>), because the difference is large and hiding it would be dishonest. Pion has no
+equivalent knob; its Go runtime provides that scheduling for free, which is rather the point.
+(<code>poop</code> needs kernel perf counters, so these were captured with <code>perf_event_paranoid</code> lowered; the
+Pion harness does a non-trickle full-SDP handshake to match the webrtc-rs one exactly.)</p>
+<h3>Steady-state throughput (Mbps, median of runs; ratio vs Pion in parens)</h3>
+<table>
+<thead>
+<tr>
+<th>configuration</th>
+<th>Pion v4.2.16</th>
+<th>webrtc-rs (plain default)</th>
+<th>webrtc-rs (+dedicated reactor)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unordered / no-rtx, <strong>N=1</strong></td>
+<td>392</td>
+<td>259 (0.66×)</td>
+<td><strong>689 (1.76×)</strong></td>
+</tr>
+<tr>
+<td>Unordered / no-rtx, <strong>N=10</strong></td>
+<td>1681</td>
+<td><strong>2863 (1.70×)</strong></td>
+<td><strong>5453 (3.24×)</strong></td>
+</tr>
+<tr>
+<td>Ordered / reliable, <strong>N=1</strong></td>
+<td>385</td>
+<td>184 (0.48×)</td>
+<td><strong>575 (1.49×)</strong></td>
+</tr>
+<tr>
+<td>Ordered / reliable, <strong>N=10</strong></td>
+<td>1848</td>
+<td><strong>4297 (2.33×)</strong></td>
+<td><strong>5296 (2.87×)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Read that honestly: <strong>single-connection, webrtc-rs's <em>plain default</em> loses to Pion</strong> (0.48–0.66×) —
+that regime is latency-bound (the CPU sits ~90% idle) and Pion's Go scheduler beats plain tokio on
+round-trip latency. Turn on the one-line dedicated reactor and webrtc-rs pulls ahead (1.49–1.76×). In
+<strong>multi-connection aggregate — the regime that saturates cores — webrtc-rs wins even at its plain
+default</strong> (1.70–2.33×) and by ~2.9–3.2× with the reactor, because there per-byte CPU efficiency, not
+scheduling, decides it.</p>
+<h3>The <code>poop</code> counter tables</h3>
+<p><code>poop</code> runs each binary head-to-head over <strong>fixed work</strong> (16 MB warmup + 48 MB measured per
+connection, setup/teardown included) and reports deltas with significance markers (⚡ = significant
+improvement, 💩 = significant regression, no marker = within noise). Benchmark 1 is Pion (baseline);
+Benchmark 2 is webrtc-rs <strong>+dedicated reactor</strong>.</p>
+<p><strong>Unordered / no-retransmit, N=1</strong> (64 MB fixed work):</p>
+<table>
+<thead>
+<tr>
+<th>measurement</th>
+<th>Pion v4.2.16</th>
+<th>webrtc-rs +reactor</th>
+<th>Δ (webrtc vs Pion)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wall_time</td>
+<td>1.52 s</td>
+<td>1.43 s</td>
+<td>⚡ −5.9% ± 4.0%</td>
+</tr>
+<tr>
+<td>peak_rss</td>
+<td>23.6 MB</td>
+<td>11.6 MB</td>
+<td>⚡ −50.9% ± 2.8%</td>
+</tr>
+<tr>
+<td>cpu_cycles</td>
+<td>11.0 G</td>
+<td>2.81 G</td>
+<td>⚡ −74.5% ± 0.8%</td>
+</tr>
+<tr>
+<td>instructions</td>
+<td>8.94 G</td>
+<td>3.69 G</td>
+<td>⚡ −58.7% ± 0.5%</td>
+</tr>
+<tr>
+<td>cache_references</td>
+<td>1.09 G</td>
+<td>405 M</td>
+<td>⚡ −62.7% ± 1.2%</td>
+</tr>
+<tr>
+<td>cache_misses</td>
+<td>269 M</td>
+<td>88.2 M</td>
+<td>⚡ −67.2% ± 1.9%</td>
+</tr>
+<tr>
+<td>branch_misses</td>
+<td>72.2 M</td>
+<td>17.8 M</td>
+<td>⚡ −75.4% ± 1.3%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Unordered / no-retransmit, N=10</strong> (640 MB fixed work):</p>
+<table>
+<thead>
+<tr>
+<th>measurement</th>
+<th>Pion v4.2.16</th>
+<th>webrtc-rs +reactor</th>
+<th>Δ (webrtc vs Pion)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wall_time</td>
+<td>3.40 s</td>
+<td>1.74 s</td>
+<td>⚡ −48.8% ± 2.0%</td>
+</tr>
+<tr>
+<td>peak_rss</td>
+<td>136 MB</td>
+<td>111 MB</td>
+<td>⚡ −18.4% ± 4.5%</td>
+</tr>
+<tr>
+<td>cpu_cycles</td>
+<td>106 G</td>
+<td>31.7 G</td>
+<td>⚡ −70.1% ± 0.6%</td>
+</tr>
+<tr>
+<td>instructions</td>
+<td>79.0 G</td>
+<td>35.6 G</td>
+<td>⚡ −54.9% ± 0.5%</td>
+</tr>
+<tr>
+<td>cache_references</td>
+<td>7.51 G</td>
+<td>3.03 G</td>
+<td>⚡ −59.6% ± 0.4%</td>
+</tr>
+<tr>
+<td>cache_misses</td>
+<td>1.28 G</td>
+<td>410 M</td>
+<td>⚡ −68.0% ± 0.7%</td>
+</tr>
+<tr>
+<td>branch_misses</td>
+<td>370 M</td>
+<td>111 M</td>
+<td>⚡ −70.0% ± 0.7%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ordered / reliable, N=1</strong> (64 MB fixed work):</p>
+<table>
+<thead>
+<tr>
+<th>measurement</th>
+<th>Pion v4.2.16</th>
+<th>webrtc-rs +reactor</th>
+<th>Δ (webrtc vs Pion)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wall_time</td>
+<td>1.48 s</td>
+<td>1.97 s</td>
+<td>💩 +33.2% ± 21.3%</td>
+</tr>
+<tr>
+<td>peak_rss</td>
+<td>23.6 MB</td>
+<td>21.5 MB</td>
+<td>−8.7% ± 24.9%</td>
+</tr>
+<tr>
+<td>cpu_cycles</td>
+<td>11.1 G</td>
+<td>2.88 G</td>
+<td>⚡ −73.9% ± 1.0%</td>
+</tr>
+<tr>
+<td>instructions</td>
+<td>8.87 G</td>
+<td>3.72 G</td>
+<td>⚡ −58.1% ± 0.6%</td>
+</tr>
+<tr>
+<td>cache_references</td>
+<td>1.08 G</td>
+<td>415 M</td>
+<td>⚡ −61.7% ± 1.1%</td>
+</tr>
+<tr>
+<td>cache_misses</td>
+<td>269 M</td>
+<td>86.8 M</td>
+<td>⚡ −67.7% ± 2.4%</td>
+</tr>
+<tr>
+<td>branch_misses</td>
+<td>72.2 M</td>
+<td>18.1 M</td>
+<td>⚡ −74.9% ± 1.5%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ordered / reliable, N=10</strong> (640 MB fixed work):</p>
+<table>
+<thead>
+<tr>
+<th>measurement</th>
+<th>Pion v4.2.16</th>
+<th>webrtc-rs +reactor</th>
+<th>Δ (webrtc vs Pion)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wall_time</td>
+<td>3.49 s</td>
+<td>3.23 s</td>
+<td>−7.5% ± 16.1%</td>
+</tr>
+<tr>
+<td>peak_rss</td>
+<td>106 MB</td>
+<td>191 MB</td>
+<td>💩 +79.5% ± 22.8%</td>
+</tr>
+<tr>
+<td>cpu_cycles</td>
+<td>102 G</td>
+<td>31.3 G</td>
+<td>⚡ −69.4% ± 0.7%</td>
+</tr>
+<tr>
+<td>instructions</td>
+<td>71.5 G</td>
+<td>35.7 G</td>
+<td>⚡ −50.1% ± 0.6%</td>
+</tr>
+<tr>
+<td>cache_references</td>
+<td>7.59 G</td>
+<td>3.35 G</td>
+<td>⚡ −55.9% ± 1.0%</td>
+</tr>
+<tr>
+<td>cache_misses</td>
+<td>1.42 G</td>
+<td>523 M</td>
+<td>⚡ −63.1% ± 1.6%</td>
+</tr>
+<tr>
+<td>branch_misses</td>
+<td>416 M</td>
+<td>126 M</td>
+<td>⚡ −69.7% ± 0.9%</td>
+</tr>
+</tbody>
+</table>
+<p>Three things to take from those tables, in order of how much I trust them:</p>
+<ol>
+<li><strong>Per-byte CPU efficiency is a decisive, robust win for webrtc-rs.</strong> Every cell, every counter:
+   <strong>−50% to −75% cycles, instructions, cache references, cache misses and branch misses</strong> versus
+   Pion for the <em>same bytes transferred</em>, with tight error bars. This is the Rust-vs-Go per-byte
+   story, and it's the part I'd stake the post on. For an SFU paying an energy bill, this is the
+   number that matters.</li>
+<li><strong><code>wall_time</code> is the noisy one, and it's not throughput.</strong> It includes per-connection <em>setup</em>
+   (DTLS handshake + reactor-thread spawn, which webrtc-rs pays more of) and, at N=1, it's
+   latency-bound so scheduling jitter dominates — the ordered N=1 <code>wall_time 💩 +33%</code> is driven by a
+   few outlier runs up to 4.2 s, while that same cell's CPU counters are all clean ⚡ wins. That's why
+   the steady-state throughput table above (setup excluded, measured window only) is the honest
+   throughput figure, and it shows webrtc-rs ahead everywhere except the plain-default single
+   connection.</li>
+<li><strong>Memory is a split decision.</strong> webrtc-rs is leaner on the unordered path (peak_rss ⚡ −51% at N=1,
+   ⚡ −18% at N=10) but <em>heavier</em> on ordered/reliable at scale (💩 +79.5%, 191 MB vs 106 MB) — that's
+   the reliable retransmit buffer, and it's exactly the cost the configurable receive window and
+   reactor pool from theme #4 exist to bound.</li>
+</ol>
+<p>For completeness and honesty, the bulk-transfer / flood regime — the one that most favors rustrtc —
+puts webrtc-rs at roughly parity-to-ahead of Pion on throughput and near rustrtc, while rustrtc still
+wins decisively on memory (tens of MB vs our hundreds). We beat Pion; we've closed most of the gap to
+the leanest from-scratch Rust stack; we're not the lightest thing in the room yet. That's the true
+state of it.</p>
+<hr />
+<h2>What I Actually Learned About Building with an AI</h2>
+<p>If you take one thing from this, let it be the shape of the collaboration, because it's replicable.</p>
+<p>The AI was extraordinary at the parts humans are slow at: reading an unfamiliar 100k-line codebase,
+holding the SCTP state machine in its head, generating a dozen plausible hypotheses for a hotspot,
+writing the patch <em>and</em> the tests <em>and</em> the PR description, and reading a competitor's source to
+explain what they do differently. It compressed weeks of work into days.</p>
+<p>It was also, left unchecked, a confident fabricator — of benchmark intuitions that were a decade out
+of date, of RFC section numbers, of "this is obviously the bottleneck" claims that <code>perf</code> flatly
+contradicted. The value wasn't the AI or the tools alone. It was <strong>wiring the tools in as the AI's
+reality check</strong>:</p>
+<ul>
+<li><strong><code>poop</code> as the acceptance test.</strong> No change merges until an A/B run shows a significant delta in
+  the direction claimed. The tool's significance markers are doing real work here — they're what stop
+  "it felt faster" from becoming a commit.</li>
+<li><strong><code>perf</code> and <code>bpftrace</code> as the hypothesis oracle.</strong> Don't ask the AI <em>why</em> it's slow; make it
+  attribute the cost to a symbol and a syscall count, then optimize <em>that</em>, then prove the symbol
+  shrank.</li>
+<li><strong>Primary sources as the anti-hallucination rule.</strong> For anything a browser or an RFC has an opinion
+  about, the model quotes the fetched text, never its memory.</li>
+<li><strong>Multiple benchmark regimes as the anti-overfit rule.</strong> A win has to survive latency-bound,
+  CPU-bound, and memory-bound framing, or it ships with an explicit note about which regime it's for.</li>
+</ul>
+<p>Adversarial review had the same flavor: for each substantive change I had a second agent try to
+<em>refute</em> it — find the correctness bug, the missing test, the regressed regime — rather than confirm
+it. That's how the FORWARD-TSN clear-logic test and the send back-pressure close/drop liveness fix
+got found before a maintainer had to find them.</p>
+<p>Huge thanks to the maintainer for the reviews, for merging eighteen of these, and for pushing back where it
+mattered (the send back-pressure API went through three redesigns before it was right). The result is
+that the boring, honest goal of issue #101 — "why is our data channel slower than Pion's?" — now has
+a boring, honest answer: <strong>it isn't.</strong></p>
+<p>The benchmark harnesses, the competitor comparisons, and the A/B scripts are all reproducible; if
+you want to check the numbers on your own hardware, that's the whole point of building it this way.
+The appendix below has the exact steps.</p>
+<hr />
+<h2>Appendix: Reproduce It Yourself</h2>
+<p>Everything above was measured on an AMD Ryzen 7 1700 (8c/16t), Linux, loopback. Here are the exact
+steps.</p>
+<p><strong>Prerequisites:</strong> a recent Rust toolchain, Go ≥ 1.24, and <a href="https://github.com/andrewrk/poop"><code>poop</code></a>.
+<code>poop</code> reads kernel perf counters, so lower the paranoia level first (throughput-only runs don't need
+this — only the <code>poop</code> counter tables do):</p>
+<pre><code class="language-sh">sudo sysctl -w kernel.perf_event_paranoid=1
+</code></pre>
+<p><strong>webrtc-rs side</strong> — current master, with the in-tree multi-pair harness:</p>
+<pre><code class="language-sh">git clone https://github.com/webrtc-rs/webrtc &amp;&amp; cd webrtc
+git submodule update --init --recursive
+cargo build --release --example data-channels-flow-control-multi
+# one connection, unordered/no-retransmit, dedicated reactor on:
+FLOW_PAIRS=1 FLOW_WARMUP_MB=16 FLOW_STOP_MB=48 FLOW_ORDERED=0 FLOW_DEDICATED_REACTOR=1 \
+  ./target/release/examples/data-channels-flow-control-multi
+</code></pre>
+<p>The harness prints a <code>FINAL &lt;Mbps&gt; aggregate over &lt;N&gt; pairs …</code> line — that's per-interval
+steady-state throughput (the <code>FLOW_WARMUP_MB</code> ramp is skipped, then throughput is measured over
+<code>FLOW_STOP_MB</code>). Env knobs:</p>
+<table>
+<thead>
+<tr>
+<th>variable</th>
+<th>meaning</th>
+<th>default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FLOW_PAIRS</code></td>
+<td>concurrent connection pairs (aggregate)</td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>FLOW_WARMUP_MB</code></td>
+<td>ramp skipped before measuring</td>
+<td>64</td>
+</tr>
+<tr>
+<td><code>FLOW_STOP_MB</code></td>
+<td>bytes measured per pair</td>
+<td>128</td>
+</tr>
+<tr>
+<td><code>FLOW_ORDERED</code></td>
+<td><code>1</code> = ordered/reliable, else unordered/no-rtx</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>FLOW_DEDICATED_REACTOR</code></td>
+<td><code>1</code> = opt-in dedicated reactor thread per PC</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pion side</strong> — pin the exact release, drop in a matching harness, build it:</p>
+<pre><code class="language-sh">git clone https://github.com/pion/webrtc pion-webrtc &amp;&amp; cd pion-webrtc
+git checkout v4.2.16
+mkdir -p examples/flow-control-multi
+# save the Go file below as examples/flow-control-multi/main.go
+go build -o /tmp/pion-flow-multi ./examples/flow-control-multi
+</code></pre>
+<p>The Pion harness mirrors the webrtc-rs one exactly — same env knobs, same 1 KB / 512 KB–1 MB
+watermarks, same per-interval steady-state measurement, and crucially a <strong>non-trickle</strong> handshake
+(wait for gathering to complete, then exchange the full SDP) so it doesn't race on
+<code>AddICECandidate</code> under concurrency:</p>
+<pre><code class="language-go">// examples/flow-control-multi/main.go  (SPDX-License-Identifier: MIT)
+package main
+
+import (
+    &quot;fmt&quot;
+    &quot;os&quot;
+    &quot;strconv&quot;
+    &quot;sync&quot;
+    &quot;sync/atomic&quot;
+    &quot;time&quot;
+
+    &quot;github.com/pion/webrtc/v4&quot;
+)
+
+const (
+    bufferedAmountLowThreshold uint64 = 512 * 1024
+    maxBufferedAmount          uint64 = 1024 * 1024
+    msgSize                           = 1024
+)
+
+func check(err error) {
+    if err != nil {
+        panic(err)
+    }
+}
+
+func envInt(key string, def int) int {
+    if v := os.Getenv(key); v != &quot;&quot; {
+        if n, err := strconv.Atoi(v); err == nil {
+            return n
+        }
+    }
+    return def
+}
+
+func runPair(warmupBytes, stopBytes uint64, ordered bool, results chan&lt;- float64) {
+    cfg := webrtc.Configuration{ICEServers: []webrtc.ICEServer{}}
+    offerPC, err := webrtc.NewPeerConnection(cfg)
+    check(err)
+    answerPC, err := webrtc.NewPeerConnection(cfg)
+    check(err)
+
+    var stop atomic.Bool
+
+    // Receiver: per-interval steady-state.
+    answerPC.OnDataChannel(func(dc *webrtc.DataChannel) {
+        var got, measureStartBytes uint64
+        var measuring atomic.Bool
+        var measureStart time.Time
+        dc.OnMessage(func(m webrtc.DataChannelMessage) {
+            got += uint64(len(m.Data))
+            if !measuring.Load() &amp;&amp; got &gt;= warmupBytes {
+                measureStart, measureStartBytes = time.Now(), got
+                measuring.Store(true)
+            }
+            if measuring.Load() &amp;&amp; got-measureStartBytes &gt;= stopBytes {
+                secs := time.Since(measureStart).Seconds()
+                mbps := float64((got-measureStartBytes)*8) / secs / (1024.0 * 1024.0)
+                if stop.CompareAndSwap(false, true) {
+                    results &lt;- mbps
+                }
+            }
+        })
+    })
+
+    // Sender.
+    maxRetransmits := uint16(0)
+    orderedFlag := ordered
+    opts := &amp;webrtc.DataChannelInit{Ordered: &amp;orderedFlag, MaxRetransmits: &amp;maxRetransmits}
+    if ordered {
+        opts = &amp;webrtc.DataChannelInit{Ordered: &amp;orderedFlag}
+    }
+    dc, err := offerPC.CreateDataChannel(&quot;data&quot;, opts)
+    check(err)
+    dc.SetBufferedAmountLowThreshold(bufferedAmountLowThreshold)
+
+    sendMore := make(chan struct{}, 1)
+    dc.OnBufferedAmountLow(func() {
+        select {
+        case sendMore &lt;- struct{}{}:
+        default:
+        }
+    })
+    dc.OnOpen(func() {
+        buf := make([]byte, msgSize)
+        for {
+            if stop.Load() {
+                return
+            }
+            if err := dc.Send(buf); err != nil {
+                return
+            }
+            if dc.BufferedAmount() &gt; maxBufferedAmount {
+                select {
+                case &lt;-sendMore:
+                case &lt;-time.After(50 * time.Millisecond):
+                }
+            }
+        }
+    })
+
+    // Non-trickle handshake: wait for gathering, exchange full SDP.
+    offer, err := offerPC.CreateOffer(nil)
+    check(err)
+    offerGathered := webrtc.GatheringCompletePromise(offerPC)
+    check(offerPC.SetLocalDescription(offer))
+    &lt;-offerGathered
+    check(answerPC.SetRemoteDescription(*offerPC.LocalDescription()))
+
+    answer, err := answerPC.CreateAnswer(nil)
+    check(err)
+    answerGathered := webrtc.GatheringCompletePromise(answerPC)
+    check(answerPC.SetLocalDescription(answer))
+    &lt;-answerGathered
+    check(offerPC.SetRemoteDescription(*answerPC.LocalDescription()))
+}
+
+func main() {
+    pairs := envInt(&quot;FLOW_PAIRS&quot;, 10)
+    warmupBytes := uint64(envInt(&quot;FLOW_WARMUP_MB&quot;, 64)) * 1024 * 1024
+    stopBytes := uint64(envInt(&quot;FLOW_STOP_MB&quot;, 128)) * 1024 * 1024
+    ordered := os.Getenv(&quot;FLOW_ORDERED&quot;) == &quot;1&quot;
+
+    results := make(chan float64, pairs)
+    start := time.Now()
+    var wg sync.WaitGroup
+    for i := 0; i &lt; pairs; i++ {
+        wg.Add(1)
+        go func() { defer wg.Done(); runPair(warmupBytes, stopBytes, ordered, results) }()
+    }
+    agg := 0.0
+    for i := 0; i &lt; pairs; i++ {
+        agg += &lt;-results
+    }
+    fmt.Printf(&quot;FINAL %.3f Mbps aggregate over %d pairs (ordered=%v) in %.3fs\n&quot;,
+        agg, pairs, ordered, time.Since(start).Seconds())
+    os.Exit(0)
+}
+</code></pre>
+<p><strong>The A/B itself.</strong> Set matching env for both binaries, read the <code>FINAL</code> lines for steady-state
+throughput, and hand both to <code>poop</code> for the counter table (Benchmark 1 is the baseline):</p>
+<pre><code class="language-sh">export LC_ALL=C \
+  FLOW_PAIRS=10 FLOW_WARMUP_MB=16 FLOW_STOP_MB=48 FLOW_ORDERED=0 FLOW_DEDICATED_REACTOR=1
+
+# steady-state throughput (run each a few times, take the median):
+/tmp/pion-flow-multi
+./target/release/examples/data-channels-flow-control-multi
+
+# full hardware-counter A/B (pion = baseline, webrtc-rs = benchmark 2):
+poop /tmp/pion-flow-multi ./target/release/examples/data-channels-flow-control-multi
+</code></pre>
+<p>Two gotchas that cost me time: <code>export LC_ALL=C</code> if your shell is in a comma-decimal locale (it
+corrupts <code>awk</code> arithmetic in any wrapper script), and remember that <code>poop</code>'s <code>wall_time</code> includes
+per-connection setup and is latency-bound at N=1 — the <code>FINAL</code> steady-state line is the honest
+throughput number, the <code>poop</code> table is for the per-byte CPU and RSS counters.</p>
+<hr />
+<h2>Links</h2>
+<ul>
+<li><strong>The issue that started it</strong>: https://github.com/webrtc-rs/webrtc/issues/101</li>
+<li><strong>webrtc (async)</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>rtc (Sans-I/O core)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>Stefano on GitHub</strong>: https://github.com/StefanoD</li>
+<li><strong>poop</strong>: https://github.com/andrewrk/poop</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+</ul>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="/blog/2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc">WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly WebRTC Built on Sans-I/O</a></li>
+<li><a href="/blog/2026/07/13/announcing-sfu-v0.20.0-rc.3">Announcing SFU v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</a></li>
+<li><a href="/blog/2026/01/31/async-friendly-webrtc-architecture">An Async-Friendly WebRTC Architecture</a></li>
+</ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>

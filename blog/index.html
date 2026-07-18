@@ -78,6 +78,16 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/07/18/from-13-mbps-to-beating-pion.html">From 13 Mbps to Beating Pion: How We Made webrtc-rs Data Channels Fast (with AI on a Short Leash)</a></h2>
+              <div class="date">July 18, 2026 · Guest post by <a href="https://github.com/StefanoD">Stefano Di Martino (StefanoD)</a></div>
+              <div class="excerpt">
+                <p>When <a href="https://github.com/webrtc-rs/webrtc/issues/101">issue #101</a> was opened, webrtc-rs data channels ran at <strong>~13 Mbps</strong> where Pion ran at ~570 Mbps— a 44× gap. Eighteen PRs later, that gap is not just closed but <strong>reversed</strong>: webrtc-rs now beats Pion by roughly 2–3× in multi-connection aggregate throughput, while burning <strong>50–75% fewer CPU cycles, instructions, and cache misses per byte</strong>.</p>
+                <p>In this guest post, Stefano tells both stories at once: the optimizations themselves — scheduler wake coalescing, batch-draining the receive path, zero-copy hot paths, an O(rwnd)→O(streams) FORWARD-TSN rewrite, bounded memory, and adaptive UDP GSO — and the workflow that produced them: an AI coding agent kept honest by a harness of <code>poop</code> A/B runs, <code>perf</code>/<code>bpftrace</code> attribution, and a strict "never quote the RFC from memory" rule.</p>
+              </div>
+              <a href="./2026/07/18/from-13-mbps-to-beating-pion.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/07/13/announcing-sfu-v0.20.0-rc.3.html">Announcing <code>sfu</code> v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</a></h2>
               <div class="date">July 13, 2026</div>
               <div class="excerpt">
