@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AppRTC's new V2 P2P/SFU signaling server: a 1:1 call stays peer-to-peer, then automatically upgrades to a Selective Forwarding Unit when the third browser joins — built on a Sans-I/O signaling authority.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>AppRTC Goes Group: Automatic P2P → SFU Upgrade at appr.tc | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <a class="navbar-item" href="https://sfu.rs"><img src="../../../../res/sfu-rs.ico" width="28" height="28"><strong>&nbsp;SFU</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>AppRTC Goes Group: Automatic P2P → SFU Upgrade at appr.tc</h1>
+            <div class="blog-meta">
+              <span>July 22, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/22/apprtc-p2p-to-sfu-upgrade.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+<p>Nine days ago, when we <a href="/blog/2026/07/13/announcing-sfu-v0.20.0-rc.3">announced the <code>sfu</code> crate</a>, we described the signaling milestone we were building toward:</p>
+<blockquote>
+<ul>
+<li><strong>≤ 2 participants stay peer-to-peer.</strong> A 1:1 call never touches the SFU — there is no reason to pay for a hop that buys nothing.</li>
+<li><strong>On the 3rd joiner, the room upgrades P2P → SFU.</strong> Each client publishes its tracks, and the SFU offers back the others': browser ⇄ SFU ⇄ browser.</li>
+<li><strong>The SFU boundary never changes.</strong> How signaling bytes reach the state machine … is a <em>driver</em> detail. That is precisely what Sans-I/O buys us here.</li>
+</ul>
+</blockquote>
+<p>That milestone is now live. <strong><a href="https://appr.tc">https://appr.tc</a></strong> no longer speaks only the P2P half of the story — open a room in three browser tabs and the call <strong>upgrades itself from a direct peer-to-peer connection to a Selective Forwarding Unit</strong>, mid-session, without a page reload, a second permission prompt, or a dropped frame.</p>
+<p>This post is about the new <strong>V2 P2P/SFU signaling server</strong> that makes that happen: what it does, how the upgrade works, and why the whole thing is built on the same Sans-I/O core as everything else in the family.</p>
+<hr />
+<h2>Two is a call, three is a conference</h2>
+<p>A peer-to-peer mesh is the right answer for a 1:1 call and the wrong answer for a group one. With <em>N</em> participants, every browser has to upload <em>N−1</em> copies of its own video — fine at <em>N=2</em>, quadratic misery beyond it. An SFU fixes that: each client uploads <strong>once</strong>, and a server in the middle forwards the streams to everyone else.</p>
+<p>But an SFU is not free. It is a media hop with CPU, bandwidth, and an extra network round trip that a 1:1 call gains nothing from. So the policy AppRTC now implements is the obvious one, made automatic:</p>
+<ul>
+<li><strong>1 or 2 members → direct P2P.</strong> No SFU worker ever sees the room, its SDP, or its media.</li>
+<li><strong>The 3rd member → the room upgrades P2P → SFU.</strong> From then on it is <code>browser ⇄ SFU ⇄ browser</code> for everyone.</li>
+</ul>
+<p>The user does nothing. They share a room link; the first two get a direct call; the third arrival quietly turns it into a conference. The room stays affine to its assigned worker until it empties.</p>
+<blockquote>
+<p><strong>Try it:</strong> open <a href="https://appr.tc">https://appr.tc</a> in two tabs for a P2P call, then add a third to watch it become an SFU conference. The room-selection page ships with the <strong>V2 P2P/SFU</strong> mode checked by default; unchecking it falls back to the legacy V1 two-party flow.</p>
+</blockquote>
+<hr />
+<h2>Three processes, one authority</h2>
+<p>AppRTC is not one server. It is three cooperating processes plus the SFU workers, and the split is deliberate:</p>
+<pre><code>Browser ── HTTP ─────────────▶ appweb      (HTTP room API; gRPC client of signaling)
+Browser ── WebSocket ────────▶ signaling   (Sans-I/O authority; owns all room state)
+appweb  ── unary gRPC ───────▶ signaling
+sfu     ── bidi gRPC stream ─▶ signaling   (one long-lived OpenSfuSession per worker)
+Browser ── ICE/DTLS/SRTP ────▶ sfu         (media never touches appweb or signaling)
+</code></pre>
+<p>Two rules make the design tractable:</p>
+<ul>
+<li><strong><code>signaling</code> is the single authority.</strong> It owns room membership, mode, epochs, worker assignment, and the upgrade barrier. <code>appweb</code> holds <em>no</em> room state — it is a thin HTTP front door that round-trips every mutation to <code>signaling</code> over gRPC. The SFU owns only a <em>projection</em> of the members assigned to it; it never decides occupancy or initiates an upgrade.</li>
+<li><strong>Media never passes through the control plane.</strong> Browser WebSocket signaling connects straight to <code>signaling</code>; browser media flows straight to the <code>sfu</code> worker over ICE/DTLS/SRTP. Neither ever transits <code>appweb</code>.</li>
+</ul>
+<p>The workspace is four Rust crates:</p>
+<table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apprtc</code></td>
+<td>The runtime adapters and the standalone <code>appweb</code>, <code>signaling</code>, and <code>sfu</code> binaries: TLS listeners, WebSocket sessions, gRPC service/client, UDP media, graceful shutdown.</td>
+</tr>
+<tr>
+<td><code>appweb</code></td>
+<td>HTTP room API, templates, static web assets, and the reusable gRPC client for the authority.</td>
+</tr>
+<tr>
+<td><code>signaling</code></td>
+<td>The authoritative V1/V2 room model — <strong>a pure Sans-I/O crate with no sockets, threads, clock, or entropy of its own.</strong></td>
+</tr>
+<tr>
+<td><code>signaling-proto</code></td>
+<td>The generated Protobuf/tonic contract shared by all three.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>The authority is a Sans-I/O state machine</h2>
+<p>If you have read any of our earlier posts, you know the pattern by now. Just as <code>rtc</code> is a Sans-I/O WebRTC endpoint and <code>sfu</code> is a Sans-I/O media engine, the <strong><code>signaling</code> authority is a Sans-I/O state machine</strong> — the same <code>sansio::Protocol</code> discipline, no I/O inside:</p>
+<pre><code>Collider          ── the authority: sessions, worker registry, SFU assignment
+└── RoomTable      ── V1 and V2 room tables (separate numeric/string namespaces)
+    └── Room       ── one room's members, mode, and signal epoch
+        └── Client ── one member's registration, queue, and reconnect timer
+</code></pre>
+<p>Every layer implements <code>sansio::Protocol</code>, so the whole thing is deterministic and testable <strong>in memory, without a socket or a wall clock.</strong> The runtime (<code>apprtc</code>) is the only place sockets exist: <code>ws_server.rs</code> turns browser WebSocket frames into commands, <code>grpc_server.rs</code> adapts the private gRPC service, and <code>signaling_server.rs</code> owns a single serialized event loop that drives the <code>Collider</code> and fires its timeouts. Every browser and authority operation flows through that one loop, so there is no lock and no shared-state race — the state machine is advanced by exactly one owner.</p>
+<p>What does V2 add over the legacy AppRTC contract? Numeric <code>u64</code> room/client IDs (validated with <code>BigInt</code> in the browser to dodge JS <code>Number</code> precision loss), signaling-issued <strong>admission tokens</strong> bound to <code>(room, client)</code>, an explicit <code>registered</code> acknowledgement, <strong>signal epochs</strong>, symmetric WebSocket relay for offers/answers/trickle-ICE, reconnect grace, and survivor promotion. V1 stays wire-compatible on its own routes and its own string-keyed table — a V1 room named <code>"42"</code> and a V2 room <code>42</code> are simply different rooms.</p>
+<hr />
+<h2>The upgrade moment</h2>
+<p>Here is what happens the instant the third browser joins room 42, whose existing P2P members are A and B:</p>
+<pre><code>C  ── POST /v2/join/42 ────────────▶ appweb
+appweb ── AdmitV2(42, C) ──────────▶ signaling
+                                     signaling: pick a Ready worker with capacity,
+                                                set room mode = Upgrading
+signaling ── JoinMember(42, A) ────▶ sfu     ; sfu ─ MemberJoined(A) ─▶ signaling
+signaling ── JoinMember(42, B) ────▶ sfu     ; sfu ─ MemberJoined(B) ─▶ signaling
+signaling ── JoinMember(42, C) ────▶ sfu     ; sfu ─ MemberJoined(C) ─▶ signaling
+                                     signaling: all three joined → commit mode = SFU,
+                                                increment signal epoch 0 → 1
+signaling ── {control:"sfu-upgrade", epoch:1} ─▶ A and B
+appweb    ── join success (mode=sfu) ──────────▶ C   (joins directly in SFU mode)
+</code></pre>
+<p>Three details make this safe rather than merely hopeful:</p>
+<p><strong><code>Upgrading</code> is a real state, not a flag.</strong> While the room is <code>Upgrading</code>, additional joins get a retryable <code>ROOM_TRANSITION</code> and browser signaling is held. The commit happens only after <em>every</em> member's <code>MemberJoined</code> barrier returns from the worker — so a browser can never send a publish offer to a worker that has not yet created its client. If any join fails, the provisional third member is removed and the original P2P pair is restored, untouched.</p>
+<p><strong>Signal epochs make in-flight frames race-free.</strong> Every V2 room carries a monotonic <code>signal_epoch</code> that increments on the P2P→SFU commit. Browsers stamp the epoch they know onto every <code>send</code>; the hub silently drops any frame whose epoch is stale or that arrives while the room is <code>Upgrading</code>. That is what stops a late pre-upgrade P2P renegotiation from being misrouted to the worker as a bogus publish offer.</p>
+<p><strong>The transport handoff is make-before-break.</strong> On <code>sfu-upgrade</code>, A and B create a <em>fresh</em> <code>RTCPeerConnection</code> to the SFU and attach the <strong>same</strong> local <code>MediaStreamTrack</code> instances — no recapture, no second camera prompt. The old P2P connection stays alive until the SFU connection's ICE state reaches <code>connected</code>, and only then does the UI cross-fade to the grid and close the old peer connection. A media gap never appears.</p>
+<hr />
+<h2>Perfect negotiation at the SFU boundary</h2>
+<p>Once a browser is in SFU mode it does two things at once: it <strong>publishes</strong> its own tracks (browser offers, SFU answers) and it <strong>subscribes</strong> to everyone else's (SFU offers, browser answers). Two offerers on one connection is textbook glare, so the browser runs the <a href="/blog/2026/01/23/perfect-negotiation-webrtc-deep-dive">perfect-negotiation</a> roles — <strong>the browser is polite, the SFU is impolite.</strong></p>
+<p>One rule turned out to matter more than any other, and it is worth stating plainly:</p>
+<blockquote>
+<p><strong>The SFU never makes the first offer. The client does.</strong> Only after the client's first offer is answered and the initial negotiation completes does the SFU begin issuing its own subscribe re-offers.</p>
+</blockquote>
+<p>Why? Because the browser establishes the RTP header-extension ID map in its first offer, and Chrome rejects a BUNDLE group where one extension ID maps to two different URIs. If the SFU raced in with a subscribe offer using its own extension namespace before the client had negotiated, the browser's <code>setLocalDescription</code> would fail with a codec/extension collision. Making the client's first offer authoritative — and having the SFU wait for a stable signaling state before it re-offers — removes the collision at the source instead of papering over it with SDP munging.</p>
+<p>When glare does happen — a browser publish offer meets an outstanding SFU subscribe offer — the resolution is the polite peer's ordinary path: the browser rolls back its pending offer, answers the SFU's, and its <code>negotiationneeded</code> handler republishes once the state is stable again. The SFU-side rejected offer is silently dropped; nothing surfaces to the user.</p>
+<hr />
+<h2>One application, two layouts</h2>
+<p>A guiding UI constraint shaped the browser code: <strong>the only thing that should change between P2P and SFU is the remote view.</strong> Self-view, mute buttons, hangup, device selection, status — all of it keeps its exact P2P position and behavior. P2P shows one remote participant full-screen; SFU shows a responsive grid of per-publisher tiles overlaid in the same stage, with the self-view still tucked in its corner.</p>
+<p>It is one call session with two layouts, not two applications. A P2P→SFU transition never reloads the page, never replaces the signaling socket, and never reacquires the camera. Each SFU tile is keyed by the publisher's client id — recovered from the <code>peer-&lt;clientid&gt;</code> msid the SFU stamps on every forwarded track — so a peer's audio and video land in the same tile.</p>
+<p>Two behaviors are worth calling out because they are exactly what users notice:</p>
+<ul>
+<li><strong>Tiles disappear when a peer leaves.</strong> A departed peer's forwarded transceiver goes <code>inactive</code> rather than firing the track's <code>ended</code> event, so the browser reconciles against the negotiated transceivers after every SFU re-offer and drops any tile whose media is gone.</li>
+<li><strong>Closing the tab counts as leaving — immediately.</strong> For an SFU member, a dropped WebSocket is treated as an instant leave: the authority issues the worker <code>LeaveMember</code> right away, the SFU stops forwarding that publisher, and the other participants' tiles prune within a beat. (P2P members keep a 10-second reconnect grace, so a refresh there rejoins the call instead of collapsing it.)</li>
+</ul>
+<hr />
+<h2>Assignment, reconnect, and failure</h2>
+<p>For the initial three-member upgrade, <code>signaling</code> filters out disconnected, draining, or full workers and picks the least-loaded one — the minimum <code>(assigned_clients, assigned_rooms, instance_id)</code> tuple, with the id breaking ties deterministically. Later joins to that room do <strong>not</strong> re-run the selector; the room is affine to its worker until it empties.</p>
+<p>Each SFU worker owns exactly one long-lived <code>OpenSfuSession</code> gRPC stream and reconnects with exponential backoff if <code>signaling</code> is not up yet. Membership commands (<code>JoinMember</code>/<code>LeaveMember</code>) are idempotent by <code>(room_id, client_id, lifecycle_id)</code> and carry a signaling-allocated <code>request_id</code> for replay, so a transient stream reconnect resynchronizes safely: the hub sends a <code>SyncRoom</code> roster, then replays unacknowledged commands, and the adapter returns cached results rather than applying anything twice. A <em>restarted</em> worker gets a new <code>instance_id</code> and is treated as a brand-new worker — it never inherits the old process's rooms. If an assigned worker stays gone past its grace period, the room is marked <code>Failed</code> and its members get a <code>room-failed</code> control.</p>
+<hr />
+<h2>Tested without a network</h2>
+<p>Because the authority is Sans-I/O, its interesting logic — admission, the three-member upgrade barrier, stale-epoch drops, survivor promotion, same-instance worker reconnect/sync, immediate SFU-member leave — is driven entirely in memory by <code>cargo test --lib</code>, no sockets and no wall clock. On top of that, the <code>apprtc</code> integration suite boots real <code>appweb</code>, <code>signaling</code>, and <code>sfu</code> TLS processes and drives headless WebRTC clients through the whole flow: the third-member join barrier, browser upgrade controls, three-client data channels, and three-publisher RTP forwarding. CI runs the same sequence with a release build.</p>
+<hr />
+<h2>Try it out</h2>
+<p>The easiest path is the live demo:</p>
+<p><strong>Open <a href="https://appr.tc">https://appr.tc</a> in three tabs, join the same room, and watch P2P become a group call.</strong></p>
+<p>To run the whole stack yourself from the <a href="https://github.com/webrtc-rs/apprtc"><code>apprtc</code></a> repo — three processes, HTTPS/WSS with the bundled dev cert:</p>
+<pre><code class="language-bash">git clone https://github.com/webrtc-rs/apprtc &amp;&amp; cd apprtc
+git submodule update --init --recursive
+
+# 1. signaling authority (browser WSS + private gRPC)
+cargo run -p apprtc --bin signaling -- --host-ip 127.0.0.1 --port 8081 \
+  --grpc-port 50051 --tls &amp;
+
+# 2. one SFU worker
+cargo run -p apprtc --bin sfu -- --host-ip 127.0.0.1 \
+  --media-port-min 35000 --media-port-max 35000 \
+  --grpc-url https://127.0.0.1:50051 --insecure-tls &amp;
+
+# 3. AppWeb front door
+cargo run -p apprtc --bin appweb -- --host-ip 127.0.0.1 --port 8080 --web-root appweb \
+  --public-url https://127.0.0.1:8080 --ws-url wss://127.0.0.1:8081/ws \
+  --grpc-url https://127.0.0.1:50051 --insecure-tls --tls &amp;
+</code></pre>
+<p>Then open <a href="https://127.0.0.1:8080">https://127.0.0.1:8080</a> (trust the self-signed cert first) in three tabs.</p>
+<hr />
+<h2>What's next</h2>
+<p>This is the group-calling milestone, and it is honest about its edges:</p>
+<ul>
+<li><strong>SFU → P2P downgrade is deferred.</strong> A room that drops back to two members stays on the SFU today. The reserved design is a break-before-make downgrade behind a dwell timer; it is specified but not implemented.</li>
+<li><strong>Browser reconnect is partial.</strong> P2P members can re-register within the grace window, but the JavaScript <code>SignalingChannel</code> does not yet auto-reopen a closed socket.</li>
+<li><strong>Production hardening remains.</strong> The private gRPC plane uses server-authenticated TLS plus firewalling today; mTLS identities for the AppWeb/SFU roles and browser <code>Origin</code> validation are the next security items.</li>
+</ul>
+<p>And on the media side, the <code>sfu</code> roadmap is unchanged: simulcast, an explicit publish/subscribe model, TWCC, and per-hop RTX/NACK.</p>
+<p>If wiring a Sans-I/O signaling authority to a Sans-I/O SFU sounds like your kind of problem, the boundaries are clean and the tests need no network — a very good place to jump in.</p>
+<hr />
+<h2>Get Involved</h2>
+<ul>
+<li><strong>Try it</strong>: open <a href="https://appr.tc">https://appr.tc</a> and turn a 1:1 call into a conference</li>
+<li><strong>Break it</strong>: browser interop, flaky networks, fast rejoin/leave races — we want the reports</li>
+<li><strong>Build it</strong>: SFU→P2P downgrade, browser reconnect, mTLS, and per-room capacity control are all open and well-scoped</li>
+<li><strong>Discuss it</strong>: tell us what a P2P/SFU signaling server needs to be useful to <em>you</em></li>
+</ul>
+<p>Join our community:</p>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/apprtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+<li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p><code>appr.tc</code> is now a <strong>P2P/SFU signaling server</strong> built the way we build everything since the Sans-I/O shift:</p>
+<ul>
+<li><strong>Two is a call, three is a conference</strong> — direct P2P for 1:1, automatic upgrade to the SFU on the third joiner</li>
+<li><strong>One authority</strong> — <code>signaling</code> owns room state; <code>appweb</code> is a thin HTTP front door; the SFU owns only its projection</li>
+<li><strong>A Sans-I/O core</strong> — <code>Collider</code> → <code>RoomTable</code> → <code>Room</code> → <code>Client</code>, no sockets/threads/clock, testable in memory</li>
+<li><strong>Race-free transitions</strong> — a real <code>Upgrading</code> state, a three-member join barrier, and signal epochs</li>
+<li><strong>One app, two layouts</strong> — the grid replaces the full-screen remote view; self-view and controls never move</li>
+</ul>
+<p>The Sans-I/O core made the async <code>webrtc</code> crate possible, then the <code>sfu</code> server, and now a signaling authority that ties them into a real group call. 🦀</p>
+<hr />
+<h2>Links</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/webrtc-rs/apprtc</li>
+<li><strong>Live demo</strong>: https://appr.tc</li>
+<li><strong>sfu (media engine)</strong>: https://github.com/webrtc-rs/sfu — live demo at https://sfu.rs</li>
+<li><strong>rtc (Sans-I/O core)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong>webrtc (async)</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+</ul>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="/blog/2026/07/13/announcing-sfu-v0.20.0-rc.3">Announcing <code>sfu</code> v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</a></li>
+<li><a href="/blog/2026/01/23/perfect-negotiation-webrtc-deep-dive">Perfect Negotiation in WebRTC: A Deep Dive</a></li>
+<li><a href="/blog/2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc">WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly WebRTC Built on Sans-I/O</a></li>
+</ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
