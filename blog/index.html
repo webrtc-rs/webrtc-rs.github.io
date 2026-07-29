@@ -77,6 +77,16 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/07/28/boxed-interceptor-type-erasure.html">Type-Erase the Interceptor Chain, Not Your Application: <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code></a></h2>
+              <div class="date">July 28, 2026</div>
+              <div class="excerpt">
+                <p>Composing behaviour by wrapping — each layer generic over the next — is one of Rust's best zero-cost patterns, and one of the easiest ways to push a type into your users' data structures that they never chose and cannot name. <code>rtc</code>'s interceptor chain was exactly that, until now: a struct holding a peer connection can finally be written <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code>, whatever chain it was built with.</p>
+                <p>A general look at the problem: why <code>impl Trait</code> postpones it by exactly one layer, and the two places you can erase the type. Erasing the <em>holder</em> behind a facade is right when the facade is the product — it is how the async <code>webrtc</code> crate is built over the Sans-I/O <code>rtc</code> core — and a costly workaround when it is only a mirror, flattening borrowing APIs into cloning ones. Erasing the <em>parameter</em> needs a dyn-compatible trait: the <code>Sized</code> supertrait that vetoes it, and the <code>Box&lt;P&gt;</code> impl that makes erasure a drop-in. Worked through with <code>rtc</code>'s new <code>BoxedInterceptor</code>, and closing with what it did for the <code>sfu</code> crate.</p>
+              </div>
+              <a href="./2026/07/28/boxed-interceptor-type-erasure.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/07/22/apprtc-p2p-to-sfu-upgrade.html">AppRTC Goes Group: Automatic P2P → SFU Upgrade at appr.tc</a></h2>
               <div class="date">July 22, 2026</div>
               <div class="excerpt">

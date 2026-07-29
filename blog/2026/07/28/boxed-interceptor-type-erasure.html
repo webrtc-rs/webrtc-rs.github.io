@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="rtc's interceptor chain is composed by generics, so its type used to leak into every struct that held a peer connection. RTCPeerConnection<BoxedInterceptor> ends that: why impl Trait doesn't fix it, when a facade is the right answer and when it is a workaround, and what a trait needs to be dyn-compatible.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Type-Erase the Interceptor Chain, Not Your Application: RTCPeerConnection<BoxedInterceptor> | WebRTC.rs</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Type-Erase the Interceptor Chain, Not Your Application: <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code></h1>
+            <div class="blog-meta">
+              <span>July 28, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/28/boxed-interceptor-type-erasure.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+
+<p>Composing behaviour by wrapping — each layer holding the next as a generic field — is one of Rust's best zero-cost patterns. It is also one of the easiest ways to accidentally push a type into your users' data structures that they never asked for and cannot name.</p>
+<p><code>rtc</code>'s interceptor chain is a textbook case of both halves, and on <a href="https://github.com/webrtc-rs/rtc">master</a> you can now opt out of the second half:</p>
+<pre><code class="language-rust">struct Session {
+    peer_connection: RTCPeerConnection&lt;BoxedInterceptor&gt;,   // no type parameter
+}
+</code></pre>
+<p>Whatever chain that connection was built with — defaults, a custom layer, something chosen from a config file at startup — the struct holding it looks like that. This post is about why it took a change to a trait bound to make it possible, and about the general shape of the problem, which is not specific to WebRTC: what a generic composition parameter costs the code that has to <em>hold</em> the composed value, why <code>impl Trait</code> doesn't rescue it, the two places you can erase the type and when each is the right one, and what a trait needs in order to make the second possible at all.</p>
+<hr />
+<h2>A pattern and its receipt</h2>
+<p>The wrapper chain is simple. Each layer is generic over the next one, holds it by value, and delegates:</p>
+<pre><code class="language-rust">pub struct SomeLayer&lt;P&gt; {
+    next: P,
+    // …layer state
+}
+
+impl&lt;P: Interceptor&gt; Protocol&lt;…&gt; for SomeLayer&lt;P&gt; {
+    fn handle_read(&amp;mut self, msg: TaggedPacket) -&gt; Result&lt;(), Self::Error&gt; {
+        // …do the layer's work
+        self.next.handle_read(msg)
+    }
+}
+</code></pre>
+<p>Stack a few of those and the compiler monomorphizes the whole thing into straight-line code. No vtables, no indirection, and the optimizer can see through every layer at once. For a packet pipeline that runs per RTP packet, that is exactly the right trade — it's why we <a href="/blog/2026/01/09/interceptor-design-principle-sansio">built the interceptor framework this way</a> in the first place.</p>
+<p>The receipt arrives when you ask what the composed value's <em>type</em> is. Composition by generics means the type is <strong>structural</strong>: it spells out the entire recipe, in order.</p>
+<pre><code class="language-rust">let registry = register_default_interceptors(Registry::new(), &amp;mut media_engine)?;
+let registry = registry.with(RtcpForwarderBuilder::new().build());
+</code></pre>
+<pre><code class="language-text">RtcpForwarderInterceptor&lt;TwccReceiverInterceptor&lt;SenderReportInterceptor&lt;
+    ReceiverReportInterceptor&lt;NackResponderInterceptor&lt;NackGeneratorInterceptor&lt;
+        NoopInterceptor&gt;&gt;&gt;&gt;&gt;&gt;
+</code></pre>
+<p>And because the pipeline that runs the chain is itself generic over it —</p>
+<pre><code class="language-rust">pub struct RTCPeerConnection&lt;I = NoopInterceptor&gt; where I: Interceptor { … }
+</code></pre>
+<p>— that recipe is now part of the type of everything that owns a peer connection.</p>
+<hr />
+<h2>Composition is not a capability</h2>
+<p>It helps to separate two kinds of type parameter.</p>
+<p>Some parameters are part of the caller's <strong>interface</strong>: <code>Vec&lt;T&gt;</code>, <code>HashMap&lt;K, V&gt;</code>, <code>impl Read</code>. The caller picked <code>T</code> on purpose, knows what it is, and wants it in the signature. Making the holder generic over it is correct — it <em>is</em> the caller's choice.</p>
+<p>Others are the residue of a <strong>configuration decision</strong>. The user of an interceptor chain chose a policy — "the defaults, plus my RTCP forwarder" — and a type fell out of it as an implementation detail of how composition happens to be encoded. Nobody wants that type. Nobody can reasonably write it down. It exists only because wrapping-with-generics is how the layers were spelled.</p>
+<p>The trouble is that Rust treats both identically, so the second kind propagates exactly like the first. And it propagates <em>upward</em>, along ownership:</p>
+<pre><code class="language-rust">struct Session&lt;I: Interceptor&gt; { pc: RTCPeerConnection&lt;I&gt;, … }
+struct Room&lt;I: Interceptor&gt;    { members: HashMap&lt;Id, Session&lt;I&gt;&gt;, … }
+struct Server&lt;I: Interceptor&gt;  { rooms: HashMap&lt;RoomId, Room&lt;I&gt;&gt;, … }
+//                              …and now it is in your public API
+</code></pre>
+<p>Three structs deep, a parameter representing "which RTCP layers did we enable" is a required part of constructing a server. Worse than the noise: it also <em>unifies</em> the choice. Every room in that <code>HashMap</code> must have the identical chain, because it is one type parameter — even though per-session policy is the obvious thing to want.</p>
+<hr />
+<h2>Why <code>impl Trait</code> doesn't rescue it</h2>
+<p>The reflex is to hide the type behind <code>impl Trait</code>:</p>
+<pre><code class="language-rust">fn build_chain() -&gt; Registry&lt;impl Interceptor&gt; { … }
+fn create_peer()  -&gt; RTCPeerConnection&lt;impl Interceptor&gt; { … }
+</code></pre>
+<p>That compiles, and it genuinely helps at the boundary where the chain is built. But <code>impl Trait</code> is not erasure — it is an <strong>opaque alias for one concrete type, fixed per return site</strong>. The type still exists, is still unique, and is still chosen by the callee; you just can't spell it. So it solves the "I don't want to write that type" problem while leaving the "that type is in my struct" problem completely intact:</p>
+<table>
+<thead>
+<tr>
+<th>You want to…</th>
+<th>With <code>impl Trait</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>put the value in a struct field</td>
+<td>you must name a type; you can't, so the struct takes a parameter — infection continues</td>
+</tr>
+<tr>
+<td>hold values from two builders in one <code>Vec</code>/<code>HashMap</code></td>
+<td>impossible: different sites, different opaque types</td>
+</tr>
+<tr>
+<td>choose the chain in an <code>if</code>/<code>match</code> at runtime</td>
+<td>impossible: arms must agree on one type</td>
+</tr>
+<tr>
+<td>write a non-generic function that takes one</td>
+<td>impossible</td>
+</tr>
+<tr>
+<td>return one from two different functions and treat them uniformly</td>
+<td>impossible</td>
+</tr>
+</tbody>
+</table>
+<p>Every row is a thing ordinary programs do. <code>impl Trait</code> postpones the naming problem by exactly one layer.</p>
+<hr />
+<h2>Two places to erase</h2>
+<p>Sooner or later, someone reaches for <code>dyn</code>. The interesting question is <em>what</em> to make dynamic — and there are two candidates. Which one is right depends less on the code than on who is writing it and why.</p>
+<h3>Erasing the holder (the facade)</h3>
+<p>Leave the generic type alone and hide the <em>whole composed object</em> behind a trait you write yourself.</p>
+<pre><code class="language-rust">trait PeerConnection {                    // your own mirror of the library's API
+    fn create_offer(&amp;mut self, o: Option&lt;RTCOfferOptions&gt;) -&gt; Result&lt;RTCSessionDescription&gt;;
+    fn set_local_description(&amp;mut self, sdp: RTCSessionDescription) -&gt; Result&lt;()&gt;;
+    // …one line per method you need, forever
+}
+
+impl&lt;I: Interceptor&gt; PeerConnection for RTCPeerConnection&lt;I&gt; {
+    fn create_offer(&amp;mut self, o: Option&lt;RTCOfferOptions&gt;) -&gt; Result&lt;RTCSessionDescription&gt; {
+        RTCPeerConnection::create_offer(self, o)          // …and one forward for each
+    }
+}
+
+struct Session { pc: Box&lt;dyn PeerConnection&gt; }            // the parameter is gone
+</code></pre>
+<h4>When this is exactly right</h4>
+<p>Sometimes the facade <strong>is the product</strong>. The <code>webrtc</code> crate is built this way on top of <code>rtc</code>, deliberately:</p>
+<pre><code class="language-rust">/// Object-safe trait exposing all public PeerConnection operations.
+///
+/// Object-safe trait exposing all public PeerConnection operations, hiding the
+/// generic interceptor type so callers can store and share connections easily.
+#[async_trait::async_trait]
+pub trait PeerConnection: Send + Sync + 'static {
+    async fn create_offer(&amp;self, options: Option&lt;RTCOfferOptions&gt;) -&gt; Result&lt;RTCSessionDescription&gt;;
+    async fn set_local_description(&amp;self, desc: RTCSessionDescription) -&gt; Result&lt;()&gt;;
+    …
+}
+</code></pre>
+<p>Look at what that trait is doing. It is not a mirror — it is a <strong>translation</strong>. <code>rtc</code>'s core is Sans-I/O: synchronous, <code>&amp;mut self</code>, driven by a poll loop the caller owns. <code>webrtc</code>'s trait is <code>async</code>, takes <code>&amp;self</code>, is <code>Send + Sync + 'static</code>, and is object safe, so a connection can be wrapped in an <code>Arc&lt;dyn PeerConnection&gt;</code> and shared across tasks; a driver task and an event-handler trait sit behind it. The trait object is the seam between two programming models, and that is precisely the job the <code>webrtc</code> crate exists to do.</p>
+<p>Three things follow from being a real API boundary rather than a workaround:</p>
+<ul>
+<li><strong>The facade earns its keep on its own merits.</strong> If the interceptor parameter vanished tomorrow, <code>webrtc</code> would still want this trait, because the async translation is the point.</li>
+<li><strong>It is written once, upstream, by people who own both sides.</strong> Every <code>webrtc</code> user gets a parameter-free connection handle — <code>impl PeerConnection</code>, wrappable as <code>Arc&lt;dyn PeerConnection&gt;</code> — without writing a line of it.</li>
+<li><strong>The dispatch cost is noise in context.</strong> One vtable hop next to a mutex acquisition, a channel send, and an <code>.await</code> is not measurable.</li>
+</ul>
+<p>That the generic interceptor type disappears along the way is a welcome side effect — not the motive.</p>
+<h4>When it is a workaround</h4>
+<p>The trouble starts when a facade has no reason to exist except to launder a type parameter — when its methods are one-line forwards with the same names, same arguments and same semantics as the thing they wrap. Then you are not presenting an API; you are paying for a type parameter in boilerplate. None of the three benefits above apply, and three taxes do instead:</p>
+<p><strong>The mirror is only as complete as you remembered to make it.</strong> Every API you later want is another signature plus another forward, and every upstream release can add methods your facade doesn't have. The abstraction is not "a peer connection" — it is "the subset of a peer connection someone needed on a Tuesday."</p>
+<p><strong>Dyn-safety flattens the signatures.</strong> A trait object cannot carry generic methods, and it cannot hand back a type that mentions the erased parameter. So borrowing views and lazy iterators have to be lowered into owned snapshots:</p>
+<pre><code class="language-rust">// library:  fn get_receivers(&amp;self) -&gt; impl Iterator&lt;Item = ReceiverId&gt; + use&lt;'_, I&gt;
+fn get_receivers(&amp;self) -&gt; Vec&lt;ReceiverId&gt;;              // → allocate
+
+// library:  fn rtp_receiver(&amp;mut self, id) -&gt; Option&lt;RTCRtpReceiver&lt;'_, I&gt;&gt;
+fn receiver_track(&amp;mut self, id) -&gt; Option&lt;MediaStreamTrack&gt;;         // → clone
+fn receiver_parameters(&amp;mut self, id) -&gt; Option&lt;RTCRtpReceiveParameters&gt;;  // → clone
+</code></pre>
+<p>A borrowing handle like <code>RTCRtpReceiver&lt;'_, I&gt;</code> mentions <code>I</code> in its type, so it can <em>never</em> cross the facade. The only way through is to copy data out — which turns a free read into an allocation, and puts it wherever the caller happens to be, including hot loops.</p>
+<p><strong>And you pay it in every application.</strong> The facade lives downstream, so each project that hits the problem writes its own, with its own subset and its own set of forced clones — and unlike the <code>webrtc</code> case, nobody else ever benefits from the work.</p>
+<p>The test is a single question: <strong>would this trait still exist if the type parameter went away?</strong> For <code>webrtc</code>, obviously yes. For a mirror, obviously no — and that is the signal that you are erasing the wrong thing.</p>
+<h3>Erasing the parameter</h3>
+<p>The other option is to make the <em>parameter itself</em> erasable, and substitute the erased type back into the same generic slot:</p>
+<pre><code class="language-rust">type BoxedInterceptor = Box&lt;dyn Interceptor&gt;;
+
+struct Session { pc: RTCPeerConnection&lt;BoxedInterceptor&gt; }   // still the real type
+</code></pre>
+<p>Everything downstream of the parameter is untouched. <code>RTCPeerConnection&lt;I&gt;</code>'s entire API is defined for all <code>I: Interceptor</code>, so if <code>BoxedInterceptor: Interceptor</code>, the erased peer connection keeps <strong>the whole API</strong>, including the generic methods and the borrowing views the facade could never express. Nothing needs re-declaring, so nothing can drift.</p>
+<p>This is the general rule the two approaches illustrate:</p>
+<blockquote>
+<p><strong>Erase a holder when the erased API is one you actually want to present. Otherwise erase the smallest type that removes the parameter, in the crate that owns the trait.</strong></p>
+</blockquote>
+<p>A mirror facade erases something enormous — a peer connection, with dozens of methods and several borrowing view types — in order to get rid of something small: a chain. Erasing the chain directly removes the same parameter at a fraction of the surface area, and, being upstream, does it once for everybody. <code>webrtc</code> sits on the other side of that line: it erases a holder, but the thing it presents is a different API, not a copy of the one underneath.</p>
+<hr />
+<h2>What it takes to erase a parameter</h2>
+<p>For <code>Box&lt;dyn Trait&gt;</code> to be a drop-in for <code>T: Trait</code>, the trait needs two properties. Only the first is famous.</p>
+<h3>1. The trait must be dyn-compatible</h3>
+<p>The rules for object safety (recently renamed <em>dyn compatibility</em>) come down to: everything in the vtable must be callable through a pointer without knowing <code>Self</code>. In practice you check three things.</p>
+<p><strong>No <code>Sized</code> supertrait.</strong> <code>trait Foo: Sized</code> is an outright veto — <code>dyn Foo</code> cannot exist, because a trait object is unsized by construction. This is the one that bit us, and it is worth dwelling on <em>why</em> someone writes it. Usually it's to support a by-value combinator:</p>
+<pre><code class="language-rust">pub trait Interceptor: Protocol&lt;…&gt; + Sized + Send + Sync + 'static {
+    fn with&lt;O, F&gt;(self, f: F) -&gt; O where F: FnOnce(Self) -&gt; O, O: Interceptor { f(self) }
+    //           ^^^^ takes self by value, so it needs a Sized bound somewhere
+}
+</code></pre>
+<p>The bound is real — <code>with</code> genuinely requires <code>Self: Sized</code> — but it was put in the wrong place. Hoisting one method's requirement onto the entire trait vetoes trait objects for every user of the trait, forever. The fix is to state it where it applies:</p>
+<pre><code class="language-rust">fn with&lt;O, F&gt;(self, f: F) -&gt; O
+where
+    Self: Sized,          // ← the requirement, scoped to the method that has it
+    F: FnOnce(Self) -&gt; O,
+    O: Interceptor,
+{ f(self) }
+</code></pre>
+<p>A method with <code>where Self: Sized</code> is simply <strong>excluded from the vtable</strong>. It stays fully available on every concrete type — the ergonomic chaining API is unchanged — and it stops blocking <code>dyn</code>. The same trick covers generic methods and by-value receivers.</p>
+<p><strong>All associated types must be nameable.</strong> <code>dyn Iterator</code> is illegal; <code>dyn Iterator&lt;Item = u32&gt;</code> is fine. If a trait's associated types are already pinned by its own supertrait bound, this is free:</p>
+<pre><code class="language-rust">pub trait Interceptor:
+    sansio::Protocol&lt;TaggedPacket, TaggedPacket, (),
+        Rout = TaggedPacket, Wout = TaggedPacket, Eout = (),
+        Time = Instant, Error = shared::error::Error&gt; + …
+</code></pre>
+<p>Every associated type is already fixed, so <code>dyn Interceptor</code> is complete with no extra annotations.</p>
+<p><strong>Auto traits come along for free if they're supertraits.</strong> <code>trait Foo: Send + Sync + 'static</code> means <code>dyn Foo</code> is <code>Send + Sync + 'static</code> — no <code>Box&lt;dyn Foo + Send + Sync&gt;</code> noise at the use site.</p>
+<h3>2. The erased type must implement the trait</h3>
+<p>This is the step that's easy to miss, and it's the one that makes erasure a <em>drop-in</em> rather than a parallel universe. <code>Box&lt;dyn Interceptor&gt;</code> being constructible is useless if it can't go back into <code>RTCPeerConnection&lt;I&gt;</code>'s <code>I</code> slot. It needs to satisfy the bound itself:</p>
+<pre><code class="language-rust">impl&lt;P: Interceptor + ?Sized&gt; Interceptor for Box&lt;P&gt; {
+    fn bind_local_stream(&amp;mut self, info: &amp;StreamInfo)   { (**self).bind_local_stream(info) }
+    fn unbind_local_stream(&amp;mut self, info: &amp;StreamInfo) { (**self).unbind_local_stream(info) }
+    fn bind_remote_stream(&amp;mut self, info: &amp;StreamInfo)  { (**self).bind_remote_stream(info) }
+    fn unbind_remote_stream(&amp;mut self, info: &amp;StreamInfo){ (**self).unbind_remote_stream(info) }
+}
+</code></pre>
+<p>The <code>+ ?Sized</code> matters: without it the impl doesn't cover <code>P = dyn Interceptor</code>, which is the only case anyone cares about. And note how little there is to write — <code>sansio</code> already blanket-implements <code>Protocol</code> for <code>Box&lt;P&gt;</code>, so the supertrait half was done. <strong>Libraries that ship a <code>Box&lt;T&gt;</code> forwarding impl for their traits make themselves erasable by anyone downstream</strong>; libraries that don't force every consumer to write a newtype.</p>
+<h3>3. Make it opt-in, and give it a name</h3>
+<p>Erasure should be a choice at the point of construction, not a change to the default:</p>
+<pre><code class="language-rust">pub type BoxedInterceptor = Box&lt;dyn Interceptor&gt;;
+
+impl&lt;P: Interceptor&gt; Registry&lt;P&gt; {
+    pub fn boxed(self) -&gt; Registry&lt;BoxedInterceptor&gt; {
+        Registry { inner: Box::new(self.inner) }
+    }
+}
+</code></pre>
+<p>The alias is not cosmetic — it's the thing users put in struct fields, so it should read like a type, not like machinery. And <code>boxed()</code> on the builder is where the two worlds meet: everything before it is statically composed, everything after it is one type.</p>
+<p>That is the whole change: move one bound, add one blanket impl, add one alias, add one method. Nothing else in <code>rtc</code> moved — the peer connection, the transceivers, the derive macros and the built-in interceptors all compiled untouched, and it is not a breaking change, because <code>T: Interceptor</code> in generic position still implies <code>Sized</code> by default.</p>
+<hr />
+<h2>What it costs</h2>
+<p>Dynamic dispatch is not free, so it matters <em>where</em> the indirection lands.</p>
+<p>Erasing the chain's outer handle puts one virtual call at each <strong>entry point of the chain</strong> — <code>handle_read</code>, <code>poll_write</code>, <code>handle_timeout</code> and friends — once per pipeline drive. The chain's <strong>interior is unchanged</strong>: layer <em>n</em> still calls layer <em>n+1</em> through a statically known type and still inlines exactly as before. You are not paying a vtable hop per layer per packet; you are paying one hop to get into the stack.</p>
+<p>That asymmetry is the reason erasing at the boundary is cheap and erasing per-layer would not be. It's also why a mirror facade can end up <em>slower</em> than erasing the parameter: its forced clones are real allocations on real hot paths, while the virtual call it avoided was one indirection amortized over an entire drive.</p>
+<p>There is a second, quieter benefit. Every distinct chain type instantiates its own copy of the generic pipeline. Collapsing <em>N</em> configurations to one erased type collapses <em>N</em> monomorphizations to one — less code to compile and less binary to ship.</p>
+<p>The rule of thumb:</p>
+<blockquote>
+<p><strong>Keep the generic when the chain is fixed at compile time. Erase when the chain is a runtime decision, or when the composed value has to live inside someone else's data structures.</strong></p>
+</blockquote>
+<hr />
+<h2>The worked example</h2>
+<p>In <code>rtc</code>, that's <code>BoxedInterceptor</code>. Master also carries a runnable demonstration of all three things the generic form couldn't do.</p>
+<p><strong>A chain chosen at runtime.</strong> The two branches build different types; <code>.boxed()</code> is where they unify:</p>
+<pre><code class="language-rust">fn build_peer_connection(
+    forward_rtcp: bool,
+    mut media_engine: MediaEngine,
+) -&gt; Result&lt;RTCPeerConnection&lt;BoxedInterceptor&gt;&gt; {
+    let registry = register_default_interceptors(Registry::new(), &amp;mut media_engine)?;
+    let registry = if forward_rtcp {
+        registry.with(RtcpForwarderBuilder::new().build()).boxed()
+    } else {
+        registry.boxed()
+    };
+    …
+}
+</code></pre>
+<p><strong>A struct with no type parameter</strong>, and therefore an ordinary <code>impl</code> block:</p>
+<pre><code class="language-rust">struct RtcpSession {
+    peer_connection: RTCPeerConnection&lt;BoxedInterceptor&gt;,
+    socket: Arc&lt;UdpSocket&gt;,
+    …
+}
+</code></pre>
+<p><strong>A collection of peers whose chains differ.</strong> <code>tests/rtcp_processing_boxed_interop.rs</code> puts two peers built with <em>different</em> chains in one <code>Vec</code> and drives them from one non-generic loop: the offerer streams RTP without the RTCP forwarder installed, the answerer has it. The assertion is that the behaviour differs accordingly — the answerer surfaces the offerer's Sender Reports to the application, and the offerer never surfaces a single RTCP packet.</p>
+<blockquote>
+<p><strong>Try it:</strong> <code>cargo run --example rtcp-processing-boxed</code>, then the same command with
+<code>-- --no-rtcp-forwarding</code>. Same peer connection type, same code path, different chain —
+and the RTCP output disappears.</p>
+</blockquote>
+<hr />
+<h2>In practice: the <code>sfu</code> crate</h2>
+<p><code>sfu</code> is the reason this got fixed, and it had gone down the mirror-facade road first — the wrong side of the line drawn above.</p>
+<p>An SFU owns rooms, each room owns a <code>HashMap&lt;ClientId, Client&gt;</code>, and every client's chain is assembled at join time from runtime configuration — so <code>I</code> had nowhere to stop propagating, and would have ended up in the crate's public API. The workaround was a hand-written <code>trait PeerConnection</code> with thirty methods and a thirty-method forwarding impl: 250 lines that did nothing but restate <code>rtc</code>'s API, complete with a commented-out <code>create_data_channel</code> stub for the parts nobody had gotten around to mirroring.</p>
+<p>Switching the field to <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code> deleted all of it. <code>client.rs</code> went from 1,209 lines to 965 (+87 / −320 including <code>room.rs</code>), and <strong><code>room.rs</code> needed no edits at all</strong> — it reached the peer connection through <code>Deref</code>, and the <code>Deref</code> target simply changed from <code>Box&lt;dyn PeerConnection&gt;</code> to the real type underneath.</p>
+<p>The tax that actually mattered was the third one. <code>Room::forward_rtp</code> runs per RTP packet, and to find which receiver owns a packet's SSRC it had to go through the facade — which meant cloning a <code>MediaStreamTrack</code> and an <code>RTCRtpReceiveParameters</code> per candidate receiver, then throwing most of them away, because the only thing it wanted was <code>ssrcs()</code>. With the real type in hand it holds the borrowing view instead:</p>
+<pre><code class="language-rust">let Some(mut receiver) = self.peer_connection.rtp_receiver(receiver_id) else {
+    continue;
+};
+if !receiver.track().ssrcs().any(|track_ssrc| track_ssrc == ssrc) {
+    continue;                                     // nothing was cloned to learn this
+}
+if let Some(codec) = Client::codec_for_payload_type(receiver.get_parameters(), payload_type) {
+    return Some(codec);
+}
+</code></pre>
+<p>Same logic, no clones, on the per-packet path. That performance was never lost to <code>dyn</code> — it was lost to erasing the wrong layer.</p>
+<hr />
+<h2>Takeaways</h2>
+<p>If you are writing a library whose users compose behaviour through a generic chain:</p>
+<ul>
+<li><strong>Assume the composed type will end up in someone's struct.</strong> Design for it.</li>
+<li><strong>Never put <code>Sized</code> on the trait</strong> to satisfy one by-value combinator. Put <code>where Self: Sized</code> on the combinator.</li>
+<li><strong>Ship a <code>impl&lt;P: Trait + ?Sized&gt; Trait for Box&lt;P&gt;</code>.</strong> It's a few lines, and it's what makes your trait erasable by anyone else.</li>
+<li><strong>Ship the alias and the <code>boxed()</code> constructor.</strong> Users should not have to discover that erasure is possible; they should find a type they can put in a field.</li>
+<li><strong>Keep static dispatch the default.</strong> Erasure is a choice for the cases that need it, not a tax on the cases that don't.</li>
+</ul>
+<p>And if you are on the consuming side: before writing a facade trait over somebody else's API, ask whether it would still be worth having if the type parameter disappeared. If yes — you are presenting a genuinely different API, the way <code>webrtc</code> presents an async one over <code>rtc</code>'s Sans-I/O core — then write it, and the erased parameter is a bonus. If no, you are about to wrap something enormous to get rid of something small. Check the size of the type you actually want gone; the fix usually belongs upstream, and it is usually four lines long.</p>
+<p>🦀</p>
+<hr />
+<h2>Links</h2>
+<ul>
+<li><strong>rtc (Sans-I/O core)</strong>: https://github.com/webrtc-rs/rtc</li>
+<li><strong><code>rtc-interceptor</code></strong>: https://github.com/webrtc-rs/rtc/tree/master/rtc-interceptor</li>
+<li><strong>sfu</strong>: https://github.com/webrtc-rs/sfu — live demo at https://sfu.rs</li>
+<li><strong>webrtc (async)</strong>: https://github.com/webrtc-rs/webrtc</li>
+<li><strong>apprtc (signaling)</strong>: https://github.com/webrtc-rs/apprtc — live demo at https://appr.tc</li>
+<li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+</ul>
+<hr />
+<h2>Further Reading</h2>
+<ul>
+<li><a href="/blog/2026/01/09/interceptor-design-principle-sansio">Interceptor Design Principle: Composable RTP/RTCP Processing with <code>sansio::Protocol</code></a></li>
+<li><a href="/blog/2026/07/13/announcing-sfu-v0.20.0-rc.3">Announcing <code>sfu</code> v0.20.0-rc.3: A Sans-I/O Selective Forwarding Unit in Rust</a></li>
+<li><a href="/blog/2026/07/22/apprtc-p2p-to-sfu-upgrade">AppRTC Goes Group: Automatic P2P → SFU Upgrade at appr.tc</a></li>
+</ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">← Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
