@@ -343,26 +343,16 @@ Each of these would have shipped as a "supported" extension point that nobody co
 
 ## Try it
 
-This has **not shipped in a release yet** — `v0.20.0-rc.4` was tagged on July 22, and this landed on
-July 30. Until `v0.20.0` goes out, it is master only:
-
 ```toml
-[dependencies]
 # Tokio, the default
-webrtc = { git = "https://github.com/webrtc-rs/webrtc", branch = "master" }
+webrtc = "0.20"
 
 # smol
-webrtc = { git = "https://github.com/webrtc-rs/webrtc", branch = "master",
-           default-features = false, features = ["runtime-smol"] }
+webrtc = { version = "0.20", default-features = false, features = ["runtime-smol"] }
 
 # Neither — bring your own
-webrtc = { git = "https://github.com/webrtc-rs/webrtc", branch = "master",
-           default-features = false }
+webrtc = { version = "0.20", default-features = false }
 ```
-
-Published release candidates up to and including `0.20.0-rc.4` still have the old cfg-gated
-abstraction described at the top of this post, panic and all. Once `v0.20.0` is released the same
-three configurations work against a version requirement instead of a git reference.
 
 Then read `examples/custom-runtime/`, which is deliberately small enough to read in one sitting and
 is the template for any runtime we do not ship. If your executor is not tokio or smol, a backend for

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="webrtc v0.20.0 is the first non-prerelease version of the Sans-I/O, runtime-agnostic architecture: what shipped since rc.1 in both the async crate and the rtc core, an honest audit against the January roadmap, and a migration path from v0.17.x.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing webrtc v0.20.0: Async-Friendly, Runtime-Agnostic WebRTC on Sans-I/O Core rtc</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Announcing <code>webrtc</code> v0.20.0: Async-Friendly, Runtime-Agnostic WebRTC on Sans-I/O Core <code>rtc</code> 🎉</h1>
+            <div class="blog-meta">
+              <span>July 31, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/31/announcing-webrtc-v0.20.0.svg?style=flat-square&amp;label=views&amp;color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+            <p>We're delighted to announce <strong>webrtc v0.20.0</strong>.</p>
+            <p>This is the <strong>first non-prerelease version of the new architecture</strong> — the one we sketched back in January in <a href="/blog/2026/01/31/async-friendly-webrtc-architecture">Building Async-Friendly <code>webrtc</code> on Sans-I/O <code>rtc</code></a>. It supersedes the Tokio-coupled <code>v0.17.x</code> line, which moves to bug-fix-only maintenance.</p>
+            <p>Three things make this release worth writing about beyond the version number:</p>
+            <ol>
+            <li><strong>What landed since <code>v0.20.0-rc.1</code></strong> — the RC promised "bug fixing, browser polish, performance tuning". That turned out to be the most consequential month of the whole cycle, because it is where the data-channel path went from <em>correct</em> to <em>fast</em>.</li>
+            <li><strong>What landed in the Sans-I/O <code>rtc</code> core underneath it</strong> — more than 70 commits, and the larger half of the engineering. Most of the perf wins and nearly all the spec-compliance fixes live down there.</li>
+            <li><strong>How the shipped crate compares to the January design</strong> — including the parts of that design we did <strong>not</strong> build. A roadmap post is only useful if someone later checks it honestly.</li>
+            </ol>
+            <hr />
+            <h2>What's New in the Async <code>webrtc</code> Crate Since rc.1</h2>
+            <p>Between <code>v0.20.0-rc.1</code> (June 30) and the end of the stabilization cycle, the async crate took nearly 50 commits. Top-level integration-test targets grew from <strong>19 to more than 30</strong>, and examples from 33 to <strong>36</strong>.</p>
+            <h3>✅ The Data-Channel Path Got Dramatically Faster</h3>
+            <p>The headline work of the RC period was performance, told in full in <a href="/blog/2026/07/18/from-13-mbps-to-beating-pion">From 13 Mbps to Beating Pion</a>. Four changes did the heavy lifting:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>PR</th>
+            <th>Change</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/webrtc/pull/813">#813</a></td>
+            <td>Eliminate Tokio scheduler overhead on the data-channel <strong>send</strong> path</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/webrtc/pull/815">#815</a></td>
+            <td><strong>Burst-read</strong> the UDP socket to batch the SCTP receive path</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/webrtc/pull/820">#820</a></td>
+            <td><strong>UDP GSO send + GRO receive</strong> batching via <code>quinn-udp</code></td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/webrtc/pull/819">#819</a></td>
+            <td><strong>Bounded shared reactor pool</strong> + configurable SCTP receive window</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Steady-state throughput on the <code>data-channels-flow-control</code> benchmark, median of runs, with the ratio against Pion v4.2.16 in parentheses:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>configuration</th>
+            <th>Pion v4.2.16</th>
+            <th>webrtc-rs (plain default)</th>
+            <th>webrtc-rs (+dedicated reactor)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>Unordered / no-rtx, <strong>N=1</strong></td>
+            <td>392</td>
+            <td>259 (0.66×)</td>
+            <td><strong>689 (1.76×)</strong></td>
+            </tr>
+            <tr>
+            <td>Unordered / no-rtx, <strong>N=10</strong></td>
+            <td>1681</td>
+            <td><strong>2863 (1.70×)</strong></td>
+            <td><strong>5453 (3.24×)</strong></td>
+            </tr>
+            <tr>
+            <td>Ordered / reliable, <strong>N=1</strong></td>
+            <td>385</td>
+            <td>184 (0.48×)</td>
+            <td><strong>575 (1.49×)</strong></td>
+            </tr>
+            <tr>
+            <td>Ordered / reliable, <strong>N=10</strong></td>
+            <td>1848</td>
+            <td><strong>4297 (2.33×)</strong></td>
+            <td><strong>5296 (2.87×)</strong></td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Read that honestly, as the perf post does: at <strong>N=1 the plain default still loses to Pion</strong> (0.48–0.66×) — that regime is latency-bound and Go's scheduler beats plain Tokio on round-trip latency. Turn on the one-line dedicated reactor and we lead (1.49–1.76×). In multi-connection aggregate — the regime that saturates cores — we win <strong>even at the plain default</strong> (1.70–2.33×), and by ~2.9–3.2× with the reactor, because per-byte CPU efficiency decides it there. Under <code>poop</code> with fixed work at N=1 we also use <strong>−50.9% peak RSS</strong> and <strong>−74.5% CPU cycles</strong> versus Pion.</p>
+            <p>The reactor pool deserves a specific note, because it replaced a design that did not scale. Enabling <code>with_dedicated_reactor_thread(true)</code> used to spawn <strong>one OS thread per <code>PeerConnection</code></strong>. It now draws from a process-global pool of at most <em>N</em> threads, so thread count — and the RSS that rides on it — stops scaling with connection count. <code>tests/dedicated_reactor_drop.rs</code> proves the bound directly on Linux by counting <code>webrtc-rx*</code> threads in <code>/proc/self/task</code>.</p>
+            <p>New tuning knobs on the builder:</p>
+            <pre><code class="language-rust">let pc = PeerConnectionBuilder::new()
+    .with_configuration(config)
+    .with_handler(Arc::new(MyHandler))
+    .with_udp_addrs(vec![&quot;0.0.0.0:0&quot;])
+    // Pin the driver to a pooled reactor thread — the big single-connection win
+    .with_dedicated_reactor_thread(true)
+    .with_reactor_pool_size(4)
+    // Trade memory for window: smaller = much lower peak RSS at high connection counts
+    .with_sctp_receive_buffer_size(256 * 1024)
+    .build()
+    .await?;
+</code></pre>
+            <h3>✅ Data-Channel Send Back-Pressure (Opt-In)</h3>
+            <p><a href="https://github.com/webrtc-rs/webrtc/pull/817">#817</a> added real back-pressure to the data-channel send path, so a fast producer can no longer grow the queue without bound:</p>
+            <pre><code class="language-rust">// Bound the outbound queue when building the connection
+let pc = PeerConnectionBuilder::new()
+    .with_data_channel_send_buffer_limit(4 * 1024 * 1024)
+    /* ... */ .build().await?;
+
+// Then either wait for room ...
+dc.writable().await?;
+dc.send(payload).await?;
+
+// ... or fail fast instead of queueing
+dc.try_send(payload).await?;
+</code></pre>
+            <p>The default remains unbounded, preserving the previous <code>send()</code> behavior. Once a limit is configured, <code>send()</code> / <code>send_text()</code> wait for capacity, <code>writable()</code> lets an application pace sends explicitly, and <code>try_send()</code> / <code>try_send_text()</code> fail fast with <code>ErrSendBufferFull</code>. In a naive-flood stress test the bounded queue cut peak RSS by <strong>~50–78%</strong>. Five new test binaries cover the semantics — <code>data_channel_send_backpressure</code>, <code>..._blocking</code>, <code>..._unbounded</code>, <code>..._after_close</code>, and <code>data_channel_close_wakes_send</code> (a closing channel must wake a blocked sender, not hang it).</p>
+            <h3>✅ An Async Media API for Local Tracks</h3>
+            <p><code>TrackLocal</code> gained a pull-based event interface — <code>TrackLocal::poll() -&gt; Option&lt;TrackLocalEvent&gt;</code> alongside <code>bind(ctx, evt_rx)</code> — so applications can react to bind/unbind and RTCP-driven events on a local track without a callback. <code>SampleWriter</code> also learned to carry a payload type. The new <code>tests/rtcp_processing_webrtc2webrtc.rs</code> exercises the whole loop between two async peers.</p>
+            <h3>✅ Correctness Fixes</h3>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/webrtc/pull/825">#825</a></strong> — <code>on_data_channel</code> now fires <strong>only</strong> for channels the <em>remote</em> peer opened. Previously locally-created channels were announced back to you, which is not what the W3C event means and led to double-handling. Regression test: <code>tests/on_data_channel_only_for_remote.rs</code>.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/webrtc/pull/828">#828</a></strong> — the stats structs returned by <code>get_stats()</code> are now exported under the names <code>get_stats</code> reports, so you can actually name the types you receive.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/webrtc/pull/832">#832</a></strong> — ICE server updates are applied on <code>set_configuration()</code>; previously a post-construction change to the server list was ignored.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/webrtc/issues/808">#808</a></strong> — <code>SettingEngine::set_dtls_cipher_suites()</code> now lets applications restrict DTLS negotiation to suites compatible with their certificate, and the async crate re-exports <code>CipherSuiteId</code> and <code>SrtpProtectionProfile</code> so callers do not need a version-locked direct <code>rtc</code> dependency merely to name the arguments.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/webrtc/issues/776">#776</a></strong> — deterministic regression coverage verifies that an unordered data channel with <code>max_retransmits: Some(0)</code> remains open after an individual socket-send failure; a dropped unreliable message is not itself a terminal channel event.</li>
+            <li><strong>Remote certificate fingerprints</strong> are now covered by <code>tests/remote_certificate_fingerprint.rs</code>.</li>
+            </ul>
+            <h3>✅ Pluggable Runtimes: the Part That Outgrew the Design</h3>
+            <p>The late-cycle change that most reshaped what the crate <em>is</em> was pluggable runtimes. Until now, "runtime-agnostic" meant "pick one of our two backends at compile time". It now means the <code>Runtime</code> trait is a genuine extension point. The built-ins provide convenient defaults, while a custom implementation is selected through the same per-connection interface.</p>
+            <p>Four things changed together:</p>
+            <p><strong>1. Runtime-neutral primitives.</strong> The library's channels, broadcast, mutexes, and notifications are now plain waker-driven data structures (<code>async-channel</code>, <code>async-broadcast</code>, <code>event-listener</code>, <code>futures::lock::Mutex</code>) rather than a runtime's. They are <em>not</em> feature-gated, because they need no reactor. Only genuinely reactor-bound operations — timers, I/O, spawning — go through the <code>Runtime</code> trait. That single distinction is what made everything else possible, and it shrank the Tokio and smol backends to ~400 lines each.</p>
+            <p><strong>2. Features became purely additive.</strong> Each runtime feature now only makes an implementation <em>available</em>; none of them selects the primitives the library uses. Enabling both is safe, and a single process can drive different connections on different runtimes:</p>
+            <pre><code class="language-rust">let pc = PeerConnectionBuilder::new()
+    .with_runtime(my_runtime.clone())   // per connection, not per binary
+    .with_udp_addrs(vec![&quot;0.0.0.0:0&quot;])
+    .build()
+    .await?;
+</code></pre>
+            <p><strong>3. A deterministic <code>MockRuntime</code>.</strong> Behind <code>runtime-mock</code>, it implements the same <code>Runtime</code> trait but drives timers from a manually advanced virtual clock and performs no I/O — so a test can advance thirty seconds instantly and assert on what fired, with no sleeping and no flakiness. This finally extends the Sans-I/O layer's deterministic-time property up into the async layer.</p>
+            <p>The proof that the abstraction is real is the new <strong><code>custom-runtime</code> example</strong>: it implements <code>Runtime</code> over <code>async-executor</code> + <code>async-io</code> — neither Tokio nor smol, defined entirely outside the crate — and runs with <strong><code>--no-default-features</code></strong>, so neither built-in is even compiled in. I ran it:</p>
+            <pre><code class="language-text">running on a custom runtime: my-runtime
+sleep(50ms) took 51.041458ms
+tick 0 / tick 1 / tick 2
+timeout on a pending future =&gt; Err(Elapsed)
+hello from a spawned task
+udp: received &quot;ping&quot; from 127.0.0.1:56527
+resolved localhost:3478 -&gt; [[::1]:3478, 127.0.0.1:3478]
+
+All runtime capabilities exercised without tokio or smol.
+</code></pre>
+            <p>And <code>tests/custom_runtime_interop.rs</code> closes the loop with the thing an example cannot show on its own — <strong>two peer connections on two different runtimes, interoperating in one process</strong>, the answerer on the custom <code>async-executor</code> runtime and the offerer on a built-in. Every packet between them crosses that boundary, so completion proves both runtimes are independently live. The example and interop test both pass.</p>
+            <p><strong>4. A contract with nothing invented in it.</strong> Once third parties were expected to implement <code>Runtime</code>, its surface stopped being an internal detail, and the final commits in that runtime series spent their time removing things from it rather than adding them. The socket types are now <code>quinn-udp</code>'s own — <code>Transmit</code>, <code>RecvMeta</code>, <code>EcnCodepoint</code>, <code>UdpSockRef</code>, <code>UdpSocketState</code> are re-exported rather than re-declared — so a runtime that already knows quinn's socket API has nothing new to learn, and there is no wrapper layer left to drift out of sync with it. The two packet primitives are poll-based:</p>
+            <pre><code class="language-rust">fn poll_send(&amp;self, cx: &amp;mut Context&lt;'_&gt;, transmit: &amp;Transmit&lt;'_&gt;) -&gt; Poll&lt;io::Result&lt;usize&gt;&gt;;
+
+fn poll_recv(
+    &amp;self,
+    cx: &amp;mut Context&lt;'_&gt;,
+    bufs: &amp;mut [IoSliceMut&lt;'_&gt;],
+    meta: &amp;mut [RecvMeta],
+) -&gt; Poll&lt;io::Result&lt;usize&gt;&gt;;
+</code></pre>
+            <p>That contract does not force runtime implementations to allocate a boxed future for every packet-readiness check. <code>poll_recv</code> takes slices because that is the shape the kernel offers: on Linux one <code>recvmmsg</code> returns up to 32 datagrams <strong>from different peers</strong>, and each of those may itself carry several GRO-coalesced datagrams from one flow. A minimal implementation fills <code>bufs[0]</code>, returns <code>Ok(1)</code>, and is done — which is exactly what the <code>custom-runtime</code> example does. Implementations can use wider batches where the platform exposes <code>recvmmsg</code>, <code>recvmsg_x</code>, or an equivalent facility.</p>
+            <p>Two honest notes on that. The driver currently asks for one message per call, so the multi-message path is available to implementors but not yet exploited internally; wiring it through is a follow-up, and a throughput-under-load one rather than a latency win. And re-exporting <code>quinn-udp</code>'s types means a major bump there is a breaking change here — a deliberate trade for not maintaining a parallel set of wrappers.</p>
+            <p>The practical consequence of all four: <strong>adding a runtime no longer requires us</strong>. An embedded, in-house, or not-yet-written executor is an implementation of one trait in your own crate — no <code>#[cfg]</code> edits, no fork, no upstream PR.</p>
+            <h3>✅ Documentation and Test Infrastructure</h3>
+            <p>The README was rewritten around a working quick-start, a feature-flag table, and a migration section. The <code>rtc</code> workspace went through a full inline-documentation pass: <code>#![warn(missing_docs)]</code> is now enabled across all 16 library crates, with crate-level documentation throughout, and <code>cargo doc --workspace --no-deps</code> builds cleanly with warnings denied. <code>codecov.yml</code> landed so coverage is tracked from here on.</p>
+            <hr />
+            <h2>What's New in the Sans-I/O <code>rtc</code> Core Since rc.1</h2>
+            <p>The async crate is a thin driver over <code>rtc</code>, so most of the engineering in this cycle happened in the core. Over the same period the <code>rtc</code> workspace took <strong>more than 70 commits</strong> and roughly <strong>15,000 lines of substantive change</strong> across the protocol crates. A workspace refactor also moved the <code>rtc</code> crate to the repository root, producing hundreds of rename-only paths, so raw changed-file totals would be misleading.</p>
+            <h3>✅ A Sustained Hot-Path Optimization Campaign</h3>
+            <p>The throughput numbers above are <em>mostly earned here</em>. The async layer contributed batching and scheduling; the core contributed per-byte CPU. Eleven PRs across SCTP, SRTP, and RTP/RTCP:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>PR</th>
+            <th>Change</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/104">#104</a></td>
+            <td>Eliminate per-packet allocations and byte-by-byte copies on the SCTP/SRTP hot paths</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/105">#105</a></td>
+            <td>Bulk-copy and preallocate on RTCP / media / NACK serialization</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/106">#106</a></td>
+            <td>Receive-path copy elimination; <strong>O(N²) → O(N)</strong> SCTP data-channel queues</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/107">#107</a></td>
+            <td>Hardware CRC-32C, zero-copy send path, O(1) queue pops, in-place AEAD</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/108">#108</a></td>
+            <td>SCTP send-path and RTP/RTCP marshalling allocation/CPU reductions</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/111">#111</a></td>
+            <td>SCTP/ICE data-channel hot-path allocation and CPU reductions</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/113">#113</a></td>
+            <td><strong>FORWARD-TSN generation O(streams) instead of O(rwnd)</strong></td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/121">#121</a></td>
+            <td>Zero-copy payload on the SCTP send <strong>and</strong> receive hot path</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/124">#124</a></td>
+            <td>Defer the transmit flush to coalesce SACKs on read bursts</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/125">#125</a></td>
+            <td>AES-GCM on <code>ring</code>; ARMv8 AES/PMULL enabled for the RustCrypto path</td>
+            </tr>
+            <tr>
+            <td><a href="https://github.com/webrtc-rs/rtc/pull/130">#130</a></td>
+            <td>Reduce control-chunk marshal allocations (SACK / FORWARD-TSN)</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Two of these are complexity fixes rather than constant-factor work — the O(N²) data-channel queues (#106) and FORWARD-TSN generation that scaled with the receive window rather than the stream count (#113). Those are the ones that made high-connection-count and large-window configurations viable at all.</p>
+            <h3>✅ Flow Control Down to the Association</h3>
+            <p>The async crate's <code>writable()</code> / <code>try_send()</code> API needs the core to report what the association has actually released:</p>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/127">#127</a></strong> plumbs <strong>per-stream released-bytes</strong> through SCTP and the data channel, which is the signal the async back-pressure layer is built on.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/129">#129</a></strong> makes the <strong>SCTP receive buffer (<code>a_rwnd</code>) configurable</strong>, the knob <code>with_sctp_receive_buffer_size()</code> exposes.</li>
+            </ul>
+            <h3>✅ Interoperability and Spec Compliance — the Long Tail</h3>
+            <p>This is the least glamorous and arguably most valuable category. A selection:</p>
+            <p><strong>SDP / negotiation</strong></p>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/114">#114</a></strong> — accept any RFC 8866 <code>&lt;proto&gt;</code> token in <code>m=</code> lines instead of a hard-coded allowlist.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/115">#115</a></strong> — allow <code>extmap</code> IDs up to 255, per RFC 8285.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/118">#118</a></strong> — order simulcast layers by the <code>a=simulcast</code> attribute (RFC 8853 §5.2), plus a <strong>real-Firefox interop test</strong> (more on this below).</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/120">#120</a></strong> — <strong>negotiate RTX (RFC 4588) by default</strong> and de-encapsulate received RTX packets. This one materially improves loss resilience for anyone streaming video.</li>
+            <li><strong>JSEP rollback</strong> now restores the transceiver <code>mid</code> and removes the remote transceiver, and several spurious/missing <code>negotiation-needed</code> transitions were fixed (direction changes, post-<code>stable</code> triggers, and a false trigger while already <code>Stable</code>).</li>
+            <li><code>a=ice-lite</code> handling fixed for SFU mode; <code>codecs()</code> added to <code>MediaDescription</code>.</li>
+            </ul>
+            <p><strong>ICE / DTLS</strong></p>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/100">#100</a></strong> — fix ICE agent crashes from stale candidate indices.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/136">#136</a></strong> — send srflx/prflx connectivity checks from the <strong>candidate base</strong>, not the mapped address.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/110">#110</a></strong> — stamp transmits with the selected candidate pair's transport protocol (the ICE TCP correctness fix that let the async layer simplify its write path).</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/135">#135</a></strong> — ignore DTLS timeouts before the transport starts.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/116">#116</a></strong> — default <code>rtc::SettingEngine</code> mDNS mode to <code>QueryOnly</code> <strong>so Safari candidates resolve</strong>.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/137">#137</a></strong> — actually honor <code>disable_certificate_fingerprint_verification</code>.</li>
+            </ul>
+            <p><strong>Data channels</strong></p>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/101">#101</a></strong> — open the SCTP stream for <em>negotiated</em> data channels.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/132">#132</a></strong> — open data channels immediately when SCTP is already connected.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/131">#131</a></strong> — fix receiving an empty message payload.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/140">#140</a></strong> — default <code>ordered</code> to <code>true</code>, as documented.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/138">#138</a></strong> — reject sends the write path cannot carry out, rather than silently dropping them.</li>
+            </ul>
+            <p><strong>Media</strong></p>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/99">#99</a></strong> — fix AV1 LEB128 encoding for values &gt; 127.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/122">#122</a></strong> — validate a reassembled fragmented AV1 OBU size against the buffer length.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/123">#123</a></strong> — return an error when <code>write_rtp</code> finds no matching RTP header extension id; <code>write_rtp</code> was also tightened to accept only sender payload types, removing an unsafe base-codec fallback.</li>
+            </ul>
+            <h3>✅ Crypto Backends, External Signers, and Platform Reach</h3>
+            <ul>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/95">#95</a></strong> — <strong><code>aws-lc-rs</code> support alongside <code>ring</code></strong>, so you can pick your crypto backend by feature flag. (A follow-up fixed the test suite under <code>--no-default-features --features aws-lc-rs</code> by passing the rustls <code>CryptoProvider</code> explicitly instead of letting rustls infer it from unified crate features.)</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/94">#94</a></strong> — a <strong><code>CustomSigner</code> trait</strong> for external signing providers, so DTLS signing can be delegated to an HSM, TPM, or cloud KMS instead of requiring raw private-key bytes in memory. This unlocks TPM-backed device certificates.</li>
+            <li><strong><a href="https://github.com/webrtc-rs/rtc/pull/126">#126</a></strong> — <code>wasm32-wasip2</code> can now be targeted (fallback interface enumeration for non-Unix/non-Windows targets).</li>
+            <li><code>rkyv</code> was bumped to 0.8.17 to avoid known advisories, alongside a general dependency refresh.</li>
+            </ul>
+            <h3>✅ A Type-Erasable Interceptor Chain</h3>
+            <p><code>Interceptor</code> dropped its <code>Sized</code> and <code>'static</code> supertraits, so <code>Box&lt;dyn Interceptor&gt;</code> is now a legal interceptor and <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code> is a concrete, nameable type. Applications that build their chain at runtime no longer need to hand-write a facade trait to hide the type parameter — the SFU crate deleted ~250 lines of boilerplate doing exactly that. Full story in <a href="/blog/2026/07/28/boxed-interceptor-type-erasure">Type-Erase the Interceptor Chain, Not Your Application</a>.</p>
+            <p>A few API-surface papercuts were fixed alongside it: <code>RTCCertificate</code> members and <code>DTLSParameters</code> are now public.</p>
+            <hr />
+            <h2>Scorecard: the January Design vs. the Shipped Crate</h2>
+            <p>In January we published an architecture proposal with a five-phase roadmap and a table of success metrics. Here is where each piece actually landed.</p>
+            <h3>What We Achieved</h3>
+            <p><strong>Quinn-style single crate with a runtime trait — and then past it.</strong> No <code>webrtc-tokio</code> / <code>webrtc-async-std</code> crate explosion. One <code>webrtc</code> crate and a <code>Runtime</code> abstraction over task spawning, timers, and sockets. The default path is a feature flag:</p>
+            <pre><code class="language-toml"># Tokio (default)
+webrtc = &quot;0.20&quot;
+
+# smol
+webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+</code></pre>
+            <p>But the final shape of this went <strong>further than the January design</strong> — see <em>Pluggable Runtimes: the Part That Outgrew the Design</em> above.</p>
+            <p><strong>Push-based trait handler — as designed.</strong> The January post argued that WebRTC's 8-ish interconnected event types make a single handler better than 6+ event streams, and picked <code>PeerConnectionEventHandler</code>. That is exactly what shipped, with default no-op methods so you implement only what you need.</p>
+            <p><strong>Sans-I/O foundation — as designed.</strong> The WebRTC protocol state machines live in <code>rtc</code> and are testable with no sockets and no runtime; the async crate is a <code>PeerConnection</code> handle plus a background <code>PeerConnectionDriver</code> structured as <code>poll_writes</code> → <code>poll_events</code> → <code>poll_reads</code> → <code>poll_timeout</code>/<code>handle_timeout</code>.</p>
+            <p><strong>A tractable lifecycle.</strong> The callback-registration pattern behind the <code>v0.17.x</code> lifetime problem (<a href="https://github.com/webrtc-rs/webrtc/issues/772">#772</a>) is gone: one handler is owned with the connection instead of user-owned boxed closures being registered independently. Applications should still call <code>pc.close().await</code>. Explicit <code>close()</code> marks the driver as closing, wakes blocked data-channel senders, and terminates the driver task; on the dedicated-reactor path it also waits for a bounded clean shutdown before aborting any task that remains. Dropping a dedicated-reactor connection signals the driver so it cannot pin a reactor-pool slot, but <code>Drop</code> is not a substitute for explicit async shutdown on every runtime path.</p>
+            <p><strong>Performance well past the target.</strong> The January metric was "&gt;500 Mbps" data-channel throughput against a ~300 Mbps baseline. We shipped 689 Mbps single-connection with the reactor and 5.3–5.5 Gbps in 10-connection aggregate, at roughly a quarter of Pion's CPU cycles per byte.</p>
+            <p><strong>Deliverables beyond the plan.</strong> The roadmap asked for "10+ working examples"; the crate ships <strong>36</strong>. It asked for a migration guide and getting-started docs; both are in the README.</p>
+            <table>
+            <thead>
+            <tr>
+            <th>January success metric</th>
+            <th>Target</th>
+            <th>Shipped</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>DataChannel throughput</td>
+            <td>&gt;500 Mbps</td>
+            <td>✅ 689 Mbps (N=1, reactor); 5.3 Gbps (N=10)</td>
+            </tr>
+            <tr>
+            <td>Memory leak per connection</td>
+            <td>0 KiB</td>
+            <td>⚠️ Callback-registration leak pattern removed; exact 0 KiB target not independently measured</td>
+            </tr>
+            <tr>
+            <td>Supported runtimes</td>
+            <td>4+</td>
+            <td>⚠️ 2 built-in + test-only mock; third-party <code>Runtime</code> implementations are supported</td>
+            </tr>
+            <tr>
+            <td>Browser interop</td>
+            <td>100%</td>
+            <td>⚠️ Chrome/Safari manual; Firefox frozen-SDP test in CI; Edge untested</td>
+            </tr>
+            <tr>
+            <td>Connection setup time</td>
+            <td>&lt;1 s</td>
+            <td>❔ Not measured or published</td>
+            </tr>
+            <tr>
+            <td>Test coverage</td>
+            <td>&gt;80%</td>
+            <td>❔ Not established; tracking just enabled</td>
+            </tr>
+            <tr>
+            <td>Working examples</td>
+            <td>10+</td>
+            <td>✅ 36</td>
+            </tr>
+            </tbody>
+            </table>
+            <h3>The Gaps — What We Did Not Build</h3>
+            <p><strong>Two built-in runtimes, not the four we named — and two of those four aged badly.</strong> <code>runtime-tokio</code> and <code>runtime-smol</code> ship as built-ins. Of the other two the January post promised:</p>
+            <ul>
+            <li><strong><a href="https://github.com/async-rs/async-std">async-std is discontinued</a>.</strong> Its maintainers recommend migrating to smol, so an adapter for it would be a liability rather than a feature. This roadmap item did not go unbuilt so much as expire; the correct action in 2026 is to drop it, and smol covers that constituency.</li>
+            <li><strong>embassy remains genuinely out of reach.</strong> It implies <code>no_std</code>, and the crate uses <code>std</code> types throughout. Listing it beside async-std as a comparable line item was the least realistic thing in the January post, and that is still true.</li>
+            </ul>
+            <p>What changed is that the count matters much less than it did. With the <code>Runtime</code> trait now a real extension point, "supported runtimes" is no longer a number we control — which is the right answer to a roadmap whose named targets can be archived out from under it.</p>
+            <p><strong>The handler takes <code>&amp;self</code>, not <code>&amp;mut self</code>.</strong> This is the most visible deviation. The January post promised "centralized state management with <code>&amp;mut self</code>" and "no <code>Arc</code> explosion". What shipped is:</p>
+            <pre><code class="language-rust">#[async_trait::async_trait]
+impl PeerConnectionEventHandler for MyHandler {
+    async fn on_track(&amp;self, track: Arc&lt;dyn TrackRemote&gt;) { /* ... */ }
+}
+</code></pre>
+            <p>Two consequences. First, the handler is shared as <code>Arc&lt;dyn PeerConnectionEventHandler&gt;</code>, so <strong>mutable handler state still needs interior mutability</strong> (<code>Mutex</code>/<code>RwLock</code>) — you write one <code>Arc</code> and one lock instead of an <code>Arc::clone</code> per callback per event, which is a large improvement but not the <code>&amp;mut self</code> story we described. Second, we use <code>#[async_trait]</code> rather than native <code>async fn in trait</code>, because the trait must remain <code>dyn</code>-compatible and native async fns in traits are not yet object-safe. Anyone reading the January post should adjust expectations accordingly.</p>
+            <p><strong>No stream-based API.</strong> The January post offered <code>pc.tracks()</code> / <code>pc.ice_candidates()</code> as an optional convenience layer on top of the handler. It was never built. If you want stream semantics today, bridge them yourself: have your handler forward events into an <code>mpsc</code> channel.</p>
+            <p><strong>Browser interop is partly automated, but the matrix is not filled in.</strong> The picture here is better than "manual testing" and worse than the roadmap's 100%:</p>
+            <ul>
+            <li><strong>Chrome and Safari</strong> are exercised by hand against <a href="https://appr.tc">appr.tc</a>, which is itself built on this stack. Safari specifically drove a real fix — the <code>rtc::SettingEngine</code> mDNS mode now defaults to <code>QueryOnly</code> so Safari's candidates resolve (<a href="https://github.com/webrtc-rs/rtc/pull/116">#116</a>).</li>
+            <li><strong>Firefox has a genuine automated interop test</strong>, but at the protocol layer: <code>rtc</code>'s <code>tests/firefox_simulcast_interop.rs</code> freezes a real simulcast offer captured from <strong>Firefox 152</strong> (via Marionette) and asserts the core parses and answers it correctly. That pinned down three Firefox-specific SDP shapes: directional <code>a=extmap:&lt;id&gt;/sendonly</code> qualifiers on RID header extensions (RFC 8285 §8), <code>a=msid:- &lt;track&gt;</code> with an empty stream id, and per-layer <code>a=ssrc-group:FID</code> alongside <code>a=rid</code> / <code>a=simulcast:send</code>.</li>
+            <li><strong>What is still missing</strong>: frozen-SDP tests are not live-browser tests. There is no Selenium/Playwright job in CI, <strong>Edge is untested</strong>, and the 4-browser × 4-capability matrix from the roadmap has no filled-in cells. Media-level interop (audio/video/simulcast actually flowing to a live browser) is validated ad hoc, not continuously.</li>
+            </ul>
+            <p>This remains the most significant quality gap, and the best place for community help.</p>
+            <p><strong>Two metrics are simply unmeasured.</strong> Connection setup time and test coverage have no published numbers. <code>codecov.yml</code> only just landed. We would rather say "unknown" than quote a figure we did not measure.</p>
+            <hr />
+            <h2>Migrating from v0.17.x — Please Do</h2>
+            <p>If you are on <code>v0.17.x</code> or earlier, this is the release to move to. <code>v0.17.x</code> is now bug-fix-only, and the rewrite directly addresses its central structural problems: callback registration, Tokio coupling, and protocol logic intertwined with I/O.</p>
+            <h3>Callback hell and <code>Arc</code> explosion → one handler</h3>
+            <p><strong>v0.17.x</strong> — an <code>Arc::clone</code> before the closure, another inside it, <code>Box::new(move |…| Box::pin(async move …))</code>, repeated per event type:</p>
+            <pre><code class="language-rust">let pc = Arc::new(api.new_peer_connection(config).await?);
+
+let pc_c1 = Arc::clone(&amp;pc);
+pc.on_peer_connection_state_change(Box::new(move |s| {
+    let _pc = Arc::clone(&amp;pc_c1);
+    Box::pin(async move { println!(&quot;State: {s}&quot;); })
+}));
+
+let pc_c2 = Arc::clone(&amp;pc);
+pc.on_ice_candidate(Box::new(move |c| {
+    let _pc = Arc::clone(&amp;pc_c2);
+    Box::pin(async move { /* signal candidate */ })
+}));
+// ... four more blocks like this
+</code></pre>
+            <p><strong>v0.20.0</strong> — one type, one <code>Arc</code>, all events together, and only the methods you care about:</p>
+            <pre><code class="language-rust">use std::sync::Arc;
+use webrtc::peer_connection::{
+    PeerConnection, PeerConnectionBuilder, PeerConnectionEventHandler, RTCConfigurationBuilder,
+    RTCIceServer, RTCPeerConnectionIceEvent, RTCPeerConnectionState,
+};
+use webrtc::runtime::TokioRuntime;
+
+struct MyHandler { /* your state, behind a Mutex if mutable */ }
+
+#[async_trait::async_trait]
+impl PeerConnectionEventHandler for MyHandler {
+    async fn on_connection_state_change(&amp;self, state: RTCPeerConnectionState) {
+        println!(&quot;State: {state}&quot;);
+    }
+
+    async fn on_ice_candidate(&amp;self, event: RTCPeerConnectionIceEvent) {
+        // signal event.candidate to the remote peer
+    }
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let config = RTCConfigurationBuilder::default()
+        .with_ice_servers(vec![RTCIceServer {
+            urls: vec![&quot;stun:stun.l.google.com:19302&quot;.to_owned()],
+            ..Default::default()
+        }])
+        .build();
+
+    let pc = PeerConnectionBuilder::new()
+        .with_configuration(config)
+        // Runtime selection is per connection. Replace this with `SmolRuntime`
+        // or your own `Runtime` implementation without changing the WebRTC API.
+        .with_runtime(Arc::new(TokioRuntime))
+        .with_handler(Arc::new(MyHandler { /* ... */ }))
+        .with_udp_addrs(vec![&quot;0.0.0.0:0&quot;])
+        .build()
+        .await?;
+
+    let offer = pc.create_offer(None).await?;
+    pc.set_local_description(offer).await?;
+    Ok(())
+}
+</code></pre>
+            <p><code>build()</code> returns an opaque <code>impl PeerConnection</code>. <code>PeerConnection</code> is an object-safe trait, so to store the connection in a struct or share it across tasks, wrap it once:</p>
+            <pre><code class="language-rust">let pc: Arc&lt;dyn PeerConnection&gt; = Arc::new(pc);
+</code></pre>
+            <p>No runtime or interceptor type parameter leaks into your own types.</p>
+            <h3>The other v0.17.x pain points</h3>
+            <table>
+            <thead>
+            <tr>
+            <th>Migration concern</th>
+            <th>v0.20.0</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><strong>Resource leaks in callbacks</strong> (<a href="https://github.com/webrtc-rs/webrtc/issues/772">#772</a>)</td>
+            <td>One connection-owned handler replaces independently registered boxed closures. Call <code>close().await</code> for deterministic driver and socket shutdown.</td>
+            </tr>
+            <tr>
+            <td><strong>Tight Tokio coupling</strong> — hidden <code>tokio::spawn</code> / <code>tokio::time</code> inside the library</td>
+            <td>Async socket wrapping/polling, timers, spawning, and name resolution go through the <code>Runtime</code> trait. Switch to smol with a feature flag; the peer-connection API is unchanged.</td>
+            </tr>
+            <tr>
+            <td><strong>Untestable protocol logic</strong> — needed a runtime and real sockets</td>
+            <td>Protocol lives in Sans-I/O <code>rtc</code>: feed bytes, read <code>poll_write()</code>, drive time by hand. Deterministic, no flaky timing.</td>
+            </tr>
+            <tr>
+            <td><strong>Scattered event handling</strong> across 6+ registrations</td>
+            <td>One handler trait, ordered delivery, one coordination point.</td>
+            </tr>
+            <tr>
+            <td><strong>Unbounded send buffering</strong></td>
+            <td>Opt-in back-pressure: <code>with_data_channel_send_buffer_limit</code>, <code>writable()</code>, <code>try_send()</code>.</td>
+            </tr>
+            <tr>
+            <td><strong>Initial rewrite throughput</strong> (~13 Mbps when the performance campaign began)</td>
+            <td>689 Mbps single-connection with the dedicated reactor; multi-Gbps in aggregate.</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>The rewritten async stack retains features such as TURN relay, mDNS candidates, and statistics while adding runtime-pluggable I/O, opt-in send back-pressure, ICE TCP active/passive support in the new driver, UDP GSO/GRO batching, the pooled reactor, and <strong>RTX (RFC 4588) negotiated by default</strong>. At the Sans-I/O layer, <code>rtc</code> additionally offers a choice of crypto backend (<code>ring</code> or <code>aws-lc-rs</code>), external DTLS signing via <code>CustomSigner</code> for HSM/TPM/KMS-held keys, and <code>wasm32-wasip2</code> as a build target.</p>
+            <h3>A pragmatic migration path</h3>
+            <ol>
+            <li><strong>Read the events you handle.</strong> Every <code>on_*</code> callback becomes a method on one handler type. That is the bulk of the work, and it usually <em>shrinks</em> the code.</li>
+            <li><strong>Move mutable callback state behind one lock</strong> in the handler struct, instead of per-callback <code>Arc&lt;Mutex&lt;_&gt;&gt;</code> captures.</li>
+            <li><strong>Delete your <code>Arc::clone</code> scaffolding.</strong> If you were cloning the peer connection into closures just to call methods on it, hold <code>Arc&lt;dyn PeerConnection&gt;</code> in the handler instead.</li>
+            <li><strong>Keep Tokio at first.</strong> <code>runtime-tokio</code> is the default, so runtime independence costs you nothing up front and is there when you want it.</li>
+            <li><strong>Then tune.</strong> Turn on <code>with_dedicated_reactor_thread(true)</code>, size the reactor pool, and bound the SCTP receive window and data-channel send buffer for your connection count.</li>
+            </ol>
+            <p>Expect it to be a real port, not a drop-in: the event-handler traits replace callbacks and the API is async throughout. In exchange you get an architecture where the protocol is testable without I/O and the runtime is your choice.</p>
+            <hr />
+            <h2>Try It Out</h2>
+            <pre><code class="language-toml">[dependencies]
+webrtc = &quot;0.20&quot;
+</code></pre>
+            <p>Or on smol:</p>
+            <pre><code class="language-toml">[dependencies]
+webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+</code></pre>
+            <p>Or on neither — bring your own, and hand it to each connection:</p>
+            <pre><code class="language-toml">[dependencies]
+webrtc = { version = &quot;0.20&quot;, default-features = false }
+</code></pre>
+            <p>Then browse the <a href="https://github.com/webrtc-rs/webrtc/tree/master/examples">36 examples</a>. Good starting points:</p>
+            <ul>
+            <li><code>data-channels</code> and <code>data-channels-flow-control</code> — the basics, then the fast path</li>
+            <li><code>data-channels-flow-control-multi</code> / <code>data-channels-stress-bench</code> — reproduce the benchmark numbers</li>
+            <li><code>play-from-disk-vpx</code> / <code>save-to-disk-h26x</code> — media in and out</li>
+            <li><code>trickle-ice-relay</code>, <code>ice-tcp</code> — connectivity in hostile networks</li>
+            <li><code>stats</code> — observability</li>
+            <li><code>rtcp-processing</code> — the new <code>TrackLocal::poll</code> flow</li>
+            <li><code>custom-runtime</code> — the whole stack on <code>async-executor</code> + <code>async-io</code>, with no built-in runtime compiled in</li>
+            </ul>
+            <hr />
+            <h2>Get Involved</h2>
+            <p>The gaps above are an invitation, and the browser matrix is the most valuable one:</p>
+            <ul>
+            <li><strong>Browser interop</strong>: a live-browser Playwright/Selenium job in CI, Edge coverage, and more captured-SDP fixtures in the style of <code>rtc</code>'s Firefox 152 simulcast test</li>
+            <li><strong>Runtimes</strong>: if your executor is not Tokio or smol, a backend is now a well-scoped crate <em>you</em> can publish — implement <code>Runtime</code>, copy the <code>custom-runtime</code> example's shape, and nothing upstream has to change</li>
+            <li><strong>Streams</strong>: if you want <code>pc.tracks()</code>, we would like to see a design</li>
+            <li><strong>Migration reports</strong>: tell us what was awkward coming from <code>v0.17.x</code> — that feedback shapes <code>v0.21</code></li>
+            </ul>
+            <p>Join us:</p>
+            <ul>
+            <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+            <li><strong>Sans-I/O core (<code>rtc</code>)</strong>: https://github.com/webrtc-rs/rtc</li>
+            <li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+            <li><strong>Discussions</strong>: https://github.com/webrtc-rs/webrtc/discussions</li>
+            </ul>
+            <hr />
+            <h2>Conclusion</h2>
+            <p><code>v0.20.0</code> delivers the architecture we proposed in January: a Sans-I/O protocol core, a Quinn-style runtime abstraction, a single push-based event handler, deterministic protocol tests, and — after the RC-period performance work — a data-channel path that beats Pion on per-byte CPU, memory, and aggregate throughput. On one axis it goes past the design: the runtime abstraction ended up a real extension point, so the stack runs on a runtime we have never heard of, chosen per connection.</p>
+            <p>Underneath it, the <code>rtc</code> core spent this cycle on the work that does not make headlines: eleven hot-path optimization PRs, two algorithmic complexity fixes, and a long tail of SDP, ICE, DTLS, data-channel, and media compliance fixes — plus RTX by default, a second crypto backend, external signing, and a new build target.</p>
+            <p>It still does not deliver everything we described. No stream layer, <code>&amp;self</code> instead of <code>&amp;mut self</code> on the handler, embassy out of reach behind <code>no_std</code>, and a browser matrix with one automated cell in it. Publishing that list next to the wins is the point: the design post was a promise, and this is the audit.</p>
+            <p>If you are still on <code>v0.17.x</code>, the callback hell, the <code>Arc</code> explosion, the leaked closures, and the Tokio lock-in are all fixed on the other side of this port. 🦀</p>
+            <hr />
+            <h2>Links</h2>
+            <ul>
+            <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+            <li><strong>rtc (Sans-I/O)</strong>: https://github.com/webrtc-rs/rtc</li>
+            <li><strong>Examples</strong>: https://github.com/webrtc-rs/webrtc/tree/master/examples</li>
+            <li><strong>Docs</strong>: https://docs.rs/webrtc</li>
+            <li><strong>AppRTC</strong>: https://appr.tc</li>
+            <li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+            </ul>
+            <hr />
+            <h2>Further Reading</h2>
+            <ul>
+            <li><a href="/blog/2026/01/31/async-friendly-webrtc-architecture">Building Async-Friendly webrtc on Sans-I/O rtc: Architecture Design and Roadmap</a></li>
+            <li><a href="/blog/2026/03/01/webrtc-v0.20.0-alpha.1-async-webrtc-on-sansio">WebRTC v0.20.0-alpha.1: Async-Friendly WebRTC Built on Sans-I/O</a></li>
+            <li><a href="/blog/2026/06/30/webrtc-v0.20.0-rc.1-toward-stable-async-webrtc">WebRTC v0.20.0-rc.1: Toward Stable Async-Friendly WebRTC</a></li>
+            <li><a href="/blog/2026/07/18/from-13-mbps-to-beating-pion">From 13 Mbps to Beating Pion: How We Made webrtc-rs Data Channels Fast</a></li>
+            <li><a href="/blog/2026/07/28/boxed-interceptor-type-erasure">Type-Erase the Interceptor Chain, Not Your Application</a></li>
+            </ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">&larr; Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
