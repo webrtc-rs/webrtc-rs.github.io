@@ -1,0 +1,117 @@
+Title:
+  [Project Update] webrtc v0.20.0 — Async WebRTC on the Sans-I/O rtc core: bring-your-own-runtime and much faster data channels
+
+  Body:
+
+  Hi everyone!
+
+  **webrtc v0.20.0** is out — the first stable release of the new architecture, and the end of a rewrite we started planning in January. Full blog post: https://webrtc.rs/blog/2026/07/31/announcing-webrtc-v0.20.0.html
+
+  Previous updates for context:
+  - [The architecture design](https://webrtc.rs/blog/2026/01/31/async-friendly-webrtc-architecture.html) for the async crate on a Sans-I/O core
+  - [v0.20.0-alpha.1](https://www.reddit.com/r/rust/comments/1q3w7f1/project_update_announcing_rtc_030_sansio_webrtc/) — the first pre-release of that design
+  - [rtc 0.8.0](https://webrtc.rs/blog/2026/01/18/rtc-feature-complete-whats-next.html) — the Sans-I/O core reaching feature parity
+
+  v0.20.0 supersedes the Tokio-coupled `v0.17.x` line, which moves to bug-fix-only maintenance.
+
+  ## Bring your own async runtime
+
+  This is the part that changed most late in the cycle, and the part I think this sub will care about most.
+
+  "Runtime-agnostic" used to mean "pick one of our two backends with a feature flag". It now means the `Runtime` trait is a real extension point. The reason it works comes down to one question asked of every primitive: **does it touch the reactor?**
+
+  - **Reactor-bound** (timers, UDP/TCP, DNS, spawning, `block_on`) → injected through `Runtime`
+  - **Executor-agnostic** (channels, broadcast, mutexes, notify) → one implementation, not feature-gated, because they're just waker-driven data structures that work on any executor
+  - **Derivable** (`timeout`, `yield_now`) → built generically on the injected `sleep`
+
+  Keeping the second group *off* the trait is what keeps `Runtime` object-safe — `fn channel<T>(&self, ...)` is a generic method, so putting it on the trait would force a viral `<R: Runtime>` parameter through `PeerConnection`, the driver, transports, and data channels. Instead the runtime is injected per connection as `Arc<dyn Runtime>`:
+
+  ```rust
+  let pc = PeerConnectionBuilder::new()
+      .with_runtime(my_runtime.clone())   // per connection, not per binary
+      .with_udp_addrs(vec!["0.0.0.0:0"])
+      .build()
+      .await?;
+  ```
+
+  Eight required methods, three defaulted. Features are now purely additive — enabling both backends is safe, and one process can drive different connections on different runtimes.
+
+  The acceptance test for "is this actually pluggable" is an example that implements `Runtime` over `async-executor` + `async-io` — neither Tokio nor smol — and runs with `--no-default-features`, so neither built-in is even compiled in. There's also an interop test running **two peer connections on two different runtimes in one process**, which a design with a process-global runtime registry couldn't express.
+
+  Practical consequence: adding a runtime doesn't require us. No `#[cfg]` edits, no fork, no upstream PR.
+
+  There's also a **`MockRuntime`** behind a feature flag: same trait, virtual clock, no I/O. Advance thirty seconds instantly and assert on what fired — deterministic time finally reaches the async layer, not just the Sans-I/O core.
+
+  ## Performance
+
+  The data-channel path went from *correct* to *fast* this cycle (full write-up: https://webrtc.rs/blog/2026/07/18/from-13-mbps-to-beating-pion.html). Steady-state throughput in Mbps, ratio vs Pion v4.2.16 in parens:
+
+  | configuration | Pion v4.2.16 | webrtc-rs (default) | webrtc-rs (+dedicated reactor) |
+  |---|---|---|---|
+  | Unordered / no-rtx, N=1  | 392  | 259 (0.66×) | **689 (1.76×)** |
+  | Unordered / no-rtx, N=10 | 1681 | **2863 (1.70×)** | **5453 (3.24×)** |
+  | Ordered / reliable, N=1  | 385  | 184 (0.48×) | **575 (1.49×)** |
+  | Ordered / reliable, N=10 | 1848 | **4297 (2.33×)** | **5296 (2.87×)** |
+
+  Read honestly: **at N=1 the plain default still loses to Pion** (0.48–0.66×). That regime is latency-bound and Go's scheduler beats plain Tokio on round-trip latency. Turn on the one-line dedicated reactor thread and we lead. In multi-connection aggregate — the regime that actually saturates cores — we win even at the default, because per-byte CPU efficiency decides it there. Under `poop` at fixed work we also use −50.9% peak RSS and −74.5% CPU cycles vs Pion.
+
+  What got it there: UDP GSO/GRO batching via `quinn-udp`, burst-reading the socket to batch the SCTP receive path, removing Tokio scheduler overhead from the send path, a bounded shared reactor pool, and — underneath, in the Sans-I/O core — eleven hot-path PRs plus two algorithmic fixes (O(N²)→O(N) data-channel queues, and FORWARD-TSN generation that scaled with the receive window instead of the stream count).
+
+  Also new: opt-in data-channel send back-pressure (`writable()` / `try_send()` with a configurable buffer cap) so a fast producer can't grow the queue without bound.
+
+  ## Migrating from v0.17.x
+
+  Callbacks are gone. Instead of an `Arc::clone` before every closure, another inside it, and `Box::new(move |...| Box::pin(async move { ... }))` repeated per event type, there's one handler:
+
+  ```rust
+  struct MyHandler { /* your state, behind a Mutex if mutable */ }
+
+  #[async_trait::async_trait]
+  impl PeerConnectionEventHandler for MyHandler {
+      async fn on_connection_state_change(&self, state: RTCPeerConnectionState) {
+          println!("State: {state}");
+      }
+      async fn on_ice_candidate(&self, event: RTCPeerConnectionIceEvent) {
+          // signal event.candidate to the remote peer
+      }
+  }
+  ```
+
+  `build()` returns an opaque `impl PeerConnection`; wrap it once in `Arc<dyn PeerConnection>` if you need to store or share it. No runtime or interceptor type parameter leaks into your types.
+
+  You also gain things `v0.17.x` never had: mDNS candidates, TURN relay, ICE TCP, the stats API, RTX (RFC 4588) negotiated by default, a choice of crypto backend (`ring` or `aws-lc-rs`), external DTLS signing via a `CustomSigner` trait for HSM/TPM/KMS-held keys, and `wasm32-wasip2` as a build target.
+
+  Expect a real port, not a drop-in — the API is async throughout and handlers replace callbacks. In exchange the protocol is testable without I/O and the runtime is your choice.
+
+  ## Try it
+
+  ```toml
+  # Tokio (default)
+  webrtc = "0.20"
+
+  # smol
+  webrtc = { version = "0.20", default-features = false, features = ["runtime-smol"] }
+
+  # Neither — bring your own
+  webrtc = { version = "0.20", default-features = false }
+  ```
+
+  36 runnable examples: https://github.com/webrtc-rs/webrtc/tree/master/examples — `data-channels-flow-control` for the fast path, `custom-runtime` for the runtime trait, `trickle-ice-relay` / `ice-tcp` for hostile networks, `stats` for observability.
+
+  ## Get involved
+
+  - **Browser interop** — a live-browser Playwright/Selenium job in CI, Edge coverage, more captured-SDP fixtures
+  - **Runtimes** — if your executor isn't Tokio or smol, a backend is now a crate *you* can publish
+  - **Migration reports** — tell us what was awkward coming from `v0.17.x`; that feedback shapes v0.21
+
+  Links:
+  - Blog post: https://webrtc.rs/blog/2026/07/31/announcing-webrtc-v0.20.0.html
+  - Repo: https://github.com/webrtc-rs/webrtc
+  - Sans-I/O core: https://github.com/webrtc-rs/rtc
+  - Examples: https://github.com/webrtc-rs/webrtc/tree/master/examples
+  - Crate: https://crates.io/crates/webrtc
+  - Docs: https://docs.rs/webrtc
+  - Discord: https://discord.gg/4Ju8UHdXMs
+  - Main project: https://webrtc.rs/
+
+  Questions and feedback are very welcome — especially from anyone porting off v0.17.x.

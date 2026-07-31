@@ -1,0 +1,179 @@
+Title: webrtc-rs/rtc – A Sans-I/O WebRTC Stack for Rust
+
+---
+
+We're excited to share rtc (https://github.com/webrtc-rs/rtc), a pure Rust WebRTC implementation built entirely on the sans-I/O architecture pattern. With the recent release of rtc v0.7.0, we've achieved feature parity with our async-based webrtc crate (https://github.com/webrtc-rs/webrtc) while offering complete runtime independence and transport flexibility.
+
+## What is Sans-I/O?
+
+Sans-I/O (without I/O) is a design pattern where protocol logic is completely separated from I/O operations. Instead of the library performing network reads/writes directly, YOU control all I/O. The library acts as a pure state machine that consumes inputs and produces outputs.
+
+The core API is straightforward - six methods:
+- poll_write() - Get outgoing packets to send
+- poll_event() - Process state changes  
+- poll_read() - Get incoming application messages
+- poll_timeout() - Get next timer deadline
+- handle_read() - Feed incoming packets
+- handle_timeout() - Notify timer expiration
+- handle_write() - Queue application messages (RTP/RTCP/data) for sending
+- handle_event() - Inject external events into the connection
+
+## Why Sans-I/O for WebRTC?
+
+WebRTC is inherently complex - it's a STACK of interrelated protocols (ICE, DTLS, SCTP, DataChannel, SRTP/RTP/RTCP). Traditional implementations tightly couple protocol logic with async runtimes and socket I/O, making them:
+
+- Locked to specific runtimes (e.g., Tokio)
+- Difficult to test without real network I/O
+- Hard to integrate into existing event loops
+- Opaque regarding internal state and control flow
+
+Sans-I/O solves these issues by modeling WebRTC as a composable protocol pipeline. Each layer (ICE → DTLS → SRTP → Interceptor → Endpoint) implements the same sansio::Protocol trait, making them stackable, testable, and transport-agnostic.
+
+## Feature Parity
+
+RTC now has complete feature parity with the async webrtc crate:
+
+✅ Full WebRTC 1.0 API (Peer Connection, Media Tracks, Data Channels)
+✅ Complete protocol stack (ICE, DTLS, SRTP/SRTCP, SCTP, RTP/RTCP)
+✅ Simulcast support with multiple spatial layers
+✅ RTCP Interceptor framework (NACK, Sender/Receiver Reports, TWCC)
+✅ mDNS support for privacy-preserving ICE candidates
+✅ Data Channels (reliable & unreliable)
+✅ SDP negotiation
+✅ W3C and RFC compliant
+
+## Architecture Highlights
+
+**Pure Protocol Pipeline**: WebRTC modeled as composable handlers, each implementing sansio::Protocol. Read path: Raw Bytes → Demuxer → ICE → DTLS → SCTP → DataChannel → SRTP → Interceptor → Endpoint. Write path reverses this.
+
+**Zero-Cost Abstractions**: Interceptors use generic composition instead of async trait objects. No heap allocations, no dynamic dispatch in the hot path.
+
+**Composable Interceptors**: Build custom RTCP processing pipelines by chaining interceptors. Example: Registry::new().with(NackGenerator).with(ReceiverReport).with(TwccReceiver).build()
+
+**Multi-Socket I/O**: The mdns-query-and-gather example demonstrates handling two sockets (mDNS multicast + WebRTC traffic) in a single event loop - impossible to express cleanly with async-based designs.
+
+**Fully Testable**: Protocol logic tested without any network I/O. Feed synthetic packets, verify state transitions, no mocking frameworks needed.
+
+## Relationship with async webrtc crate
+
+rtc (sans-I/O) and webrtc (async) are COMPLEMENTARY, not competitive:
+
+- Use webrtc if you want async/await, Tokio integration, quick start
+- Use rtc if you need runtime independence, custom I/O, maximum control, embedded systems, or non-Tokio runtimes
+
+Both are actively maintained and share underlying protocol implementations where possible.
+
+## Recent Milestones
+
+v0.7.0 (Jan 10, 2026) - mDNS support for IP privacy
+- New rtc-mdns crate with RFC 6762 implementation  
+- Hide local IPs with .local hostnames
+- QueryOnly and QueryAndGather modes
+- Matches Firefox/Safari privacy standards
+
+v0.6.0 (Jan 9, 2026) - Complete interceptor framework
+- NACK for packet loss recovery
+- RTCP Sender/Receiver Reports
+- TWCC for congestion control
+- Simulcast now achieves highest quality in browsers
+
+v0.5.0 (Jan 5, 2026) - Enhanced simulcast support
+- Multiple spatial layers per track
+- RID-based stream identification
+- Dynamic layer switching
+
+v0.3.0 (Jan 4, 2026) - Initial public release
+- Complete sans-I/O WebRTC stack
+- 14+ workspace crates
+- 215+ passing doc tests
+
+## Technical Deep Dives
+
+We've written detailed articles exploring the architecture:
+
+1. "Building WebRTC's Pipeline with sansio::Protocol" - How WebRTC layers compose as pure protocol handlers
+   https://webrtc-rs.github.io/blog/2026/01/04/building-webrtc-pipeline-with-sansio.html
+
+2. "Interceptor Design Principle" - Why we redesigned interceptors from async traits to generic composition
+   https://webrtc-rs.github.io/blog/2026/01/09/interceptor-design-principle-sansio.html
+
+## Use Cases
+
+Sans-I/O shines when you need:
+
+- Custom networking (non-UDP transports, custom protocols)
+- Embedded systems (no runtime overhead, precise control)
+- Game engines (integration with existing game loops)
+- High performance (fine-tuned I/O scheduling and batching)
+- Testing infrastructure (deterministic protocol testing)
+- WebAssembly or future no_std support
+
+## Example
+
+```rust
+use rtc::peer_connection::RTCPeerConnection;
+use rtc::sansio::Protocol;
+
+let config = RTCConfigurationBuilder::new().build();
+let mut pc = RTCPeerConnection::new(config)?;
+
+// Create offer
+let offer = pc.create_offer(None)?;
+pc.set_local_description(offer)?;
+
+// Sans-I/O event loop
+loop {
+    // 1. Send outgoing packets
+    while let Some(msg) = pc.poll_write() {
+        socket.send_to(&msg.message, msg.transport.peer_addr).await?;
+    }
+    
+    // 2. Handle state changes
+    while let Some(event) = pc.poll_event() {
+        match event {
+            RTCPeerConnectionEvent::OnTrack(track) => { /* ... */ }
+            _ => {}
+        }
+    }
+    
+    // 3. Process messages
+    while let Some(message) = pc.poll_read() {
+        match message {
+            RTCMessage::RtpPacket(track_id, packet) => { /* ... */ }
+            RTCMessage::DataChannelMessage(id, msg) => { /* ... */ }
+            _ => {}
+        }
+    }
+    
+    // 4. Multiplex I/O and Timeout
+    tokio::select! {
+        _ = sleep(delay) => pc.handle_timeout(now)?,
+        Ok((n, addr)) = socket.recv_from(&mut buf) => {
+            pc.handle_read(TaggedBytesMut { /* packet */ })?;
+        }
+    }
+}
+```
+
+## Project Info
+
+- GitHub: https://github.com/webrtc-rs/rtc
+- Crates.io: https://crates.io/crates/rtc (v0.7.0)
+- Docs: https://docs.rs/rtc
+- Blog: https://webrtc-rs.github.io/blog/
+- Discord: https://discord.gg/4Ju8UHdXMs
+- Examples: https://github.com/webrtc-rs/rtc/tree/master/examples
+
+The project includes 20+ working examples demonstrating data channels, media streaming, simulcast, mDNS, and more.
+
+## Implementation Details
+
+- 14+ workspace crates (rtc-ice, rtc-dtls, rtc-srtp, rtc-sctp, rtc-mdns, etc.)
+- Zero unsafe Rust
+- Comprehensive documentation (220+ passing doc tests)
+- Full W3C WebRTC API compliance
+- RFC-compliant protocol implementations
+
+We'd love feedback from the Rust and WebRTC communities! The sans-I/O approach has proven transformative for testing, composability, and runtime flexibility. We believe it offers a compelling alternative for applications that need fine-grained control over WebRTC behavior.
+
+Happy to answer questions about the architecture, design decisions, or how sans-I/O compares to traditional async approaches!

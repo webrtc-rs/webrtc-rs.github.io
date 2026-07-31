@@ -1,0 +1,34 @@
+Show HN: webrtc v0.20.0 — Async WebRTC in Rust on the Sans-I/O rtc core: bring-your-own-runtime and much faster data channels
+
+webrtc v0.20.0 (https://github.com/webrtc-rs/webrtc) is the first non-prerelease of a ground-up rewrite: the async crate is now a thin layer over a sans-I/O protocol core (rtc, https://github.com/webrtc-rs/rtc), you can plug in your own async runtime by implementing one trait, and the data-channel path got ~10x faster this cycle. Write-up: https://webrtc.rs/blog/2026/07/31/announcing-webrtc-v0.20.0.html
+
+#The design question behind the runtime abstraction
+
+The crate advertised runtime independence before it had it. What it had was a seam: spawning and sockets were injected as a value (a dyn Runtime), while timers, channels, mutexes, notify and block_on were resolved at compile time by fourteen cfg-gated aliases naming tokio::* or smol::* concretely.
+
+There is no cfg arm for "a third party", so a custom runtime got its spawn and sockets used and its timers silently ignored. Worse: Cargo features are additive, so any crate in your dependency graph pulling in the defaults could hand a smol user tokio's timers, which panic when polled outside a tokio reactor. You did not have to do anything wrong to reach that. The tell: the function returning a smol runtime had zero callers and zero tests — its only reachable purpose was that failure mode.
+
+What resolved it was asking one question of every primitive: does it touch the reactor?
+
+  - Reactor-bound (timers, UDP/TCP, DNS, spawning, block_on) -> inject through the trait
+  - Executor-agnostic (channels, broadcast, mutexes, notify) -> one impl, delete the abstraction
+  - Derivable (timeout, yield_now) -> build generically on the injected sleep
+
+The second bucket is the interesting one. Channels and mutexes feel like runtime concerns, but they are just waker-driven data structures — async-channel, futures::lock::Mutex, event-listener all work on any executor — and they never appear in the public API.
+
+That matters concretely: fn channel<T>(&self, ...) is a generic method, so putting it on the trait makes it non-object-safe, forcing a viral <R: Runtime> parameter through PeerConnection, the driver, transports, data channels and transceivers — on top of the <I: Interceptor> already there. Keeping executor-agnostic primitives off the trait is what lets the runtime stay an Arc<dyn Runtime> injected per connection.
+
+Result: eight required methods, three defaulted, both built-in backends ~400 lines. Features are purely additive, so enabling both is safe, one process can drive connections on different runtimes, and the panic above is unrepresentable rather than documented.
+
+#Performance, honestly
+
+Throughput, median of runs, vs Pion v4.2.16 (the Go stack this was ported from), Mbps:
+
+  Unordered/no-rtx,  1 conn:  Pion 392  | ours 259 (0.66x)  | +reactor 689 (1.76x)
+  Unordered/no-rtx, 10 conn:  Pion 1681 | ours 2863 (1.70x) | +reactor 5453 (3.24x)
+  Ordered/reliable,  1 conn:  Pion 385  | ours 184 (0.48x)  | +reactor 575 (1.49x)
+  Ordered/reliable, 10 conn:  Pion 1848 | ours 4297 (2.33x) | +reactor 5296 (2.87x)
+
+Read it as written: at one connection our default loses to Pion. That regime is latency-bound (CPU ~90% idle) and Go's scheduler beats plain tokio on round-trip latency; a one-line dedicated reactor thread pulls us ahead. In multi-connection aggregate — the regime that saturates cores — we win even at the default, because there per-byte CPU efficiency decides it, not scheduling. At fixed work we also use ~51% less peak RSS and ~75% fewer CPU cycles.
+
+What got it there: UDP GSO/GRO batching via quinn-udp, burst-reading the socket to batch the SCTP receive path, removing tokio scheduler overhead from the send path, a bounded reactor pool replacing one-thread-per-connection, and two algorithmic fixes in the core: O(N^2) -> O(N) data-channel queues, and FORWARD-TSN generation that scaled with the receive window rather than the stream count. Methodology: https://webrtc.rs/blog/2026/07/18/from-13-mbps-to-beating-pion.html

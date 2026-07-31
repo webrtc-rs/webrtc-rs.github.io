@@ -1,0 +1,115 @@
+Title:
+  [Project Update] rtc 0.8.0 – Feature Complete: What's Next for Sans-I/O WebRTC
+
+  Body:
+
+  Hi everyone!
+
+  I'm excited to share another major milestone for the webrtc-rs project. We've just published a new blog post: https://webrtc.rs/blog/2026/01/18/rtc-feature-complete-whats-next.html.
+
+  In previous post https://www.reddit.com/r/rust/comments/1q3w7f1/project_update_announcing_rtc_030_sansio_webrtc/, we announced the first public release of our sans-I/O WebRTC implementation. Today, with rtc 0.8.0, we've reached full feature parity with the async-based webrtc crate and comprehensive W3C WebRTC API compliance.
+
+  What's New Since v0.3.0?
+
+  When we announced v0.3.0, we mentioned that Simulcast support and RTCP feedback handling (Interceptors) were still in progress. Those are now complete, along with several other features:
+
+  - Interceptor Framework – NACK generator/responder, Sender/Receiver reports, TWCC sender/receiver, Simulcast with RID/MID extensions
+  - mDNS Support – Privacy-preserving ICE candidates with .local hostnames
+  - W3C Stats API – Full getStats() implementation with StatsSelector for selective queries
+  - Enhanced Simulcast – First-class support for multiple RTP encodings per track
+
+  Current Status
+
+  The rtc crate now has feature parity with the async webrtc crate:
+
+  ✅ ICE (Host, SRFLX, Relay, Trickle ICE, ICE-TCP, mDNS)
+  ✅ DTLS 1.2 with certificate fingerprints
+  ✅ SRTP with AES-CM and AES-GCM cipher suites
+  ✅ SCTP for reliable & unreliable data channels
+  ✅ RTP/RTCP with full header extension support
+  ✅ Interceptors (NACK, RTX, TWCC, SR/RR, Simulcast)
+  ✅ W3C WebRTC Stats API
+  ✅ Full Peer Connection API (offer/answer, tracks, data channels, events)
+
+  Quick Refresher: Why Sans-I/O?
+
+  For those new to the project, the sans-I/O pattern means protocol logic is completely decoupled from networking, threads, or async runtimes:
+
+  // You control the I/O loop - works with any runtime or no runtime
+  let mut pc = RTCPeerConnection::new(config)?;
+
+  // SDP offer/answer exchange via signaling
+  // ...
+
+  loop {
+      // Send outgoing packets
+      while let Some(msg) = pc.poll_write() {
+          socket.send_to(&msg.message, msg.transport.peer_addr)?;
+      }
+
+      // Handle events (connection state, tracks, data channels)
+      while let Some(event) = pc.poll_event() {
+          match event {
+              RTCPeerConnectionEvent::OnConnectionStateChangeEvent(state) => {
+                  println!("Connection state: {state}");
+              }
+              RTCPeerConnectionEvent::OnTrack(RTCTrackEvent::OnOpen(init)) => {
+                  println!("New track: {}", init.track_id);
+              }
+              _ => {}
+          }
+      }
+
+      // Handle incoming messages (RTP, RTCP, data channel)
+      while let Some(message) = pc.poll_read() {
+          // Process RTP packets, data channel messages, etc.
+      }
+
+      // Feed incoming network data
+      let (n, peer_addr) = socket.recv_from(&mut buf)?;
+      pc.handle_read(TaggedBytesMut { ... })?;
+
+      // Handle timeouts for retransmissions/keepalives
+      pc.handle_timeout(Instant::now())?;
+  }
+
+  This gives you runtime independence, deterministic testing, and full control over your event loop.
+
+  Check the Examples README for working code demonstrating how to use the sansio RTC API with event loops for different WebRTC use-cases: https://github.com/webrtc-rs/rtc/blob/master/examples/examples/README.md
+
+  The examples cover:
+  - **Data Channels**: bidirectional messaging, flow control, offer/answer between two rtc instances
+  - **Media**: play from disk (VP8/VP9/H264/H265/AV1), save to disk, broadcast, simulcast, RTP forwarding, track swapping, insertable streams (E2E encryption)
+  - **ICE/Connectivity**: mDNS privacy, ICE restart, Trickle ICE, ICE-TCP (passive & active modes)
+  - **Stats**: W3C WebRTC statistics collection and monitoring
+
+  What's Next?
+
+  With feature parity achieved, our focus shifts to four key areas:
+
+  🔄 Browser Interoperability – Comprehensive testing with Chrome, Firefox, Safari, and Edge. We're building automated browser test infrastructure.
+
+  🔄 Performance Engineering – Benchmarking with criterion, profiling hot paths, optimizing DataChannel throughput (target: >500 Mbps reliable, >1 Gbps unreliable) and RTP pipeline latency.
+
+  🔄 Test Coverage – Expanding unit tests toward 80%+ coverage, adding integration scenarios, and fuzz testing for all packet parsers.
+
+  🔄 Code Quality – Cleaning up 104 TODO/FIXME comments, improving rustdoc coverage, and refining APIs based on user feedback.
+
+  Get Involved
+
+  We welcome contributions at all levels:
+
+  - Good first issues: Documentation, unit tests, simple TODO cleanups
+  - Intermediate: Integration test scenarios, benchmark implementations
+  - Advanced: Performance optimizations, new interceptors, protocol extensions
+
+  Links:
+  - Blog Post: https://webrtc.rs/blog/2026/01/18/rtc-feature-complete-whats-next.html
+  - Repo: https://github.com/webrtc-rs/rtc
+  - Examples: https://github.com/webrtc-rs/rtc/blob/master/examples/examples/README.md
+  - Crate: https://crates.io/crates/rtc
+  - Docs: https://docs.rs/rtc
+  - Discord: https://discord.gg/4Ju8UHdXMs
+  - Main Project: https://webrtc.rs/
+
+  Questions and feedback are very welcome!
