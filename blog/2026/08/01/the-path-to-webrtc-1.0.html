@@ -4,7 +4,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Read v0.20.0 as a v1.0 alpha: what v1.0 will mean for webrtc and rtc, current W3C compliance, the decisions now final, the three items that gate the release, and what does not.">
+  <meta name="description" content="Treat 0.20.0 as a 1.0.0-alpha.1: what the number will mean, current W3C compliance, the decisions now final, the items that gate the release, and what does not.">
   <link rel="icon" href="../../../../res/webrtc.rs.ico">
   <link rel="stylesheet" href="../../../../res/all.css">
   <link rel="stylesheet" href="../../../../res/bulma.min.css">
@@ -159,7 +159,7 @@
       fill: currentColor;
     }
   </style>
-  <title>The Path to webrtc v1.0</title>
+  <title>The Path to webrtc 1.0</title>
 </head>
 
 <body>
@@ -187,20 +187,20 @@
       <article class="message is-success">
         <div class="message-body">
           <div class="blog-content">
-            <h1>The Path to <code>webrtc</code> v1.0</h1>
+            <h1>The Path to <code>webrtc</code> 1.0</h1>
             <div class="blog-meta">
               <span>August 1, 2026</span>
-              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/08/01/the-path-to-webrtc-v1.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/08/01/the-path-to-webrtc-1.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
             </div>
-            <p><a href="/blog/2026/07/31/announcing-webrtc-v0.20.0"><code>webrtc</code> v0.20.0 shipped yesterday</a> — the first non-prerelease of the Sans-I/O architecture. This post is about the next number, what it will mean, and what still has to happen first.</p>
-            <p><strong>Treat v0.20.0 as the proving ground for v1.0.</strong> The largest architectural rough edges are fixed: the runtime abstraction no longer has a <a href="/blog/2026/07/30/pluggable-async-runtime">seam through the middle of it</a>, the interceptor type parameter no longer <a href="/blog/2026/07/28/boxed-interceptor-type-erasure">leaks into your data structures</a>, and the callback-lifetime problems of <code>v0.17.x</code> are gone with the callbacks. What remains is a short pre-1.0 API checklist and, more importantly, validation by applications outside this repository. This is the window in which feedback can still reshape the API cheaply. After v1.0 we can extend and deprecate it compatibly, but a breaking correction would wait for the next major release.</p>
-            <p>That framing is the one <a href="https://tokio.rs/blog/2020-10-tokio-0-3">Tokio used before its own 1.0</a>, and we are adopting the substance of it too: <strong>v1.0 is a commitment to API stability, not a claim of feature completeness.</strong> Those are different promises, and conflating them is how projects either ship a v1.0 they have to break, or never ship one at all.</p>
-            <p>So this post says plainly what we are promising, what v1.0 will not require, and the handful of things still in the way.</p>
+            <p><a href="/blog/2026/07/31/announcing-webrtc-v0.20.0"><code>webrtc</code> 0.20.0 shipped yesterday</a> — the first non-prerelease of the Sans-I/O architecture. This post is about the next number, what it will mean, and what still has to happen first.</p>
+            <p><strong>Treat 0.20.0 as a 1.0.0-alpha.1.</strong> The largest architectural rough edges are fixed: the runtime abstraction no longer has a <a href="/blog/2026/07/30/pluggable-async-runtime">seam through the middle of it</a>, the interceptor type parameter no longer <a href="/blog/2026/07/28/boxed-interceptor-type-erasure">leaks into your data structures</a>, and the callback-lifetime problems of <code>0.17.x</code> are gone with the callbacks. What remains is a short pre-1.0 API checklist and, more importantly, validation by applications outside this repository. This is the window in which feedback can still reshape the API cheaply. After 1.0 we can extend and deprecate it compatibly, but a breaking correction would wait for the next major release.</p>
+            <p>That is the position we are taking on the number itself: <strong>1.0 is a commitment to API stability, not a claim of feature completeness.</strong> Those are different promises, and conflating them is how projects either ship a 1.0 they have to break, or never ship one at all.</p>
+            <p>So this post says plainly what we are promising, what 1.0 will not require, and the handful of things still in the way.</p>
             <hr />
-            <h2>What v1.0 will mean</h2>
-            <p><strong>A stable API.</strong> Once v1.0 ships, the <code>webrtc</code> and <code>rtc</code> public APIs evolve under normal Semantic Versioning compatibility rules. Additive change continues — new methods, new interceptors, new runtimes — while breaking change waits for a new major version.</p>
+            <h2>What 1.0 will mean</h2>
+            <p><strong>A stable API.</strong> Once 1.0 ships, the <code>webrtc</code> and <code>rtc</code> public APIs evolve under normal Semantic Versioning compatibility rules. Additive change continues — new methods, new interceptors, new runtimes — while breaking change waits for a new major version.</p>
             <p><strong>What it will not mean:</strong> that every W3C feature is implemented, or that every subsystem a production media server needs is present. The gaps are named below. None of them gates the release, and any that are finished in time will be in it.</p>
-            <p>We think this is the honest framing. The alternative — waiting until the feature list is complete — would push v1.0 out by a long way while the API sits in a <code>v0.x</code> that signals "may break at any time" to everyone evaluating it. The architecture and API direction are ready; the remaining freeze preparation is named below. Finish that work, then keep shipping features against a stable surface.</p>
+            <p>We think this is the honest framing. The alternative — waiting until the feature list is complete — would push 1.0 out by a long way while the API sits in a <code>0.x</code> that signals "may break at any time" to everyone evaluating it. The architecture and API direction are ready; the remaining freeze preparation is named below. Finish that work, then keep shipping features against a stable surface.</p>
             <hr />
             <h2>W3C compliance today</h2>
             <p>The distinction above — stable API versus complete feature list — needs a concrete inventory, not an adjective. The best existing measurement is the compliance audit of the core.</p>
@@ -213,7 +213,7 @@
             <p><strong>It measured <code>rtc</code>, not <code>webrtc</code>.</strong> The transports score 85–90% because the <em>core</em> <code>rtc</code> implements them. The async <code>webrtc</code> crate does not currently expose <code>RTCIceTransport</code>, <code>RTCDtlsTransport</code>, or <code>RTCSctpTransport</code> at all — see “Transport objects” below for why that does not gate the release. The async layer maps many core operations into object-safe handles, but the core's percentage should not be transferred to that surface without a separate audit.</p>
             </li>
             <li>
-            <p><strong>It predates this release.</strong> The analysis is from January; <code>v0.20.0</code> is a rewrite of the async layer that has since added <code>RtpSender::set_parameters</code>, <code>RtpTransceiver::set_direction</code>, and the <code>RtpReceiver</code> CSRC/SSRC accessors — all W3C members that the January table predates. We will refresh the table against <code>v0.20.0</code> before v1.0 rather than keep citing a six-month-old figure.</p>
+            <p><strong>It predates this release.</strong> The analysis is from January; <code>0.20.0</code> is a rewrite of the async layer that has since added <code>RtpSender::set_parameters</code>, <code>RtpTransceiver::set_direction</code>, and the <code>RtpReceiver</code> CSRC/SSRC accessors — all W3C members that the January table predates. We will refresh the table against <code>0.20.0</code> before 1.0 rather than keep citing a six-month-old figure.</p>
             </li>
             </ul>
             <p>What that leaves is the useful part: <strong>the known residual has names.</strong> The refresh may find more, and if it does, we will publish those too.</p>
@@ -221,7 +221,7 @@
             <thead>
             <tr>
             <th>Known gap</th>
-            <th>Status for v1.0</th>
+            <th>Status for 1.0</th>
             </tr>
             </thead>
             <tbody>
@@ -235,7 +235,7 @@
             </tr>
             <tr>
             <td>Identity provider / assertion</td>
-            <td>Out of scope for the current v1.0 plan</td>
+            <td>Out of scope for the current 1.0 plan</td>
             </tr>
             </tbody>
             </table>
@@ -248,7 +248,7 @@
     state: Mutex&lt;MyState&gt;,   // interior mutability, once
 }
 </code></pre>
-            <p><strong>This is the final design.</strong> It is still a large improvement on <code>v0.17.x</code>, where every callback needed an <code>Arc::clone</code> before the closure and another inside it — you now write one <code>Arc</code> and one lock for the whole connection. But it is not the <code>&amp;mut self</code> story the January post described, and we would rather close the question than leave it looking like an unfinished migration.</p>
+            <p><strong>This is the final design.</strong> It is still a large improvement on <code>0.17.x</code>, where every callback needed an <code>Arc::clone</code> before the closure and another inside it — you now write one <code>Arc</code> and one lock for the whole connection. But it is not the <code>&amp;mut self</code> story the January post described, and we would rather close the question than leave it looking like an unfinished migration.</p>
             <h3>2. No peer-connection-level stream API</h3>
             <p>January floated <code>pc.tracks()</code> and <code>pc.ice_candidates()</code> as an optional stream layer over the handler. We are not planning that layer. The shipped API splits event consumption by responsibility: connection-level lifecycle and discovery go through <code>PeerConnectionEventHandler</code>, while <code>DataChannel</code>, <code>TrackLocal</code>, and <code>TrackRemote</code> each expose <code>poll()</code> for their own events. Applications therefore pull media and data per object instead of multiplexing everything through one peer-connection stream.</p>
             <p>Treat the January proposal as superseded rather than outstanding.</p>
@@ -282,16 +282,16 @@
             </tr>
             </tbody>
             </table>
-            <p>For the public shape we want, the practical result is still a boxed <code>dyn Future + Send</code>. The cost is one future allocation per async trait call. The lower socket and protocol-driving paths remain poll-based, but this cost is not exclusively control-plane: object-safe application methods such as data-channel sends also cross an async trait boundary. The v0.20.0 throughput results include that cost; it is a known trade rather than a hidden one.</p>
+            <p>For the public shape we want, the practical result is still a boxed <code>dyn Future + Send</code>. The cost is one future allocation per async trait call. The lower socket and protocol-driving paths remain poll-based, but this cost is not exclusively control-plane: object-safe application methods such as data-channel sends also cross an async trait boundary. The 0.20.0 throughput results include that cost; it is a known trade rather than a hidden one.</p>
             <p>We will revisit when native dyn-compatible async trait methods can express the bounds this API needs. Until then this is a language constraint, not a preference for macro-generated futures.</p>
             <hr />
-            <h2>What has to land before v1.0</h2>
+            <h2>What has to land before 1.0</h2>
             <p>Three items. The first is tiny, the second is a broad compatibility review, and the third is the largest implementation change. None is a research project.</p>
             <h3>1. Stop advertising ULPFEC by default</h3>
             <p>The default media engine registers <code>video/ulpfec</code>, but the receive path does not recover media from ULPFEC packets. FlexFEC MIME constants exist but are not in the default codec list; RTX is registered separately and is implemented, so neither belongs in this cleanup.</p>
             <p>This is the only <em>correctness</em> item on the list: stop offering ULPFEC by default until recovery exists. The change is small, reversible, and safer than negotiating a capability the receive path cannot provide.</p>
             <h3>2. Make the API extensible before freezing it</h3>
-            <p>This is the least glamorous item and probably the most consequential, because it decides how much of everything else has to happen before v1.0 rather than after.</p>
+            <p>This is the least glamorous item and probably the most consequential, because it decides how much of everything else has to happen before 1.0 rather than after.</p>
             <p>Across the two top-level crate source trees, there are currently <strong>40 directly declared public enums, none marked <code>#[non_exhaustive]</code>, and no sealed-trait pattern.</strong> That count deliberately excludes enums re-exported from the protocol subcrates; the compatibility audit must include those re-exports as well. Frozen as-is, that means:</p>
             <ul>
             <li>Adding a variant to an exhaustively matched public enum — a new ICE candidate type, a new DTLS role, a new stats entry — breaks downstream <code>match</code> expressions.</li>
@@ -300,33 +300,33 @@
             <p>The work is mechanical only after the ownership decisions are made. For each public enum: can this ever gain a variant? If yes, mark it <code>#[non_exhaustive]</code>. For each public trait: is this an extension point for users, or an interface implemented only by the library? Keep user extension points such as <code>Runtime</code>, <code>PeerConnectionEventHandler</code>, and application-provided tracks open; seal implementation-owned traits where doing so buys compatible evolution.</p>
             <p>Those choices have to be made before the freeze, because adding <code>#[non_exhaustive]</code> or sealing a trait later is itself a breaking change for code that already relies on exhaustive matches or downstream implementations.</p>
             <h3>3. Crypto provider unification</h3>
-            <p><a href="https://github.com/webrtc-rs/rtc/issues/128"><code>rtc</code> #128</a> proposes unifying crypto across DTLS, SRTP, STUN, and the top-level <code>rtc</code> crate behind an <code>RTCCryptoProvider</code> trait. It touches public API, which makes it dramatically cheaper before v1.0 than after. This is the largest of the three and the one whose cost grows most sharply if deferred.</p>
+            <p><a href="https://github.com/webrtc-rs/rtc/issues/128"><code>rtc</code> #128</a> proposes unifying crypto across DTLS, SRTP, STUN, and the top-level <code>rtc</code> crate behind an <code>RTCCryptoProvider</code> trait. It touches public API, which makes it dramatically cheaper before 1.0 than after. This is the largest of the three and the one whose cost grows most sharply if deferred.</p>
             <p>Getting this right is what makes the next section possible.</p>
             <hr />
-            <h2>What does not gate v1.0</h2>
-            <p>The implementation work in this section is a <strong>candidate for v1.0, not a release requirement.</strong> None of it will hold the release — but the release is not a cut-off either. Anything here that is finished before v1.0 ships goes into v1.0; anything that is not can follow in a compatible point release, which the extensibility pass above is there to make possible.</p>
+            <h2>What does not gate 1.0</h2>
+            <p>The implementation work in this section is a <strong>candidate for 1.0, not a release requirement.</strong> None of it will hold the release — but the release is not a cut-off either. Anything here that is finished before 1.0 ships goes into 1.0; anything that is not can follow in a compatible point release, which the extensibility pass above is there to make possible.</p>
             <p>We are naming them because "the API is stable" should not be read as "everything is present", and because knowing what is absent today is more useful than a promise about when it arrives.</p>
             <h3>1. Congestion control</h3>
             <p>This is the honest one, and the most important thing in this post for anyone shipping video.</p>
             <p>We have TWCC sender and receiver interceptors, so feedback is generated and received. What we do not have is a <strong>bandwidth estimator or a pacer</strong>: <code>target_bitrate</code> appears in our stats structures and nowhere in any control path. There is no send-rate adaptation.</p>
             <p>For data channels this specific gap does not apply — SCTP runs its own congestion control, and <a href="/blog/2026/07/18/from-13-mbps-to-beating-pion">that path is fast</a>. For <strong>media</strong>, it is the difference between "can send video" and "can send video over a congested link without making it worse". Production browser stacks include media congestion controllers; we do not yet have an equivalent.</p>
-            <p>Under a v1.0 that promises API stability rather than feature completeness, this not gating the release is consistent — and if an estimator and pacer land before v1.0 ships, they ship with it. What we will not do is delay the API freeze waiting for them. <strong>If you are shipping media over unpredictable networks today, this is the gap to plan around.</strong></p>
+            <p>Under a 1.0 that promises API stability rather than feature completeness, this not gating the release is consistent — and if an estimator and pacer land before 1.0 ships, they ship with it. What we will not do is delay the API freeze waiting for them. <strong>If you are shipping media over unpredictable networks today, this is the gap to plan around.</strong></p>
             <h3>2. Transport objects</h3>
             <p>The W3C API exposes <code>RTCPeerConnection.sctp</code>, <code>RTCRtpSender.transport</code>, and <code>RTCIceTransport</code> with <code>getSelectedCandidatePair()</code>. The Sans-I/O core owns all three; the async layer surfaces none of them. <code>SctpTransportStats</code> is also missing from our stats set.</p>
             <p>We had these as release-gating and have moved them out, because the architecture makes them a design job rather than a patch. In the core they are <code>pub(crate)</code> state machines living inside handler contexts, holding live <code>Agent</code>, <code>dtls::Endpoint</code>, and <code>sctp::Endpoint</code> state; the async layer keeps the whole core behind a mutex owned by the driver. Exposing them properly likely means three new handle types reaching back through that mutex, plus a coherent transport-event model. The handler already reports ICE connection and gathering state, but it has no DTLS- or SCTP-transport handle events.</p>
-            <p>That is worth doing carefully rather than quickly, which is why it is not gating. With item 2 above done first it is purely additive — a <code>#[non_exhaustive]</code> stats enum accepts a new variant, and sealed traits accept new methods — so it can land in v1.0 if it is ready, or in a point release if it is not. <strong>The prerequisite is the extensibility pass, not the release.</strong></p>
+            <p>That is worth doing carefully rather than quickly, which is why it is not gating. With item 2 above done first it is purely additive — a <code>#[non_exhaustive]</code> stats enum accepts a new variant, and sealed traits accept new methods — so it can land in 1.0 if it is ready, or in a point release if it is not. <strong>The prerequisite is the extensibility pass, not the release.</strong></p>
             <h3>3. Also candidates</h3>
-            <p>Jitter buffering, ULPFEC/FlexFEC recovery, an FFI C API, embedded/<code>no_std</code>, and TURN over TCP in the async layer are all possible follow-on work. None blocks a stable API, and each can ship in v1.0 if it is done in time.</p>
-            <p>Two W3C areas are <strong>out of scope for the current v1.0 plan</strong> rather than candidates. <code>RTCDTMFSender</code>: <code>audio/telephone-event</code> is registered in the media engine, but there is no browser-style tone-generation API; applications that need it can generate telephone-event RTP themselves. Identity provider and assertion: we have not seen enough server-side demand to justify adding them to the freeze checklist.</p>
+            <p>Jitter buffering, ULPFEC/FlexFEC recovery, an FFI C API, embedded/<code>no_std</code>, and TURN over TCP in the async layer are all possible follow-on work. None blocks a stable API, and each can ship in 1.0 if it is done in time.</p>
+            <p>Two W3C areas are <strong>out of scope for the current 1.0 plan</strong> rather than candidates. <code>RTCDTMFSender</code>: <code>audio/telephone-event</code> is registered in the media engine, but there is no browser-style tone-generation API; applications that need it can generate telephone-event RTP themselves. Identity provider and assertion: we have not seen enough server-side demand to justify adding them to the freeze checklist.</p>
             <hr />
-            <h2>Where we diverge from the Tokio playbook</h2>
-            <p>Tokio's path to 1.0 included removing non-1.0 crates — <code>bytes</code>, <code>mio</code> — from its public API, so that a breaking change in a dependency could not force a breaking change in Tokio.</p>
+            <h2>One semver trade we are making knowingly</h2>
+            <p>The usual advice before a 1.0 is to keep pre-1.0 crates out of your public API, so that a breaking change in a dependency cannot force one of your own.</p>
             <p><strong>We are doing the opposite, deliberately.</strong> <code>webrtc::runtime</code> re-exports <code>quinn-udp</code>'s <code>Transmit</code>, <code>RecvMeta</code>, <code>EcnCodepoint</code>, <code>UdpSockRef</code>, and <code>UdpSocketState</code>, and the first two appear in <code>AsyncUdpSocket</code>'s method signatures. An incompatible <code>quinn-udp</code> change therefore reaches our public API unless we carry a compatibility layer.</p>
             <p>The reasoning: the alternative is maintaining a parallel set of wrapper types that add no information and must be kept in sync forever. We tried that — an earlier design had a <code>UdpBatchState</code> wrapper — and removed it, because a runtime author who already knows quinn's socket API had to learn our restatement of it instead. Re-exporting means there is nothing to drift.</p>
-            <p>It is a real trade and we would rather name it than have someone discover it. If <code>quinn-udp</code> releases a major version, we will need a major version or a compatibility shim. We think that is a better problem than a permanent wrapper layer, but reasonable people would call it differently — Tokio did.</p>
+            <p>It is a real trade and we would rather name it than have someone discover it. If <code>quinn-udp</code> releases a major version, we will need a major version or a compatibility shim. We think that is a better problem than a permanent wrapper layer, but it is a judgement call and reasonable people would make it differently.</p>
             <hr />
             <h2>Sequencing</h2>
-            <p>We are not naming a date. The critical path is clear: remove ULPFEC from the defaults, complete the extensibility audit across the top-level crates and their re-exported protocol types, then finish the crypto-provider work in <a href="https://github.com/webrtc-rs/rtc/issues/128"><code>rtc</code> #128</a>. v1.0 ships when those are done — we would rather move when the work is finished than announce a month and then move it.</p>
+            <p>We are not naming a date. The critical path is clear: remove ULPFEC from the defaults, complete the extensibility audit across the top-level crates and their re-exported protocol types, then finish the crypto-provider work in <a href="https://github.com/webrtc-rs/rtc/issues/128"><code>rtc</code> #128</a>. 1.0 ships when those are done — we would rather move when the work is finished than announce a month and then move it.</p>
             <p>Alongside them, the work that does <strong>not</strong> gate the release but is where help matters most:</p>
             <ul>
             <li><strong>Live-browser interop in CI.</strong> There is no Playwright, Selenium, or equivalent job running real browser engines. The repository does contain useful protocol-level fixtures — including a captured Firefox 152 simulcast offer and Safari 26.5.2 SDP — but a recorded offer is not a live browser. Chrome, Firefox, Safari, and Edge should all become repeatable CI targets.</li>
@@ -335,10 +335,10 @@
             </ul>
             <hr />
             <h2>What we are asking for</h2>
-            <p>The point of announcing a path rather than just shipping is that <strong>API feedback is most useful before the API freezes.</strong> After v1.0 we can add alternatives and deprecate old paths, but correcting a mistake without preserving compatibility becomes major-version work.</p>
+            <p>The point of announcing a path rather than just shipping is that <strong>API feedback is most useful before the API freezes.</strong> After 1.0 we can add alternatives and deprecate old paths, but correcting a mistake without preserving compatibility becomes major-version work.</p>
             <p>So: if something in <code>webrtc</code> or <code>rtc</code> is awkward to use, now is when saying so changes anything. Particularly valuable —</p>
             <ul>
-            <li><strong>Porting reports from <code>v0.17.x</code>.</strong> What was mechanical, what forced a redesign.</li>
+            <li><strong>Porting reports from <code>0.17.x</code>.</strong> What was mechanical, what forced a redesign.</li>
             <li><strong>Anything you had to work around</strong> rather than express directly in the API.</li>
             <li><strong>Missing surface you expected to find</strong>, especially the transport objects above — tell us if the shape we are planning is the shape you need.</li>
             </ul>
@@ -346,7 +346,7 @@
             <hr />
             <h2>Links</h2>
             <ul>
-            <li><strong>v0.20.0 release</strong>: <a href="https://webrtc.rs/blog/2026/07/31/announcing-webrtc-v0.20.0.html">Announcing <code>webrtc</code> v0.20.0</a></li>
+            <li><strong>0.20.0 release</strong>: <a href="https://webrtc.rs/blog/2026/07/31/announcing-webrtc-v0.20.0.html">Announcing <code>webrtc</code> v0.20.0</a></li>
             <li><strong>Repo</strong>: <a href="https://github.com/webrtc-rs/webrtc">github.com/webrtc-rs/webrtc</a></li>
             <li><strong>Sans-I/O core (<code>rtc</code>)</strong>: <a href="https://github.com/webrtc-rs/rtc">github.com/webrtc-rs/rtc</a></li>
             <li><strong>Docs</strong>: <a href="https://docs.rs/webrtc">docs.rs/webrtc</a></li>
@@ -359,7 +359,6 @@
             <li><a href="/blog/2026/07/30/pluggable-async-runtime">Bring Your Own Async Runtime</a></li>
             <li><a href="/blog/2026/07/18/from-13-mbps-to-beating-pion">How We Made webrtc-rs Data Channels Fast</a></li>
             <li><a href="/blog/2026/01/31/async-friendly-webrtc-architecture">Building Async-Friendly webrtc on Sans-I/O rtc</a></li>
-            <li><a href="https://tokio.rs/blog/2020-10-tokio-0-3">Announcing Tokio 0.3 and the path to 1.0</a></li>
             </ul>
             <p style="text-align: center;">
               <a href="../../../index.html">&larr; Back to Blog</a> | <a href="../../../../index.html">Home</a>
