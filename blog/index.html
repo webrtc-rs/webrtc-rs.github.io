@@ -77,6 +77,16 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/08/01/the-path-to-webrtc-v1.0.html">The Path to <code>webrtc</code> v1.0</a></h2>
+              <div class="date">August 1, 2026</div>
+              <div class="excerpt">
+                <p><strong>Treat v0.20.0 as a v1.0 alpha.</strong> The API rough edges we knew about are fixed — the runtime seam, the interceptor type leak, the callback lifetimes — and what is left is validation. This post says what v1.0 will mean, and takes the position Tokio took before its own 1.0: <strong>v1.0 is a commitment to API stability, not a claim of feature completeness.</strong> After the freeze we can add to the API, but we cannot fix it until the next major release — so this is the window in which feedback still changes anything.</p>
+                <p>Covers where W3C compliance actually stands today (and why the widely-quoted 95%+ figure measured <code>rtc</code>, not <code>webrtc</code>); the API decisions now final, including why <code>#[async_trait]</code> is a language constraint rather than legacy — RPITIT is not <code>dyn</code>-compatible and gives no <code>Send</code> bound; the three items that gate the release, of which the least glamorous is making the API extensible before freezing it — 40 public enums, none <code>#[non_exhaustive]</code>, no sealed traits; and what does <em>not</em> gate it, congestion control included, all of which are candidates for v1.0 rather than exclusions from it.</p>
+              </div>
+              <a href="./2026/08/01/the-path-to-webrtc-v1.0.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/07/31/announcing-webrtc-v0.20.0.html">Announcing <code>webrtc</code> v0.20.0: Async-Friendly, Runtime-Agnostic WebRTC on Sans-I/O Core <code>rtc</code> 🎉</a></h2>
               <div class="date">July 31, 2026</div>
               <div class="excerpt">
