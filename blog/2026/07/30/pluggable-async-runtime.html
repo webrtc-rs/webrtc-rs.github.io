@@ -496,18 +496,29 @@ fn poll_recv(
             </ul>
             <hr />
             <h2>Try it</h2>
-<pre><code class="language-toml"># Tokio, the default
-webrtc = &quot;0.20&quot;
+            <p>This has <strong>not shipped in a release yet</strong> — <code>v0.20.0-rc.4</code> was tagged on July 22, and this landed on
+            July 30. Until <code>v0.20.0</code> goes out, it is master only:</p>
+<pre><code class="language-toml">[dependencies]
+# Tokio, the default
+webrtc = { git = &quot;https://github.com/webrtc-rs/webrtc&quot;, branch = &quot;master&quot; }
 
 # smol
-webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+webrtc = { git = &quot;https://github.com/webrtc-rs/webrtc&quot;, branch = &quot;master&quot;,
+           default-features = false, features = [&quot;runtime-smol&quot;] }
 
 # Neither — bring your own
-webrtc = { version = &quot;0.20&quot;, default-features = false }
+webrtc = { git = &quot;https://github.com/webrtc-rs/webrtc&quot;, branch = &quot;master&quot;,
+           default-features = false }
 </code></pre>
+            <p>Published release candidates up to and including <code>0.20.0-rc.4</code> still have the old cfg-gated
+            abstraction described at the top of this post, panic and all. Once <code>v0.20.0</code> is released the same
+            three configurations work against a version requirement instead of a git reference.</p>
             <p>Then read <code>examples/custom-runtime/</code>, which is deliberately small enough to read in one sitting and
             is the template for any runtime we do not ship. If your executor is not tokio or smol, a backend for
             it is now a crate <em>you</em> can publish — no <code>#[cfg]</code> edits, no fork, no upstream PR.</p>
+
+			<hr />
+			<h2>Links</h2>
             <ul>
             <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
             <li><strong>Sans-I/O core (<code>rtc</code>)</strong>: https://github.com/webrtc-rs/rtc</li>
