@@ -32,9 +32,9 @@ with `RTCRtpSender` at 95% (the missing piece is DTMF), and the three transport 
 
 Two honest qualifications on that number, because it is widely quoted as "95%+ compliant" and the details matter:
 
-**It measured `rtc`, not `webrtc`.** The transports score 85–90% because the *core* `rtc` implements them. The async `webrtc` crate does not currently expose `RTCIceTransport`, `RTCDtlsTransport`, or `RTCSctpTransport` at all — see “Transport objects” below for why that does not gate the release. The async layer maps many core operations into object-safe handles, but the core's percentage should not be transferred to that surface without a separate audit.
+- **It measured `rtc`, not `webrtc`.** The transports score 85–90% because the *core* `rtc` implements them. The async `webrtc` crate does not currently expose `RTCIceTransport`, `RTCDtlsTransport`, or `RTCSctpTransport` at all — see “Transport objects” below for why that does not gate the release. The async layer maps many core operations into object-safe handles, but the core's percentage should not be transferred to that surface without a separate audit.
 
-**It predates this release.** The analysis is from January; `v0.20.0` is a rewrite of the async layer that has since added `RtpSender::set_parameters`, `RtpTransceiver::set_direction`, and the `RtpReceiver` CSRC/SSRC accessors — all W3C members that the January table predates. We will refresh the table against `v0.20.0` before v1.0 rather than keep citing a six-month-old figure.
+- **It predates this release.** The analysis is from January; `v0.20.0` is a rewrite of the async layer that has since added `RtpSender::set_parameters`, `RtpTransceiver::set_direction`, and the `RtpReceiver` CSRC/SSRC accessors — all W3C members that the January table predates. We will refresh the table against `v0.20.0` before v1.0 rather than keep citing a six-month-old figure.
 
 What that leaves is the useful part: **the known residual has names.** The refresh may find more, and if it does, we will publish those too.
 
@@ -50,7 +50,7 @@ What that leaves is the useful part: **the known residual has names.** The refre
 
 Several API questions have been open since the [January architecture post](/blog/2026/01/31/async-friendly-webrtc-architecture). They are settled. Recording them here so nobody is waiting on a change that is not coming.
 
-### The event handler takes `&self`
+### 1. The event handler takes `&self`
 
 The January design promised `&mut self` on handler methods and "no `Arc` explosion". What shipped is `&self` on an `Arc<dyn PeerConnectionEventHandler>`, so mutable handler state goes behind a lock:
 
@@ -62,21 +62,21 @@ struct MyHandler {
 
 **This is the final design.** It is still a large improvement on `v0.17.x`, where every callback needed an `Arc::clone` before the closure and another inside it — you now write one `Arc` and one lock for the whole connection. But it is not the `&mut self` story the January post described, and we would rather close the question than leave it looking like an unfinished migration.
 
-### No peer-connection-level stream API
+### 2. No peer-connection-level stream API
 
 January floated `pc.tracks()` and `pc.ice_candidates()` as an optional stream layer over the handler. We are not planning that layer. The shipped API splits event consumption by responsibility: connection-level lifecycle and discovery go through `PeerConnectionEventHandler`, while `DataChannel`, `TrackLocal`, and `TrackRemote` each expose `poll()` for their own events. Applications therefore pull media and data per object instead of multiplexing everything through one peer-connection stream.
 
 Treat the January proposal as superseded rather than outstanding.
 
-### `#[async_trait]`, and why native `async fn` in traits does not work here
+### 3. `#[async_trait]`, and why native `async fn` in traits does not work here
 
 The object-facing async traits in the crate use `#[async_trait]`. This gets read as legacy — Rust stabilised `async fn` in traits in 1.75, so why the macro? The answer is not maturity. It is two specific limitations in stable Rust, and the first is a hard blocker for this API.
 
 `async fn foo(&self)` in a trait desugars to `fn foo(&self) -> impl Future<Output = ()>` — a return-position `impl Trait` in trait (RPITIT).
 
-**1. RPITIT is not `dyn`-compatible.** Each implementation returns a different anonymous future type, of a size no vtable can describe, so a trait with an RPITIT method cannot become a trait object. The current API deliberately uses objects such as `Arc<dyn PeerConnectionEventHandler>`, `Arc<dyn DataChannel>`, `Arc<dyn TrackRemote>`, and `Arc<dyn RtpSender>` throughout. Adopting native async methods would mean either giving those objects up or threading generic parameters through `PeerConnection`, the driver, transports, data channels, and transceivers — the exact viral-parameter problem [the runtime design was shaped to avoid](/blog/2026/07/30/pluggable-async-runtime).
+- **RPITIT is not `dyn`-compatible.** Each implementation returns a different anonymous future type, of a size no vtable can describe, so a trait with an RPITIT method cannot become a trait object. The current API deliberately uses objects such as `Arc<dyn PeerConnectionEventHandler>`, `Arc<dyn DataChannel>`, `Arc<dyn TrackRemote>`, and `Arc<dyn RtpSender>` throughout. Adopting native async methods would mean either giving those objects up or threading generic parameters through `PeerConnection`, the driver, transports, data channels, and transceivers — the exact viral-parameter problem [the runtime design was shaped to avoid](/blog/2026/07/30/pluggable-async-runtime).
 
-**2. AFIT gives no `Send` bound.** The driver awaits handler methods inside its task, and that task is spawned through `Runtime::spawn(Pin<Box<dyn Future<Output = ()> + Send>>)`. The returned futures must therefore be `Send` — and `async fn` in a trait has no syntax to say so. A caller only knows it receives `impl Future`.
+- **AFIT gives no `Send` bound.** The driver awaits handler methods inside its task, and that task is spawned through `Runtime::spawn(Pin<Box<dyn Future<Output = ()> + Send>>)`. The returned futures must therefore be `Send` — and `async fn` in a trait has no syntax to say so. A caller only knows it receives `impl Future`.
 
 The common alternatives each solve only part of the problem:
 
@@ -128,7 +128,7 @@ The implementation work in this section is a **candidate for v1.0, not a release
 
 We are naming them because "the API is stable" should not be read as "everything is present", and because knowing what is absent today is more useful than a promise about when it arrives.
 
-### Congestion control
+### 1. Congestion control
 
 This is the honest one, and the most important thing in this post for anyone shipping video.
 
@@ -138,7 +138,7 @@ For data channels this specific gap does not apply — SCTP runs its own congest
 
 Under a v1.0 that promises API stability rather than feature completeness, this not gating the release is consistent — and if an estimator and pacer land before v1.0 ships, they ship with it. What we will not do is delay the API freeze waiting for them. **If you are shipping media over unpredictable networks today, this is the gap to plan around.**
 
-### Transport objects
+### 2. Transport objects
 
 The W3C API exposes `RTCPeerConnection.sctp`, `RTCRtpSender.transport`, and `RTCIceTransport` with `getSelectedCandidatePair()`. The Sans-I/O core owns all three; the async layer surfaces none of them. `SctpTransportStats` is also missing from our stats set.
 
@@ -146,7 +146,7 @@ We had these as release-gating and have moved them out, because the architecture
 
 That is worth doing carefully rather than quickly, which is why it is not gating. With item 2 above done first it is purely additive — a `#[non_exhaustive]` stats enum accepts a new variant, and sealed traits accept new methods — so it can land in v1.0 if it is ready, or in a point release if it is not. **The prerequisite is the extensibility pass, not the release.**
 
-### Also candidates
+### 3. Also candidates
 
 Jitter buffering, ULPFEC/FlexFEC recovery, an FFI C API, embedded/`no_std`, and TURN over TCP in the async layer are all possible follow-on work. None blocks a stable API, and each can ship in v1.0 if it is done in time.
 
