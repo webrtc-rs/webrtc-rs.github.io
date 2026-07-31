@@ -77,6 +77,16 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/07/30/pluggable-async-runtime.html">Bring Your Own Async Runtime: Closing the Seam in <code>webrtc</code>'s Runtime Abstraction</a></h2>
+              <div class="date">July 30, 2026</div>
+              <div class="excerpt">
+                <p>The <code>webrtc</code> crate advertised runtime independence, but the abstraction had a <strong>seam running through the middle of it</strong>: task spawning and sockets were injected as a value, while timers, channels, mutexes and notifications were resolved by fourteen <code>#[cfg]</code>-gated type aliases naming <code>tokio::*</code> or <code>smol::*</code> concretely. A custom runtime would have had its <code>spawn</code> used and its timers ignored — and because Cargo features are additive, a <code>SmolRuntime</code> could end up handed tokio timers that panic outside a tokio reactor, reachable by dependency-graph accident alone.</p>
+                <p>How a single question — <em>does this touch the reactor?</em> — resolved the whole design: inject what is reactor-bound, keep executor-agnostic primitives off the trait (which is what preserves object safety and avoids a viral <code>&lt;R: Runtime&gt;</code> parameter), and derive the rest. Covers the 8-method trait, why the settable process-global was cut, the deterministic <code>MockRuntime</code>, the poll-based socket path, and the three defects that only surfaced once someone actually tried to implement a runtime from outside the crate.</p>
+              </div>
+              <a href="./2026/07/30/pluggable-async-runtime.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/07/28/boxed-interceptor-type-erasure.html">Type-Erase the Interceptor Chain, Not Your Application: <code>RTCPeerConnection&lt;BoxedInterceptor&gt;</code></a></h2>
               <div class="date">July 28, 2026</div>
               <div class="excerpt">

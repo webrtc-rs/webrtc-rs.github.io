@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="webrtc's runtime abstraction had a seam through the middle: half of it was injected as a value, half was resolved by cfg-gated type aliases — and a panic lived in the gap. How one question resolved the design, and what it took to make 'bring your own runtime' true.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Bring Your Own Async Runtime: Closing the Seam in webrtc's Runtime Abstraction</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Bring Your Own Async Runtime: Closing the Seam in <code>webrtc</code>'s Runtime Abstraction</h1>
+                        <div class="blog-meta">
+                          <span>July 30, 2026</span>
+                          <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/07/30/pluggable-async-runtime.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+                        </div>
+
+            <p>The <code>webrtc</code> crate has advertised runtime independence since the <code>v0.20</code> rewrite began. It shipped a
+            <code>Runtime</code> trait, a <code>TokioRuntime</code>, a <code>SmolRuntime</code>, and a feature flag to pick between them. What it
+            did <em>not</em> have was a way for you to supply your own.</p>
+            <p>That sounds like a missing feature. It was worse than that: the abstraction had a <strong>seam running
+            through the middle of it</strong>, and the seam had a panic on the other side.</p>
+            <p>This post is about finding that seam, the single question that turned out to resolve the whole
+            design, and what it took to make "bring your own runtime" true rather than aspirational.</p>
+            <hr />
+            <h2>The abstraction was two abstractions</h2>
+            <p>Everything the stack needed from a runtime went through one of two mechanisms — and only one of them
+            was replaceable.</p>
+            <table>
+            <thead>
+            <tr>
+            <th></th>
+            <th>Mechanism</th>
+            <th>Members</th>
+            <th>Pluggable?</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><strong>Layer 1</strong></td>
+            <td><code>dyn Runtime</code>, injected as a value</td>
+            <td><code>spawn</code>, <code>spawn_reactor</code>, <code>wrap_udp_socket</code>, <code>wrap_tcp_listener</code>, <code>connect_tcp</code></td>
+            <td>✅</td>
+            </tr>
+            <tr>
+            <td><strong>Layer 2</strong></td>
+            <td><code>#[cfg(feature = …)]</code> + type aliases</td>
+            <td><code>sleep</code>, <code>interval</code>, <code>timeout</code>, <code>yield_now</code>, <code>channel</code>, <code>Sender</code>, <code>Receiver</code>, <code>broadcast_channel</code>, <code>Mutex</code>, <code>Notify</code>, <code>block_on</code>, <code>resolve_host</code></td>
+            <td>❌</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Layer 2 was resolved at compile time by <strong>fourteen <code>#[cfg]</code>-gated type aliases</strong> naming <code>tokio::*</code> or
+            <code>smol::*</code> concretely. There is no <code>#[cfg]</code> arm for "a third party". So a custom runtime — supposing
+            you could write one — would have had its <code>spawn</code> and its sockets used, while its <strong>timers, channels,
+            mutexes and notifications were silently still tokio's or smol's</strong>.</p>
+            <p>The traits that looked like they existed for extensibility (<code>AsyncMutex</code>, <code>AsyncNotify</code>,
+            <code>AsyncSender</code>, <code>AsyncReceiver</code>) were not reachable through <code>Runtime</code> at all. They described a shape
+            without providing a way in. <code>AsyncMutex</code> could not have been reached that way even in principle: its
+            generic associated type <code>Guard&lt;'a&gt;</code> made it non-object-safe.</p>
+            <h3>The seam had a panic behind it</h3>
+            <p><code>default = ["runtime-tokio"]</code>, and the documented rule when both features were on was "tokio takes
+            precedence". But <code>smol_runtime()</code> returned a <code>SmolRuntime</code>, whose <code>spawn</code> runs tasks on <strong>smol's</strong>
+            executor — while <code>sleep</code> and <code>interval</code> resolved to <code>tokio::time::*</code>, which <strong>panic when polled
+            outside an ambient tokio reactor</strong>.</p>
+            <p>Cargo features are additive. Any crate anywhere in your dependency graph depending on <code>webrtc</code> with
+            default features silently re-enables <code>runtime-tokio</code> for a smol user. You did not have to do anything
+            wrong to reach this.</p>
+            <p>The tell was in the call graph: <code>smol_runtime()</code> had <strong>zero callers and zero tests</strong> in the entire
+            crate. Its only reachable purpose was this failure mode.</p>
+            <hr />
+            <h2>One question resolves the design</h2>
+            <p>The temptation with an abstraction like this is to make <em>everything</em> pluggable — put channels,
+            mutexes and notifications on the trait alongside timers and sockets. That instinct is wrong, and
+            seeing why is what unlocked the rest.</p>
+            <p>Ask a single question of each primitive: <strong>does it touch the reactor?</strong></p>
+            <table>
+            <thead>
+            <tr>
+            <th>Category</th>
+            <th>Members</th>
+            <th>Treatment</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><strong>Reactor-bound</strong></td>
+            <td>spawn, timers, UDP, TCP, DNS, <code>block_on</code></td>
+            <td><strong>Inject</strong> through <code>Runtime</code></td>
+            </tr>
+            <tr>
+            <td><strong>Executor-agnostic</strong></td>
+            <td>channels, broadcast, mutex, notify</td>
+            <td><strong>One implementation</strong>; delete the abstraction</td>
+            </tr>
+            <tr>
+            <td><strong>Derivable</strong></td>
+            <td><code>timeout</code>, <code>yield_now</code></td>
+            <td>Build generically on injected <code>sleep</code></td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Two facts make that partition hold.</p>
+            <p><strong>Channels, mutexes and notify never appear in the public API.</strong> Searching every <code>pub</code> item outside
+            <code>src/runtime/</code> turns up nothing — they are pure implementation details. Users cannot observe which
+            implementation is used, so they do not need to be pluggable.</p>
+            <p><strong>They are just data structures driven by wakers.</strong> <code>async-channel</code>, <code>futures::lock::Mutex</code>,
+            <code>event-listener</code> and <code>async-broadcast</code> work on any executor. Only things that must register with a
+            <em>reactor</em> — timers and I/O — are genuinely runtime-specific.</p>
+            <p>And the payoff is what keeps the whole design viable: <code>fn channel&lt;T&gt;(&amp;self, …)</code> is a <strong>generic
+            method</strong>, so putting it on the trait would make <code>Runtime</code> non-object-safe, which would force a
+            <code>&lt;R: Runtime&gt;</code> parameter viral through <code>PeerConnection</code>, the driver, transports, data channels and
+            transceivers — on top of the <code>&lt;I: Interceptor&gt;</code> parameter already there. Keeping executor-agnostic
+            primitives <em>off</em> the trait is what lets injection stay <code>Arc&lt;dyn Runtime&gt;</code>.</p>
+            <p>The result: <code>tokio.rs</code> and <code>smol.rs</code> are now about <strong>400 lines each</strong>, containing spawn, timers and
+            socket readiness — and nothing else.</p>
+            <hr />
+            <h2>The trait</h2>
+            <p><strong>Eight required methods, three defaulted.</strong></p>
+<pre><code class="language-rust">pub trait Runtime: Send + Sync + Debug + 'static {
+    // Task execution
+    fn spawn(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send&gt;&gt;) -&gt; Box&lt;dyn JoinHandle&gt;;
+
+    // Timers — reactor-bound, which is why they cannot be free functions
+    fn sleep(&amp;self, duration: Duration) -&gt; Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + Send + 'static&gt;&gt;;
+    fn interval(&amp;self, period: Duration) -&gt; Box&lt;dyn AsyncInterval&gt;;
+
+    // Networking — reactor-bound
+    fn wrap_udp_socket(&amp;self, socket: std::net::UdpSocket) -&gt; io::Result&lt;Arc&lt;dyn AsyncUdpSocket&gt;&gt;;
+    fn wrap_tcp_listener(&amp;self, l: std::net::TcpListener) -&gt; io::Result&lt;Arc&lt;dyn AsyncTcpListener&gt;&gt;;
+    fn connect_tcp&lt;'a&gt;(&amp;'a self, remote: SocketAddr) -&gt; /* boxed future */;
+    fn resolve_host&lt;'a&gt;(&amp;'a self, host: &amp;'a str) -&gt; /* boxed future */;
+
+    // Synchronous entry point for `main` and test harnesses
+    fn block_on(&amp;self, future: Pin&lt;Box&lt;dyn Future&lt;Output = ()&gt; + '_&gt;&gt;);
+
+    // Defaulted: spawn_reactor (falls back to spawn), yield_now, name
+}
+</code></pre>
+            <p>Object-safe by construction: <code>&amp;self</code> receivers, no generic method parameters, no <code>where Self: Sized</code>.</p>
+            <p>Three details worth calling out.</p>
+            <p><strong><code>spawn_reactor</code> defaults to <code>spawn</code>.</strong> The built-in runtimes pin each connection's driver to a
+            thread from a bounded pool — the fix for the RSS blowup of one-OS-thread-per-connection. A custom
+            runtime that does not want to implement thread confinement simply inherits the default and forgoes
+            the benefit, rather than being unable to compile.</p>
+            <p><strong><code>block_on</code> takes a non-<code>Send</code> future.</strong> It runs on the calling thread and never moves the future
+            across threads, matching what tokio, smol and <code>futures::executor</code> all do. Over-constraining this to
+            <code>Send</code> was a real bug caught during implementation — it broke <code>examples/save-to-disk-av1</code>.</p>
+            <p><strong><code>JoinHandle</code> is a trait</strong>, so a runtime returns its own handle type boxed. This one is
+            retrospectively embarrassing: in the old code <code>JoinHandle</code> was a <em>struct</em> with a private field, a
+            private inner trait and no constructor. <strong>No out-of-tree runtime could return one from <code>spawn</code>.</strong>
+            Before any of the timer work, before the type aliases, the abstraction was already unpluggable for
+            that reason alone — and nobody had noticed, because nobody had tried.</p>
+            <hr />
+            <h2>Features became additive, and the panic became unrepresentable</h2>
+<pre><code class="language-toml">[features]
+default       = [&quot;runtime-tokio&quot;]
+runtime-tokio = [&quot;dep:tokio&quot;]   # provides TokioRuntime
+runtime-smol  = [&quot;dep:smol&quot;]    # provides SmolRuntime
+runtime-mock  = []              # provides MockRuntime
+</code></pre>
+            <p>Features now gate exactly one thing: <strong>whether a built-in runtime type exists</strong>. They never select
+            which primitives the library uses. Consequences:</p>
+            <ul>
+            <li>The "tokio takes precedence" rule is <strong>deleted</strong> — nothing is cfg-selected any more.</li>
+            <li>Enabling several at once is legitimate. One process can drive tokio connections and smol
+              connections simultaneously.</li>
+            <li>The panic is <strong>impossible by construction</strong>, not by documentation: timers come from the runtime
+              <em>value</em>, so a <code>SmolRuntime</code> can never hand you a tokio timer.</li>
+            <li><code>default-features = false</code> with no built-in runtime at all is a supported configuration.</li>
+            </ul>
+            <p>This is the provider pattern <code>rustls</code> uses for crypto and <code>sqlx</code> for database drivers.</p>
+            <hr />
+            <h2>Injected per connection — and deliberately no global</h2>
+<pre><code class="language-rust">let runtime: Arc&lt;dyn Runtime&gt; = Arc::new(MyRuntime::new());
+
+let pc = PeerConnectionBuilder::new()
+    .with_runtime(runtime.clone())
+    .with_udp_addrs(vec![&quot;0.0.0.0:0&quot;])
+    .build()
+    .await?;
+</code></pre>
+            <p>An earlier draft of the design had a settable process-global <code>set_default_runtime()</code>, so
+            applications and tests would not have to thread a handle around. It was cut, for five reasons:</p>
+            <ol>
+            <li><strong>Per-connection is strictly more expressive.</strong> A global is emulated by holding one <code>Arc</code> and
+               cloning it per builder. The converse — "this connection on the mock runtime, that one on tokio" —
+               is impossible with a global.</li>
+            <li><strong>It reintroduces exactly the bug being fixed:</strong> a second source of truth for "which runtime",
+               with precedence rules and an initialisation-order hazard.</li>
+            <li><strong>It is hostile to libraries.</strong> A mid-stack crate calling it silently steals the choice from the
+               application, and the "already set" error surfaces as a startup failure somewhere unrelated.</li>
+            <li><strong>It breaks parallel testing.</strong> A process-global forces mock-runtime tests to serialise; with
+               per-connection injection each <code>#[test]</code> owns an independent virtual clock.</li>
+            <li><strong>Nothing needs it.</strong> Every timer call site in library code — four hits across three files —
+               already had a runtime handle in scope.</li>
+            </ol>
+            <p><code>default_runtime()</code> remains as a <strong>non-settable factory</strong> returning the compiled-in built-in for
+            callers with no preference. There is no way to overwrite what it returns.</p>
+            <p>The rule this preserves: <strong>the library has no ambient runtime.</strong> Every internal call site takes an
+            explicit handle. The convenience helpers live in the test and example trees only, where they cannot
+            reintroduce a mismatch into library code.</p>
+            <hr />
+            <h2>Derived rather than injected</h2>
+            <p><code>timeout</code> is not a trait method. It is a free function built generically on <code>sleep</code>, so every
+            runtime gets it — including yours — with no per-runtime implementation:</p>
+<pre><code class="language-rust">pub async fn timeout&lt;T&gt;(
+    runtime: &amp;dyn Runtime,
+    duration: Duration,
+    future: impl Future&lt;Output = T&gt;,
+) -&gt; Result&lt;T, Elapsed&gt; {
+    match select(Box::pin(future), runtime.sleep(duration)).await {
+        Either::Left((value, _)) =&gt; Ok(value),
+        Either::Right(_) =&gt; Err(Elapsed),
+    }
+}
+</code></pre>
+            <p>The evidence that this was the right call was already in the tree: the old smol implementation
+            built <code>timeout</code> from <code>sleep</code> + <code>or</code>, using no smol-specific timer API at all.</p>
+            <p>It also fixed an error type. <code>timeout</code> used to return <code>Result&lt;T, ()&gt;</code> — an error carrying no
+            information and not implementing <code>std::error::Error</code>. It now returns <code>Elapsed</code>.</p>
+            <hr />
+            <h2>The proof: a runtime we do not ship</h2>
+            <p>A trait is only pluggable if someone outside the crate can implement it. So the acceptance test is
+            an example that does exactly that — <code>examples/custom-runtime/</code>, ~350 lines implementing <code>Runtime</code>
+            over <a href="https://crates.io/crates/async-executor"><code>async-executor</code></a> and
+            <a href="https://crates.io/crates/async-io"><code>async-io</code></a>, neither of which is tokio or smol:</p>
+<pre><code class="language-shell">cargo run --no-default-features --example custom-runtime
+</code></pre>
+<pre><code class="language-text">running on a custom runtime: my-runtime
+sleep(50ms) took 51.041458ms
+tick 0 / tick 1 / tick 2
+timeout on a pending future =&gt; Err(Elapsed)
+hello from a spawned task
+udp: received &quot;ping&quot; from 127.0.0.1:56527
+resolved localhost:3478 -&gt; [[::1]:3478, 127.0.0.1:3478]
+
+All runtime capabilities exercised without tokio or smol.
+</code></pre>
+            <p><code>--no-default-features</code> is the load-bearing part: <strong>neither built-in runtime is compiled in</strong>. If
+            anything in the library were still reaching for tokio's timers, this would not link.</p>
+            <p>An example can only show one runtime, though. <code>tests/custom_runtime_interop.rs</code> closes the loop with
+            the thing that actually proves per-connection injection: <strong>two peer connections on two different
+            runtimes, interoperating in one process</strong> — the answerer on the custom <code>async-executor</code> runtime, the
+            offerer on a built-in. Every packet between them crosses that boundary, so a completed connection
+            proves both runtimes are independently live. A design with a process-global registry could not
+            express this test.</p>
+            <hr />
+            <h2>The other prize: deterministic time</h2>
+            <p>Once timers are injected, a runtime can lie about time. <code>MockRuntime</code> (behind <code>runtime-mock</code>)
+            implements the same trait but drives timers from a manually advanced virtual clock and performs no
+            I/O:</p>
+<pre><code class="language-rust">let rt = Arc::new(MockRuntime::new());
+let clock = rt.clock();
+
+let sleep = rt.sleep(Duration::from_secs(30));
+// ...nothing fires until time is advanced...
+clock.advance(Duration::from_secs(30));   // instant, deterministic
+</code></pre>
+            <p>This finally extends up into the async layer the property the Sans-I/O <code>rtc</code> core has always had:
+            timing-dependent behaviour — ICE timeouts, DTLS retransmits, SCTP RTO, back-pressure — becomes
+            testable instantly and without flakiness. Each <code>MockRuntime</code> owns an independent clock, so tests
+            using one run in parallel; that is the concrete payoff of having refused the global registry.</p>
+            <hr />
+            <h2>The hot path, and what it cost</h2>
+            <p>One claim in the old module docs was simply false: "zero-cost abstraction without dynamic dispatch in
+            the hot path". The Layer-2 type aliases were indeed zero-cost, but <code>AsyncUdpSocket::send_to</code> and
+            <code>recv_from</code> were <code>dyn</code> calls returning <code>Pin&lt;Box&lt;dyn Future&gt;&gt;</code> — <strong>one heap allocation per datagram</strong>.</p>
+            <p><code>AsyncUdpSocket</code> is now poll-based, mirroring <code>quinn</code>'s socket trait. Two primitives:</p>
+<pre><code class="language-rust">fn poll_send(&amp;self, cx: &amp;mut Context&lt;'_&gt;, transmit: &amp;Transmit&lt;'_&gt;) -&gt; Poll&lt;io::Result&lt;usize&gt;&gt;;
+
+fn poll_recv(
+    &amp;self,
+    cx: &amp;mut Context&lt;'_&gt;,
+    bufs: &amp;mut [IoSliceMut&lt;'_&gt;],
+    meta: &amp;mut [RecvMeta],
+) -&gt; Poll&lt;io::Result&lt;usize&gt;&gt;;
+</code></pre>
+            <p>The driver polls these directly and allocates nothing per datagram; <code>send_to</code> and <code>recv_from</code> remain
+            as single-datagram conveniences for the control plane.</p>
+            <p><code>poll_recv</code> takes slices because that is the shape the kernel offers: on Linux one <code>recvmmsg</code> returns
+            up to 32 datagrams <strong>from different peers</strong>, and each of those may itself carry several GRO-coalesced
+            datagrams from one flow. A minimal implementation fills <code>bufs[0]</code>, returns <code>Ok(1)</code>, and is done —
+            which is what the custom-runtime example does, and what non-Linux platforms do regardless.</p>
+            <p>There is no wrapper layer around any of this. <code>Transmit</code>, <code>RecvMeta</code>, <code>EcnCodepoint</code>, <code>UdpSockRef</code>,
+            <code>UdpSocketState</code> and <code>BATCH_SIZE</code> are re-exported from <code>quinn-udp</code> directly, so a runtime that
+            already knows quinn's socket API has nothing new to learn and there is nothing for us to keep in
+            sync. The deliberate cost: <strong>part of the public API is now tied to <code>quinn-udp</code>'s major version</strong>, and
+            its syscall bindings compile even for a build that supplies its own socket type.</p>
+            <hr />
+            <h2>What the plan got wrong</h2>
+            <p>The implementation plan deliberately ordered "write a third-party runtime" as a phase that <em>gates</em>
+            acceptance of the trait design. That ordering earned its keep — writing the example surfaced three
+            defects that review had not:</p>
+            <ol>
+            <li><strong><code>JoinHandle</code> was unconstructible from outside the crate.</strong> As above: the abstraction was not
+               pluggable at all, independent of every other problem on the list.</li>
+            <li><strong><code>block_on</code> was over-constrained to <code>Send</code></strong>, which broke a working example.</li>
+            <li><strong>The broadcast channel had two bugs</strong>, one of them pre-existing: dropping the initial receiver
+               permanently closes an <code>async-broadcast</code> channel and <code>subscribe</code> cannot reopen it — which means the
+               old smol path's <code>send</code> would <em>always</em> have returned <code>Err(Closed)</code>. And <code>send</code> must stay
+               synchronous, because an <code>async</code> version blocks forever with zero subscribers, wedging a publisher
+               that has no viewers.</li>
+            </ol>
+            <p>Each of these would have shipped as a "supported" extension point that nobody could actually use.</p>
+            <hr />
+            <h2>Honest gaps</h2>
+            <ul>
+            <li><strong><code>MockRuntime</code> has no in-memory sockets yet.</strong> It covers timers and task execution; socket methods
+              return <code>io::ErrorKind::Unsupported</code>. End-to-end connection tests on virtual time need transports.</li>
+            <li><strong>The driver does not yet exploit batched receive.</strong> <code>poll_recv</code> accepts up to <code>BATCH_SIZE</code>
+              messages, but the driver currently asks for one per call, and the burst-drain loop still makes N
+              syscalls where one <code>recvmmsg</code> would do. The API is in place; the buffer rework is a follow-up.</li>
+            <li><strong>The hot-path work is unmeasured.</strong> Removing per-datagram allocations is correct by construction,
+              but the magnitude has not been benchmarked.</li>
+            <li><strong><code>quinn-udp</code> in the public API</strong> is a semver coupling taken deliberately, in exchange for not
+              maintaining a parallel set of wrapper types.</li>
+            </ul>
+            <hr />
+            <h2>Try it</h2>
+<pre><code class="language-toml"># Tokio, the default
+webrtc = &quot;0.20&quot;
+
+# smol
+webrtc = { version = &quot;0.20&quot;, default-features = false, features = [&quot;runtime-smol&quot;] }
+
+# Neither — bring your own
+webrtc = { version = &quot;0.20&quot;, default-features = false }
+</code></pre>
+            <p>Then read <code>examples/custom-runtime/</code>, which is deliberately small enough to read in one sitting and
+            is the template for any runtime we do not ship. If your executor is not tokio or smol, a backend for
+            it is now a crate <em>you</em> can publish — no <code>#[cfg]</code> edits, no fork, no upstream PR.</p>
+            <ul>
+            <li><strong>GitHub</strong>: https://github.com/webrtc-rs/webrtc</li>
+            <li><strong>Sans-I/O core (<code>rtc</code>)</strong>: https://github.com/webrtc-rs/rtc</li>
+            <li><strong>Discord</strong>: https://discord.gg/4Ju8UHdXMs</li>
+            </ul>
+            <hr />
+            <h2>Further Reading</h2>
+            <ul>
+            <li><a href="/blog/2026/01/31/async-friendly-webrtc-architecture">Building Async-Friendly webrtc on Sans-I/O rtc: Architecture Design and Roadmap</a></li>
+            <li><a href="/blog/2026/07/18/from-13-mbps-to-beating-pion">From 13 Mbps to Beating Pion: How We Made webrtc-rs Data Channels Fast</a></li>
+            <li><a href="/blog/2026/07/28/boxed-interceptor-type-erasure">Type-Erase the Interceptor Chain, Not Your Application</a></li>
+            </ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">&larr; Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>
