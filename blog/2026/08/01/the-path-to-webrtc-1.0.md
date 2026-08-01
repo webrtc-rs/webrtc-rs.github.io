@@ -140,7 +140,7 @@ Under a 1.0 that promises API stability rather than feature completeness, this n
 
 ### 2. Transport objects
 
-The W3C API exposes `RTCPeerConnection.sctp`, `RTCRtpSender.transport`, and `RTCIceTransport` with `getSelectedCandidatePair()`. The Sans-I/O core owns all three; the async layer surfaces none of them. `SctpTransportStats` is also missing from our stats set.
+The W3C API exposes `RTCPeerConnection.sctp`, `RTCRtpSender.transport`, and `RTCIceTransport` with `getSelectedCandidatePair()`. The Sans-I/O core owns all three; the async layer surfaces none of them.
 
 We had these as release-gating and have moved them out, because the architecture makes them a design job rather than a patch. In the core they are `pub(crate)` state machines living inside handler contexts, holding live `Agent`, `dtls::Endpoint`, and `sctp::Endpoint` state; the async layer keeps the whole core behind a mutex owned by the driver. Exposing them properly likely means three new handle types reaching back through that mutex, plus a coherent transport-event model. The handler already reports ICE connection and gathering state, but it has no DTLS- or SCTP-transport handle events.
 
