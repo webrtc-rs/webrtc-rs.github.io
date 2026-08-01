@@ -1,0 +1,112 @@
+Title:
+  [Project Update] webrtc v0.20.0-alpha.1 – Async-Friendly WebRTC Built on Sans-I/O, Runtime Agnostic (Tokio + smol)
+
+  Body:
+
+  Hi everyone!
+
+  We're excited to share a major milestone for the webrtc-rs project: the first pre-release of **webrtc v0.20.0-alpha.1**. Full blog post here: https://webrtc.rs/blog/2026/03/01/webrtc-v0.20.0-alpha.1-async-webrtc-on-sansio.html
+
+  In our previous updates, we announced:
+  - The [Sans-I/O `rtc` crate reaching feature parity](https://www.reddit.com/r/rust/comments/1q3w7f1/project_update_announcing_rtc_030_sansio_webrtc/) with the old async webrtc crate
+  - The [v0.17.0 feature freeze](https://webrtc.rs/blog/2026/01/31/webrtc-v0.17.0-feature-freeze-sansio-shift.html) and the shift toward a Sans-I/O architecture
+  - The [architecture design](https://webrtc.rs/blog/2026/01/31/async-friendly-webrtc-architecture.html) for the new async-friendly webrtc crate
+
+  Today, that design is reality. **v0.20.0-alpha.1 is a ground-up rewrite** of the async `webrtc` crate, built as a thin layer on top of the battle-tested Sans-I/O `rtc` protocol core.
+
+  What's New?
+
+  ✅ **Runtime Agnostic** – Supports Tokio (default) and smol via feature flags. Switching is a one-line Cargo.toml change; your application code stays identical.
+
+  ✅ **Full Async API Parity** – Every Sans-I/O `rtc` operation has an `async fn` counterpart: `create_offer`, `create_answer`, `set_local_description`, `add_ice_candidate`, `create_data_channel`, `add_track`, `get_stats`, and more.
+
+  ✅ **20 Working Examples** – All v0.17.x examples ported: data channels (6 variants), media playback/recording (VP8/VP9/H.264/H.265), simulcast, RTP forwarding, broadcast, ICE restart, insertable streams, and more.
+
+  ✅ **No More Callback Hell** – The old v0.17.x API required `Box::new(move |...| Box::pin(async move { ... }))` with Arc cloning everywhere. The new API uses a clean trait-based event handler:
+
+  ```rust
+  #[derive(Clone)]
+  struct MyHandler;
+
+  #[async_trait::async_trait]
+  impl PeerConnectionEventHandler for MyHandler {
+      async fn on_connection_state_change(&self, state: RTCPeerConnectionState) {
+          println!("State: {:?}", state);
+      }
+
+      async fn on_ice_candidate(&self, event: RTCPeerConnectionIceEvent) {
+          // Send to remote peer via signaling
+      }
+
+      async fn on_data_channel(&self, dc: Arc<dyn DataChannel>) {
+          while let Some(evt) = dc.poll().await {
+              match evt {
+                  DataChannelEvent::OnOpen => println!("Opened!"),
+                  DataChannelEvent::OnMessage(msg) => println!("Got: {:?}", msg),
+                  _ => {}
+              }
+          }
+      }
+  }
+
+  let pc = PeerConnectionBuilder::new()
+      .with_configuration(config)
+      .with_handler(Arc::new(MyHandler))
+      .with_udp_addrs(vec!["0.0.0.0:0"])
+      .build()
+      .await?;
+  ```
+
+  No Arc explosion. No triple-nesting closures. No memory leaks from dangling callbacks.
+
+  Architecture
+
+  The crate follows a Quinn-inspired pattern:
+
+  - **`rtc` crate** (Sans-I/O) – Pure protocol logic: ICE, DTLS, SRTP, SCTP, RTP/RTCP. No async, no I/O, fully deterministic and testable.
+  - **`webrtc` crate** (async layer) – Thin wrapper with a `Runtime` trait abstracting spawning, UDP sockets, timers, channels, mutexes, and DNS resolution.
+  - **`PeerConnectionDriver`** – Background event loop bridging the Sans-I/O core and async runtime using `futures::select!` (not `tokio::select!`).
+
+  Runtime switching is just a feature flag:
+
+  ```toml
+  # Tokio (default)
+  webrtc = "0.20.0-alpha.1"
+
+  # smol
+  webrtc = { version = "0.20.0-alpha.1", default-features = false, features = ["runtime-smol"] }
+  ```
+
+  What's Next?
+
+  This is an alpha — here's what's on the roadmap:
+
+  🔄 **More Examples** – Adding parity with the full Sans-I/O `rtc` example set: ICE-TCP, mDNS, perfect negotiation, trickle ICE variants, RTCP processing, AV1 codec, stats, bidirectional simulcast.
+
+  🔄 **ICE Improvements** – IPv6 gather failures ([#774](https://github.com/webrtc-rs/webrtc/issues/774)), graceful socket error recovery ([#777](https://github.com/webrtc-rs/webrtc/issues/777)), localhost STUN timeout ([#778](https://github.com/webrtc-rs/webrtc/issues/778)).
+
+  🔄 **H.265 Fixes** – Packetizer/depacketizer issues in simulcast and H.26x examples ([#779](https://github.com/webrtc-rs/webrtc/issues/779)).
+
+  🔄 **Runtime Abstraction** – Introducing a `RuntimeFactory` trait so external crates can add runtime support (e.g., async-std, embassy) without forking.
+
+  🔄 **Performance & Testing** – Benchmarks, browser interop testing, deterministic test suites, memory leak verification.
+
+  Get Involved
+
+  This is the best time to shape the API — we'd love feedback:
+
+  - Try the alpha, run the examples, build something
+  - File issues for bugs and rough edges
+  - Contribute examples, runtime adapters, docs, or tests
+
+  Links:
+  - Blog Post: https://webrtc.rs/blog/2026/03/01/webrtc-v0.20.0-alpha.1-async-webrtc-on-sansio.html
+  - Repo: https://github.com/webrtc-rs/webrtc
+  - Examples: https://github.com/webrtc-rs/webrtc/tree/master/examples
+  - Sans-I/O core: https://github.com/webrtc-rs/rtc
+  - Crate: https://crates.io/crates/webrtc
+  - Docs: https://docs.rs/webrtc
+  - Discord: https://discord.gg/4Ju8UHdXMs
+  - Main Project: https://webrtc.rs/
+
+  Questions and feedback are very welcome!
