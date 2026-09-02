@@ -77,6 +77,15 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/09/01/interceptor-chain-list-not-tower.html">The Interceptor Chain Is a List, Not a Tower</a></h2>
+              <div class="date">September 1, 2026</div>
+              <div class="excerpt">
+                <p><strong>rtc 0.21 takes the interceptors that ship with the stack from six to thirteen — congestion control with a full GCC estimator, a pacer, FlexFEC both ways, a jitter buffer, RFC 8888 feedback, interval PLI — and rewrites the chain that holds them.</strong> Those are the same fact. The new interceptors are <em>bidirectional</em>, they have to see every byte that leaves including packets other interceptors generate, and they have to tell each other things across directions — and a tower of <code>A&lt;B&lt;C&gt;&gt;</code> fails all three, because nesting encodes one static containment relationship and none of those is one. So direction became a property of the walk (one list, ordered by distance from the wire, traversed forward to read and backward to write) and packets grew <code>AttributedPacket</code> to carry what the chain has learned. The worked example is congestion control: TWCC and RFC 8888 feedback flatten into one report shape, and the estimate reaches the pacer by riding an <em>inbound</em> packet — the only walk it can cross on. Also: why <code>RTCPeerConnection</code> is no longer generic, why slots go up by a thousand, and what the vtable dispatch costs.</p>
+              </div>
+              <a href="./2026/09/01/interceptor-chain-list-not-tower.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/09/01/pluggable-crypto-provider.html">Bring Your Own Crypto Provider</a></h2>
               <div class="date">September 1, 2026</div>
               <div class="excerpt">
