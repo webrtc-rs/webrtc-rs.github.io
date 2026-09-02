@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="rtc 0.21 routes every cryptographic operation through one provider-neutral crate. The seven design principles behind the boundary, how it landed across the workspace, and the three performance bugs the benchmarks found.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Bring Your Own Crypto Provider</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Bring Your Own Crypto Provider</h1>
+            <div class="blog-meta">
+              <span>September 1, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/09/01/pluggable-crypto-provider.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+            <p><code>rtc</code> 0.21.0-rc.1 routes every cryptographic operation in the stack through one provider-neutral crate, <code>rtc-crypto</code>. No protocol crate depends on <code>ring</code>, <code>aws-lc-rs</code>, or a RustCrypto primitive crate any more. The provider is an ordinary value you pass through configuration, so two peer connections in one process can use different ones, and an application can supply its own — for OpenSSL, a FIPS-validated module, an HSM, a platform API, or a deterministic test double — by implementing three public traits.</p>
+            <p>This post is about the design principles behind that boundary and how they played out across the workspace. It is the crypto counterpart to <a href="/blog/2026/07/30/pluggable-async-runtime">Bring Your Own Async Runtime</a>: same instinct, that a library should not decide for the application which implementation of a general capability it links against, applied to the other big one.</p>
+            <hr />
+            <h2>What we were replacing</h2>
+            <p>Every crate that touched crypto carried this:</p>
+<pre><code class="language-rust">#[cfg(all(feature = &quot;aws-lc-rs&quot;, feature = &quot;ring&quot;))]
+compile_error!(&quot;At most one of the features \&quot;aws-lc-rs\&quot; and \&quot;ring\&quot; can be enabled.&quot;);
+</code></pre>
+            <p>Four copies, in <code>rtc-dtls</code>, <code>rtc-srtp</code>, <code>rtc-stun</code>, and <code>rtc</code>. Cargo unifies features across a dependency graph, so a transitive dependency that enabled the other backend broke an otherwise valid build — and the person hitting it had no fix available, because the conflict was between two crates neither of which they controlled. <strong>Non-additive features are a bug, and this was four of them.</strong></p>
+            <p>Underneath, the same crates carried:</p>
+<pre><code class="language-rust">#[cfg(feature = &quot;aws-lc-rs&quot;)]
+extern crate aws_lc_rs as ring;
+</code></pre>
+            <p>This works, because <code>aws-lc-rs</code> deliberately exposes a ring-compatible API. It also means the <em>entire</em> extension story was "be shaped exactly like ring". An OpenSSL backend, a platform keystore, or an HSM could not be expressed at all, and protocol code was full of backend conditionals that had nothing to do with DTLS or SRTP.</p>
+            <p>And the choice was a compile-time global. One process could not run two peer connections against two backends — a real requirement for anyone migrating a fleet, or running a validated module for one tenant and a fast one for another.</p>
+            <p>Three more things had leaked out of place. <code>rtc-shared::Error</code> carried variants holding <code>sec1</code>, <code>p256</code>, <code>rcgen</code>, <code>aes-gcm</code>, and <code>aes</code> error types, so a crate that only wanted marshaling inherited a crypto dependency tree and its version constraints. <code>rtc-dtls::crypto::CryptoPrivateKeyKind</code> was a <strong>public</strong> enum naming concrete backend key types. And <code>rtc-srtp</code>'s <code>openssl</code> feature replaced exactly one AES-CTR path inside SRTP while being named as though it selected a backend.</p>
+            <hr />
+            <h2>Seven design principles</h2>
+            <h3>1. Two components, one bundle</h3>
+            <p>We took the shape from <a href="https://github.com/openmls/openmls">OpenMLS</a>, which separates a flat operations trait from a randomness trait and exposes both through a provider:</p>
+<pre><code class="language-rust">pub trait RTCCryptoProvider: Send + Sync {
+    fn name(&amp;self) -&gt; &amp;'static str;
+    fn crypto(&amp;self) -&gt; &amp;dyn RTCCrypto;
+    fn random(&amp;self) -&gt; &amp;dyn RTCRandom;
+}
+</code></pre>
+            <p><code>RTCCrypto</code> is the operations half — one flat trait carrying every primitive the stack needs, with no backend-shaped submodules and no per-protocol subtraits:</p>
+<pre><code class="language-rust">pub trait RTCCrypto: Send + Sync {
+    fn supports(&amp;self, algorithm: CryptoAlgorithm) -&gt; bool;
+
+    fn hash(&amp;self, algorithm: HashAlgorithm, data: &amp;[u8]) -&gt; Result&lt;Vec&lt;u8&gt;, CryptoError&gt;;
+    fn block_encrypt(&amp;self, algorithm: BlockCipherAlgorithm, key: &amp;[u8], block: &amp;mut [u8])
+        -&gt; Result&lt;(), CryptoError&gt;;
+
+    // Keyed operations are factories; see principle 4.
+    fn new_hmac(&amp;self, algorithm: HmacAlgorithm, key: &amp;[u8]) -&gt; Result&lt;Box&lt;dyn Mac&gt;, CryptoError&gt;;
+    fn new_stream_cipher(&amp;self, /* … */) -&gt; Result&lt;Box&lt;dyn StreamCipher&gt;, CryptoError&gt;;
+    fn new_aead(&amp;self, /* … */) -&gt; Result&lt;Box&lt;dyn AeadCipher&gt;, CryptoError&gt;;
+    fn new_cbc(&amp;self, /* … */) -&gt; Result&lt;Box&lt;dyn CbcCipher&gt;, CryptoError&gt;;
+    fn start_key_exchange(&amp;self, /* … */) -&gt; Result&lt;Box&lt;dyn ActiveKeyExchange&gt;, CryptoError&gt;;
+
+    fn generate_signing_key(&amp;self, scheme: SignatureScheme)
+        -&gt; Result&lt;Arc&lt;dyn SigningKey&gt;, CryptoError&gt;;
+    fn import_signing_key(&amp;self, scheme: SignatureScheme, pkcs8_der: &amp;[u8])
+        -&gt; Result&lt;Arc&lt;dyn SigningKey&gt;, CryptoError&gt;;
+    fn verify_signature(&amp;self, scheme: SignatureScheme, public_key: PublicKey&lt;'_&gt;,
+                        message: &amp;[u8], signature: &amp;[u8]) -&gt; Result&lt;(), CryptoError&gt;;
+}
+</code></pre>
+            <p>Flat is a decision, not an accident. The alternative we rejected was one trait per protocol — <code>DtlsCrypto</code>, <code>SrtpCrypto</code>, <code>StunCrypto</code> — which duplicates primitives across contracts (all three want HMAC-SHA1) and makes a downstream author implement overlapping surfaces. Protocol-specific composition stays in the protocol crates; the provider exposes primitives.</p>
+            <p><code>RTCRandom</code> is the other half, and it is deliberately tiny:</p>
+<pre><code class="language-rust">pub trait RTCRandom: Send + Sync {
+    fn fill(&amp;self, output: &amp;mut [u8]) -&gt; Result&lt;(), CryptoError&gt;;
+}
+</code></pre>
+            <p>Randomness is separate because it has a different consumer set and a different compliance story. A deployment that must draw every byte of protocol entropy from a validated module needs to replace exactly that, without reimplementing AES-GCM. Conversely a deterministic test provider wants a predictable <code>RTCRandom</code> and real crypto.</p>
+            <p><code>name()</code> lives on the bundle rather than on <code>RTCCrypto</code>, so the operations trait contains only capabilities and operations. It is a diagnostic label, and the docs say so explicitly: <strong>a provider name is not a validation claim.</strong></p>
+            <h3>2. A provider is a value, not a global</h3>
+            <p>This is the principle we were least willing to compromise on, and where we diverge from most of the ecosystem. The common pattern is a process-wide default installed once at startup — <code>rustls</code> works this way — and it is a reasonable fit for an application that owns its whole process. It is a poor one for a library that gets embedded in a process it does not own.</p>
+            <p>A process-global provider makes tests order-dependent, prevents per-connection choice, and means a library can silently change the crypto of an application that never asked. So:</p>
+<pre><code class="language-rust">setting_engine.set_crypto_provider(Arc::new(MyProvider::new()));
+</code></pre>
+            <p>There is nothing to install at startup and no registration step. A downstream provider is a struct that implements three traits and gets passed in.</p>
+            <p><strong>No library code resolves a default.</strong> <code>default_provider()</code> is called in exactly one place in the whole workspace — peer-connection construction, where the application either supplied one or gets the feature-selected built-in:</p>
+<pre><code class="language-rust">let crypto_provider = match setting_engine.crypto_provider.take() {
+    Some(crypto_provider) =&gt; crypto_provider,
+    None =&gt; crypto::default_provider().map_err(|error| {
+        Error::Crypto(format!(
+            &quot;peer connection requires a crypto provider: {error}; \
+             configure one with SettingEngineBuilder::with_crypto_provider&quot;
+        ))
+    })?,
+};
+</code></pre>
+            <p>Everything below that receives an <code>Arc&lt;dyn RTCCryptoProvider&gt;</code> from its caller. (Tests, examples and benchmarks are the outside caller and may resolve a default themselves.) It is also why the default-resolving constructors are gone. Each had a <code>*_with_provider</code> sibling, and keeping both meant keeping a path that hid the choice — one that, in a <code>--no-default-features</code> build, failed deep inside a handshake instead of at configuration time. Where a type had such a pair, the two collapsed into one provider-taking constructor: <code>Context::new</code>, <code>Agent::new</code>, <code>Client::new</code>, <code>Certificate::generate_self_signed</code>, <code>Certificate::from_pem</code>, <code>RTCCertificate::from_pem</code>, and <code>get_fingerprints</code>. <code>MessageIntegrity</code> is the exception — there the default-resolving constructors were dropped and the explicit <code>new_raw_integrity_with_provider</code>, <code>new_short_term_integrity_with_provider</code> and <code>new_long_term_integrity_with_provider</code> kept their names. <code>Default</code> impls that resolved a provider — on <code>HandshakeConfig</code>, <code>rtc_dtls::State</code>, <code>Agent</code>, <code>RTCDtlsTransport</code> — were removed rather than reworked, because <code>Default</code> has nowhere to accept one.</p>
+            <h3>3. Erase the type at the configuration boundary, not through the stack</h3>
+            <p>OpenMLS threads <code>&amp;impl OpenMlsProvider</code> generically. That is right for OpenMLS and wrong here: RTC's peer connection and protocol state are long-lived concrete types, and a generic provider parameter would land on most of them, in public signatures, forever.</p>
+            <p><code>Arc&lt;dyn RTCCryptoProvider&gt;</code> costs a vtable dispatch. We are not going to claim, as some pluggable-backend designs do, that this is free — it is a real indirect call. It is also negligible next to the cryptographic work behind it, and principle 4 exists to make sure it stays that way. The trade we accepted: dynamic dispatch at a boundary crossed once per operation, in exchange for not parameterizing <code>RTCPeerConnection</code> on its crypto.</p>
+            <p>Two smaller decisions fell out of the same reasoning. The traits require <code>Send + Sync</code> where shared concurrency needs them, but <strong>not</strong> <code>Debug</code> — crypto implementations, cipher objects, key exchange state and platform handles hold sensitive material, and structural debug formatting is not a safe diagnostics contract. And there is no trait-level <code>'static</code> bound; storing the <code>Arc</code> in owned state imposes that where ownership actually happens.</p>
+            <h3>4. Factories, not one-shot calls</h3>
+            <p>The expensive part of keyed cryptography is usually the key schedule, not the operation. An API of stateless <code>encrypt(key, ...)</code> calls repeats it per packet and gives a hardware backend nowhere to keep a session. So every keyed operation is a factory returning a mutable object:</p>
+<pre><code class="language-rust">fn new_hmac(&amp;self, algorithm: HmacAlgorithm, key: &amp;[u8]) -&gt; Result&lt;Box&lt;dyn Mac&gt;, CryptoError&gt;;
+fn new_stream_cipher(&amp;self, algorithm: StreamCipherAlgorithm, key: &amp;[u8]) -&gt; Result&lt;Box&lt;dyn StreamCipher&gt;, CryptoError&gt;;
+fn new_aead(&amp;self, algorithm: AeadAlgorithm, key: &amp;[u8]) -&gt; Result&lt;Box&lt;dyn AeadCipher&gt;, CryptoError&gt;;
+fn new_cbc(&amp;self, algorithm: CbcAlgorithm, key: &amp;[u8]) -&gt; Result&lt;Box&lt;dyn CbcCipher&gt;, CryptoError&gt;;
+</code></pre>
+            <p>An SRTP <code>Context</code> creates its cipher once, during construction, for that one-way cryptographic context — not per SSRC and not per packet. A DTLS epoch keys its record cipher once. Provider dispatch is concentrated in setup, and the per-packet path is a direct call on an already-keyed object.</p>
+            <p>These objects are <code>Send</code> and take <code>&amp;mut self</code>, deliberately not <code>Sync</code>. A software backend can hold an immutable expanded key internally; an HSM needs mutable session state. Requiring <code>Sync</code> would force internal locking on implementations that need it, to serve callers — DTLS epochs, one-way SRTP contexts — that already have exclusive access.</p>
+            <p><strong>The <code>Mac</code> trait was not in the original design, and it is the change the implementation forced.</strong> The design had one-shot <code>hmac()</code> and <code>verify_hmac()</code> methods. They looked harmless, and they preserved a path that re-derives the HMAC ipad/opad schedule on every call — which measured at roughly <strong>40% of SRTP's per-RTCP-packet time</strong>. They were removed in favour of <code>new_hmac</code> returning a keyed <code>Mac</code>, so there is exactly one way to compute an HMAC and the keying cost is visible at the call site.</p>
+            <p>Key exchange gets the same treatment, with an ownership twist:</p>
+<pre><code class="language-rust">pub trait ActiveKeyExchange: Send {
+    fn algorithm(&amp;self) -&gt; KeyExchangeAlgorithm;
+    fn public_key(&amp;self) -&gt; &amp;[u8];
+    fn complete(self: Box&lt;Self&gt;, peer_public_key: &amp;[u8]) -&gt; Result&lt;SecretVec, CryptoError&gt;;
+}
+</code></pre>
+            <p>The object owns the ephemeral private key, exposes only the wire public key, and <strong>consumes itself</strong> deriving the shared secret. Accidental reuse of an ephemeral key becomes a compile error. This replaced a <code>pub(crate)</code> enum holding a <code>p256::ecdh::EphemeralSecret</code>, a <code>p384</code> one, or an <code>x25519_dalek::StaticSecret</code>. The alternative shape — <code>Box&lt;dyn Any&gt;</code> handles with downcasts — was rejected: it permits provider/key mismatches at runtime and cannot enforce one-shot use.</p>
+            <h3>5. Primitives, not policy</h3>
+            <p>The hardest part of a crypto boundary is deciding what is <em>not</em> on it. Our line: <strong>the provider answers whether a signature is valid; configuration answers whether a certificate should be trusted.</strong></p>
+            <p>So these stayed out of <code>RTCCrypto</code>: X.509 and PEM encoding, WebRTC fingerprint formatting and comparison, CA roots, hostname checks, <code>VerifyPeerCertificateFn</code>, the DTLS 1.2 PRF composition, SRTP key-derivation labels and packet layout, and the DTLS handshake state machine. A custom provider is not required to implement CA-chain policy, and a provider cannot become the place where application security policy lives.</p>
+            <p>The clearest case was <code>KeyingMaterialExporter</code>, a trait in <code>rtc-shared</code> that existed so <code>rtc-srtp</code> could call into <code>rtc-dtls</code> without depending on it. It looks like a crypto primitive. It is not: RFC 5705 export needs an established session's master secret, client and server randoms, negotiated suite, and handshake state — all of which belong to <code>rtc-dtls::State</code>, and none of which a provider owns. We deleted it rather than moving it:</p>
+<pre><code class="language-text">rtc-dtls::State -- export_keying_material() --&gt; SecretVec
+                                                    |
+                                                    v
+             rtc orchestration -- selected profile and endpoint role
+                                                    |
+                                                    v
+rtc-srtp::Config -- set_session_keys_from_keying_material() --&gt; SessionKeys
+</code></pre>
+            <p>DTLS exports bytes through an inherent method, SRTP consumes bytes, and the top-level <code>rtc</code> crate — which is the only thing that knows both the DTLS state and the negotiated SRTP profile — owns the handoff. The RFC 5764 label was promoted from a private <code>const</code> in <code>rtc-srtp</code> to a <code>pub const</code>, so standalone users of the two crates are not retyping a magic string. The blast radius was one call site.</p>
+            <p>Secrets crossing the boundary use a zeroizing container with redacted <code>Debug</code> and no <code>Display</code>:</p>
+<pre><code class="language-rust">pub struct SecretVec(zeroize::Zeroizing&lt;Vec&lt;u8&gt;&gt;);
+</code></pre>
+            <h3>6. Capabilities are checked before negotiation, not during</h3>
+            <p>A provider that does not implement P-384 should cause a <em>construction</em> error, not a handshake that stalls after the peer picks a suite nobody can complete. So configuration intersects four sets before advertising anything:</p>
+<pre><code class="language-text">DTLS suites implemented by rtc-dtls
+  ∩ suites whose primitives the provider supports
+  ∩ suites compatible with the configured certificate/signing key
+  ∩ application-configured suites
+  = advertised/accepted suites
+</code></pre>
+            <p>The same rule applies to named groups, signature schemes, and SRTP protection profiles. <code>RTCCrypto::supports(CryptoAlgorithm)</code> is what makes it possible, and the contract is explicit that <code>supports</code> is for negotiation and early failure — an operation must still reject an unsupported algorithm even if a provider's <code>supports</code> lies.</p>
+            <h3>7. Open traits, and prove it in the build</h3>
+            <p><code>RTCCrypto</code> is user-implementable and will not be sealed. That is the whole point, and it has a consequence that is easy to lose by accident: <strong>dyn compatibility</strong>. A generic method, an <code>impl Trait</code> argument, or a method returning <code>Self</code> silently makes a trait unusable through <code>dyn</code> — and a feature-gated one only breaks some builds. Documenting the invariant is not enough, so it is asserted:</p>
+<pre><code class="language-rust">const _: () = {
+    fn assert_dyn_compatible(
+        _provider: &amp;dyn RTCCryptoProvider,
+        _crypto: &amp;dyn RTCCrypto,
+        _random: &amp;dyn RTCRandom,
+        _mac: &amp;dyn Mac,
+        _stream: &amp;dyn StreamCipher,
+        _aead: &amp;dyn AeadCipher,
+        _cbc: &amp;dyn CbcCipher,
+        _exchange: &amp;dyn ActiveKeyExchange,
+        _signing_key: &amp;dyn SigningKey,
+    ) {
+    }
+};
+</code></pre>
+            <p>It compiles under every feature combination in CI, so the moment someone adds a method that breaks object safety, the build says so.</p>
+            <p>Every operation method has a default body returning <code>UnsupportedAlgorithm</code>. Only <code>name</code> and <code>supports</code> must be implemented. Partial providers are practical, and adding an operation later does not break every downstream implementation.</p>
+            <hr />
+            <h2>How it landed across the crates</h2>
+            <p>The provider does not go everywhere. It goes exactly where cryptography happens: one crate defines it, six consume it, and nine of the sixteen have no crypto dependency at all.</p>
+            <table>
+            <thead>
+            <tr>
+            <th>Crate</th>
+            <th><code>RTCCrypto</code></th>
+            <th><code>RTCRandom</code></th>
+            <th>How it holds the provider</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>rtc-crypto</code></td>
+            <td>defines and implements</td>
+            <td>defines and implements</td>
+            <td>owns every backend dependency</td>
+            </tr>
+            <tr>
+            <td><code>rtc-dtls</code></td>
+            <td>direct — transcripts, PRF, AEAD/CBC/ChaCha20, ECDHE, signing, verification</td>
+            <td>direct — handshake randoms, cookies, record IVs</td>
+            <td>keeps the <code>Arc</code> for the handshake lifetime</td>
+            </tr>
+            <tr>
+            <td><code>rtc-srtp</code></td>
+            <td>direct at construction — KDF AES blocks, cipher factories</td>
+            <td>none; IVs derive from salts and packet state</td>
+            <td>borrows <code>&amp;dyn RTCCrypto</code>, then stores the cipher objects</td>
+            </tr>
+            <tr>
+            <td><code>rtc-stun</code></td>
+            <td>direct — MD5, HMAC-SHA1, constant-time comparison</td>
+            <td>none; transaction IDs keep a documented CSPRNG</td>
+            <td><code>MessageIntegrity&lt;'a&gt;</code> borrows <code>&amp;'a dyn RTCCrypto</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc-ice</code></td>
+            <td>indirect, via authenticated STUN</td>
+            <td>direct — ufrags, passwords, tie-breakers</td>
+            <td>holds the <code>Arc</code>, forwards it to STUN</td>
+            </tr>
+            <tr>
+            <td><code>rtc-turn</code></td>
+            <td>indirect, via authenticated STUN</td>
+            <td>—</td>
+            <td>forwards the provider it holds</td>
+            </tr>
+            <tr>
+            <td><code>rtc-sctp</code>, <code>rtc-shared</code>, <code>rtc-rtp</code>, <code>rtc-rtcp</code>, <code>rtc-interceptor</code>, <code>rtc-media</code>, <code>rtc-sdp</code>, <code>rtc-mdns</code>, <code>rtc-datachannel</code></td>
+            <td>none</td>
+            <td>none</td>
+            <td>no <code>rtc-crypto</code> dependency at all</td>
+            </tr>
+            <tr>
+            <td><code>rtc</code></td>
+            <td>direct — certificate keys and fingerprints</td>
+            <td>—</td>
+            <td><code>SettingEngine</code> resolves once, clones downstream</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Two things in that table are decisions rather than outcomes.</p>
+            <p><strong><code>rtc-shared</code> does not depend on <code>rtc-crypto</code>, and never will.</strong> Crypto errors convert at the consuming crate's boundary. The backend error variants are gone, replaced by a neutral <code>Error::Crypto(String)</code>. Otherwise every crate in the workspace that wants a marshaling helper acquires a transitive crypto dependency, which is the problem we started with wearing a different hat.</p>
+            <p><strong>Not everything random is cryptographic, and not every secure random is worth the plumbing.</strong> This was the most contested judgement in the design, and we came down against uniformity — twice, in two different directions.</p>
+            <p>RTP sequence-number and timestamp offsets, SSRCs, codec picture IDs, SDP session IDs and media container serials are collision-avoidance values, not secrets. Routing them through a provider would mean threading <code>Arc&lt;dyn RTCCryptoProvider&gt;</code> through <code>rtc-rtp</code> and <code>rtc-sdp</code> for no security benefit and a permanently worse standalone API. They keep ordinary <code>rand</code>.</p>
+            <p>The harder cases are the values that genuinely need unpredictability in crates that do not otherwise need crypto. DTLS randoms, cookies and record IVs go through <code>RTCRandom</code> — it is a hard requirement there, and DTLS already holds the provider. ICE went through too: ufrags, passwords and tie-breakers all take <code>provider.random()</code>, because the agent already holds an <code>Arc</code> for authenticated STUN. But <strong>STUN transaction IDs and SCTP verification tags, association IDs and initial TSNs did not.</strong> They keep a thread-local CSPRNG, which satisfies their security requirement, and they keep it so that <code>rtc-sctp</code> and <code>rtc-stun</code>'s message layer remain usable standalone without acquiring a provider parameter. The rule we settled on: adopt <code>RTCRandom</code> where the provider is already in hand, and do not distort an API to reach it. The reasoning sits in a comment next to each retained call rather than in a document nobody will find:</p>
+<pre><code class="language-rust">// RFC 4960 requires an unpredictable initial TSN. SCTP remains usable without an RTC
+// crypto provider, so this deliberately uses `rand`'s thread-local CSPRNG.
+</code></pre>
+            <p>The shape of provider ownership also differs by crate, on purpose. DTLS holds an <code>Arc</code> because it needs algorithms and randomness across flights that span time. SRTP takes <code>&amp;dyn RTCCrypto</code> at construction and afterwards holds only the cipher objects it built — it has no later need for the provider. STUN's <code>MessageIntegrity&lt;'a&gt;</code> borrows for a lifetime rather than sharing an <code>Arc</code>, because it is a short-lived credential used inside one message operation. <strong><code>Arc</code> is the ownership mechanism, not the abstraction</strong>, and where a borrow is honest we borrow.</p>
+            <hr />
+            <h2>What the benchmarks found</h2>
+            <p>We benchmarked before believing anything, and the first measurements were bad: DTLS encryption 3–8× slower than the pre-migration baseline. Three separate causes, none of them the vtable dispatch everybody worries about.</p>
+            <p><strong>Per-record <code>SystemRandom</code>.</strong> DTLS draws fresh randomness per record — the GCM explicit nonce, the CBC record IV. Before the migration that came from a thread-local ChaCha CSPRNG. After it, <code>RTCRandom</code>'s built-ins called the backend's <code>SystemRandom</code>, which reaches the operating system on every call:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>8-byte fill</th>
+            <th>ns/call</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>rand::fill</code> (thread-local)</td>
+            <td><strong>8.3</strong></td>
+            </tr>
+            <tr>
+            <td><code>ring::rand::SystemRandom</code></td>
+            <td>829.1</td>
+            </tr>
+            <tr>
+            <td><code>aws_lc_rs::rand::SystemRandom</code></td>
+            <td>2196.5</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>That is 100–250×, and it accounted for the regression almost exactly. Caching the <code>SystemRandom</code> handle instead of constructing one per call recovered only ~9% — the OS round trip was the whole cost. The built-in providers now use an OS-seeded, periodically reseeded thread-local CSPRNG, which is what the pre-provider code did and what BoringSSL and OpenSSL do internally. Backend RNGs are still used where the backend owns the operation, for keypair generation and signing. A deployment that needs every byte from a validated module supplies its own <code>RTCRandom</code> — that is what the trait is for.</p>
+            <p><strong>Per-record HMAC key setup.</strong> <code>CryptoCbc</code> passed raw key bytes on every record, re-deriving the key schedule per record. This is the defect that produced the <code>Mac</code> trait in principle 4. It now holds two keyed <code>Mac</code> objects, keyed once per epoch.</p>
+            <p><strong><code>ring</code>'s software SHA-1.</strong> CBC authenticates every record with HMAC-SHA1, and <code>ring</code> exposes SHA-1 only as <code>HMAC_SHA1_FOR_LEGACY_USE_ONLY</code>, without the ARMv8 SHA-1 instructions — 4469 ns against RustCrypto's 1373 ns over 1212 bytes. The <code>ring</code> provider now composes RustCrypto's HMAC-SHA1.</p>
+            <p>After those three, on an Apple M1 Max with identical criterion settings:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>DTLS record protection</th>
+            <th>Pre-migration</th>
+            <th>ring (default)</th>
+            <th>aws-lc-rs</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>Encrypt/AES-128-GCM</code></td>
+            <td>270.5 ns</td>
+            <td>270.1 ns</td>
+            <td>245.8 ns</td>
+            </tr>
+            <tr>
+            <td><code>Decrypt/AES-128-GCM</code></td>
+            <td>280.6 ns</td>
+            <td>274.8 ns</td>
+            <td>225.6 ns</td>
+            </tr>
+            <tr>
+            <td><code>Encrypt/AES-256-CBC</code></td>
+            <td>3.419 µs</td>
+            <td>3.204 µs</td>
+            <td>2.498 µs</td>
+            </tr>
+            <tr>
+            <td><code>Decrypt/AES-256-CBC</code></td>
+            <td>2.036 µs</td>
+            <td>1.882 µs</td>
+            <td>1.194 µs</td>
+            </tr>
+            <tr>
+            <td><code>Setup/AES-256-CBC</code></td>
+            <td>86.5 ns</td>
+            <td>755.9 ns</td>
+            <td>818.4 ns</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Every per-record path is at parity or better on both providers. <code>Setup</code> rose by design: that is the record MAC key schedule moving out of the per-record path, paid once per epoch instead of once per record. SRTP tells the same story — <code>Encrypt/RTP</code> at 1.723 µs against a 1.725–1.780 µs baseline on ring, and 1.018 µs on aws-lc-rs.</p>
+            <p>The benchmark groups are split into <code>Setup/*</code> and <code>Encrypt/*</code>/<code>Decrypt/*</code> precisely so this property is falsifiable: if a per-packet number ever regresses while setup holds steady, the design has broken. The numbers, and the procedure for reproducing them, are in <a href="https://github.com/webrtc-rs/rtc/blob/master/rtc-dtls/benches/README.md"><code>rtc-dtls/benches/README.md</code></a> and <a href="https://github.com/webrtc-rs/rtc/blob/master/rtc-srtp/benches/README.md"><code>rtc-srtp/benches/README.md</code></a>.</p>
+            <p><strong>An honest note on the built-ins:</strong> both are <em>composite</em>. <code>RingProvider</code> uses ring for SHA-256, AEAD, key exchange and signatures, and RustCrypto for AES-CTR, CCM, CBC, MD5 and HMAC-SHA1. <code>AwsLcRsProvider</code> keeps its own SHA-1, which is faster than both. Neither exposes an <code>is_fips()</code> method or should be described as FIPS because of its name. A strict provider that advertises only algorithms routed through a validated module is exactly what the trait is for, and it is a downstream artifact.</p>
+            <hr />
+            <h2>Features are additive now</h2>
+<pre><code class="language-toml">[features]
+default = [&quot;crypto-ring&quot;]
+crypto-ring = [&quot;crypto/crypto-ring&quot;]
+crypto-aws-lc-rs = [&quot;crypto/crypto-aws-lc-rs&quot;]
+</code></pre>
+            <table>
+            <thead>
+            <tr>
+            <th>Build</th>
+            <th>Result</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>--features crypto-ring</code></td>
+            <td>ring only</td>
+            </tr>
+            <tr>
+            <td><code>--features crypto-aws-lc-rs</code></td>
+            <td>aws-lc-rs only</td>
+            </tr>
+            <tr>
+            <td><code>--features crypto-ring,crypto-aws-lc-rs</code></td>
+            <td>both compiled; <code>default_provider()</code> returns ring</td>
+            </tr>
+            <tr>
+            <td><code>--no-default-features</code></td>
+            <td>no built-in; supply your own</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Enabling both is supported and tested. <code>default_provider()</code> prefers ring when both are on, so adding <code>crypto-aws-lc-rs</code> adds capability without changing behaviour — you get aws-lc-rs by naming it, not by enabling it. The features are named <code>crypto-*</code> rather than <code>ring</code>/<code>aws-lc-rs</code> because they now select a <em>provider</em>, not a dependency, and <code>rtc-dtls</code> forwards them to <code>rustls</code> and <code>rcgen</code> as well.</p>
+            <p>CI covers default, ring-only, aws-only, both, and a no-built-in build against a test custom provider, for the workspace and for each protocol crate standalone.</p>
+            <hr />
+            <h2>Breaking changes</h2>
+            <p>This is a pre-1.0 gate — it changes public construction APIs and would have been far more expensive after the freeze. These are the ones most likely to affect you:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>Item</th>
+            <th>Status</th>
+            <th>Replacement</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>rtc_shared::crypto::KeyingMaterialExporter</code></td>
+            <td>removed</td>
+            <td><code>rtc_dtls::State::export_keying_material</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc_srtp::Config::extract_session_keys_from_dtls</code></td>
+            <td>removed</td>
+            <td><code>set_session_keys_from_keying_material</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc_dtls::crypto::CryptoPrivateKeyKind</code></td>
+            <td>removed</td>
+            <td>opaque <code>Arc&lt;dyn SigningKey&gt;</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc_dtls::crypto::CustomSigner</code></td>
+            <td>removed</td>
+            <td>implement <code>rtc_crypto::SigningKey</code></td>
+            </tr>
+            <tr>
+            <td><code>RTCCertificate::from_key_pair</code></td>
+            <td>removed</td>
+            <td><code>RTCCertificate::generate</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc_shared::Error::{Sec1, P256, RcGen, AesGcm, Aes}</code></td>
+            <td>removed</td>
+            <td><code>Error::Crypto(String)</code></td>
+            </tr>
+            <tr>
+            <td><code>rtc_srtp</code> <code>openssl</code> / <code>vendored-openssl</code></td>
+            <td>removed</td>
+            <td>write a complete provider</td>
+            </tr>
+            <tr>
+            <td>every default-resolving constructor</td>
+            <td>changed</td>
+            <td>takes a provider</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>Two are worth expanding.</p>
+            <p><strong><code>CustomSigner</code> is subsumed, not lost.</strong> An external HSM or KMS signer implements <code>SigningKey</code> directly and returns <code>None</code> from <code>to_pkcs8_der</code>. Non-exportable keys are first-class: nothing in the API requires producing placeholder private-key bytes, and attempting a PEM serialization that would include a private key returns an explicit error rather than an empty block.</p>
+            <p><strong>The OpenSSL features were removed rather than kept.</strong> They selected an alternate AES-CTR path inside SRTP only and never implemented the full contract, so keeping the names would have implied a completeness that did not exist. An OpenSSL backend can return as a complete <code>RTCCryptoProvider</code>, in an application or a separate crate, and needs no change to <code>rtc</code> to do it.</p>
+            <p>Each protocol crate re-exports the crypto API — <code>rtc_srtp::crypto</code>, <code>rtc_stun::crypto</code>, <code>rtc_ice::crypto</code>, <code>rtc_turn::crypto</code>, and <code>rtc_dtls::crypto_provider</code> (named differently because <code>rtc-dtls</code> already has a <code>crypto</code> module) — so a standalone user can name <code>Arc&lt;dyn RTCCryptoProvider&gt;</code> without adding and version-matching a direct <code>rtc-crypto</code> dependency.</p>
+            <hr />
+            <h2>Writing your own</h2>
+            <p>Implement three traits and pass the value in. There is nothing to register.</p>
+<pre><code class="language-rust">use std::sync::Arc;
+use rtc_crypto::{RTCCrypto, RTCCryptoProvider, RTCRandom};
+
+struct MyProvider { crypto: MyCrypto, random: MyRandom }
+
+impl RTCCryptoProvider for MyProvider {
+    fn name(&amp;self) -&gt; &amp;'static str { &quot;my-provider&quot; }
+    fn crypto(&amp;self) -&gt; &amp;dyn RTCCrypto { &amp;self.crypto }
+    fn random(&amp;self) -&gt; &amp;dyn RTCRandom { &amp;self.random }
+}
+
+setting_engine.set_crypto_provider(Arc::new(MyProvider::new()));
+</code></pre>
+            <p>Then validate it against the same suite the built-ins pass:</p>
+<pre><code class="language-rust">// Cargo.toml: rtc-crypto = { version = &quot;0.21&quot;, features = [&quot;test-support&quot;] }
+#[test]
+fn my_provider_conforms() {
+    rtc_crypto::conformance::assert_provider(&amp;MyProvider::new());
+}
+</code></pre>
+            <p><code>assert_provider</code> runs RFC known-answer vectors, round trips, tag- and nonce-length validation, wrong-key and wrong-AAD failures, ECDHE agreement per group, signature generation and verification, and unsupported-algorithm reporting. Individual sections are public too — <code>assert_hashes_and_hmac</code>, <code>assert_aead</code>, <code>assert_cbc</code>, <code>assert_block_and_stream_ciphers</code>, <code>assert_key_exchange</code>, <code>assert_signatures</code>, <code>assert_random</code> — for a provider that implements part of the surface. Publishing the suite rather than keeping it as an internal test module is deliberate: a downstream provider author should not have to copy our tests to find out whether their AEAD nonce handling is right.</p>
+            <p><code>cargo test --package rtc-crypto --no-default-features --features test-support --test custom_provider</code> builds a complete downstream-style provider with no built-in enabled, so the "bring your own" path is exercised in CI rather than asserted in a README.</p>
+            <p>One request, in the docs and repeated here: <strong>report unsupported algorithms honestly through <code>supports</code>.</strong> Negotiation intersects protocol support, provider capability, key compatibility, and application configuration before advertising anything. An accurate answer turns an unusable combination into a construction-time error. An optimistic one turns it into a handshake that stalls.</p>
+            <hr />
+            <h2>What this does not do</h2>
+            <ul>
+            <li><strong>It is not a FIPS claim.</strong> Neither built-in provider is validated, and neither exposes <code>is_fips()</code>. The trait makes a validated provider possible; it does not make one.</li>
+            <li><strong>It does not delegate DTLS.</strong> A provider supplies primitives to our sans-I/O DTLS engine; it cannot replace the engine. Handing a backend the whole handshake is a coherent design — it is what you do when the DTLS state machine is not yours to begin with — but it is not this one. The flights, transcript, suite negotiation, PRF composition and key schedule stay in <code>rtc-dtls</code>.</li>
+            <li><strong>It is not a stable ABI.</strong> Providers are Rust trait implementations compiled into your binary, not dynamically loaded modules.</li>
+            <li><strong>No <code>no_std</code> yet.</strong> Out of scope for this change.</li>
+            <li><strong>No new algorithms.</strong> HKDF, RSA-PSS and DTLS 1.3 primitives are absent because no caller exists. The enums are <code>#[non_exhaustive]</code> and the operations have default bodies, so adding them later breaks nothing.</li>
+            </ul>
+            <hr />
+            <h2>Try it</h2>
+<pre><code class="language-toml">[dependencies]
+rtc = &quot;0.21.0-rc.1&quot;
+</code></pre>
+            <p>The rc is where feedback is still cheap to act on. If you have a provider that does not fit — a platform keystore with an odd public-key encoding, an HSM whose signing session needs state we have not allowed for, a validated module whose RNG can fail in a way <code>CryptoError::RandomnessFailed</code> does not capture — the conformance suite is the fastest way to find out, and an issue on <a href="https://github.com/webrtc-rs/rtc/issues">webrtc-rs/rtc</a> is the fastest way to fix it. After 1.0, this trait is a compatibility commitment.</p>
+            <h2>Related posts</h2>
+            <ul>
+            <li><a href="/blog/2026/07/30/pluggable-async-runtime">Bring Your Own Async Runtime</a></li>
+            <li><a href="/blog/2026/08/01/the-path-to-webrtc-1.0">The Path to webrtc 1.0</a></li>
+            <li><a href="/blog/2026/01/09/interceptor-design-principle-sansio">Interceptor Design Principle: Composable RTP/RTCP Processing</a></li>
+            <li><a href="/blog/2026/01/04/building-webrtc-pipeline-with-sansio">Building WebRTC's Pipeline with sansio::Protocol</a></li>
+            </ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">&larr; Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>

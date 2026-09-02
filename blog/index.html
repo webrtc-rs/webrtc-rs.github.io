@@ -77,6 +77,15 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/09/01/pluggable-crypto-provider.html">Bring Your Own Crypto Provider</a></h2>
+              <div class="date">September 1, 2026</div>
+              <div class="excerpt">
+                <p><strong>rtc 0.21 routes every cryptographic operation through one provider-neutral crate.</strong> No protocol crate depends on <code>ring</code>, <code>aws-lc-rs</code>, or a RustCrypto primitive any more: <code>RTCCryptoProvider</code> bundles an operations trait and a CSPRNG, and it is an ordinary value you pass through configuration — so two peer connections in one process can use different providers, and an application can supply its own for OpenSSL, a FIPS module, or an HSM. The post covers the seven design principles behind the boundary (a provider is a value, not a global; factories rather than one-shot calls; primitives, not policy), how they landed across the workspace, and the three performance bugs the benchmarks found — none of which was the vtable dispatch everybody worries about.</p>
+              </div>
+              <a href="./2026/09/01/pluggable-crypto-provider.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/08/01/the-path-to-webrtc-1.0.html">The Path to <code>webrtc</code> 1.0</a></h2>
               <div class="date">August 1, 2026</div>
               <div class="excerpt">
