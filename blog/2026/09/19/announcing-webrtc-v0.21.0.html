@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="webrtc and rtc v0.21.0 are the 1.0 release candidate: the API we intend to freeze. What shipped against The Path to 1.0 — extensible API, crypto providers, congestion control, transport objects, FlexFEC, jitter buffer — what did not, and why there is a 0.21 before 1.0.">
+  <link rel="icon" href="../../../../res/webrtc.rs.ico">
+  <link rel="stylesheet" href="../../../../res/all.css">
+  <link rel="stylesheet" href="../../../../res/bulma.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../../res/notie.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    .blog-content {
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .blog-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #363636;
+    }
+
+    .blog-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #363636;
+    }
+
+    .blog-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #363636;
+    }
+
+    .blog-content p {
+      margin-bottom: 1rem;
+    }
+
+    .blog-content ul {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: disc;
+    }
+
+    .blog-content ol {
+      margin-bottom: 1rem;
+      margin-left: 2rem;
+      list-style-type: decimal;
+    }
+
+    .blog-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .blog-content pre {
+      background-color: #282c34;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+
+    .blog-content code {
+      background-color: #f5f5f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .blog-content pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .blog-content strong {
+      font-weight: 600;
+    }
+
+    .blog-content hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #dbdbdb;
+    }
+
+    .blog-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .blog-content table th {
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table td {
+      padding: 0.75rem;
+      border: 1px solid #dbdbdb;
+    }
+
+    .blog-content table tr:hover {
+      background-color: #fafafa;
+    }
+
+    .blog-content blockquote {
+      border-left: 4px solid #48c774;
+      background-color: #f6fdf9;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .blog-content blockquote p:last-child,
+    .blog-content blockquote ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .blog-meta {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .view-count svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+  <title>Announcing webrtc and rtc v0.21.0: The 1.0 Release Candidate</title>
+</head>
+
+<body>
+  <nav class="navbar is-dark" style="z-index:1">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://github.com/webrtc-rs"><img src="../../../../res/Github.png" height="28"></a>
+        <a class="navbar-item" href="https://webrtc.rs"><img src="../../../../res/webrtc.rs.ico" width="28" height="28"><strong>&nbsp;WebRTC</strong></a>
+        <a class="navbar-item" href="https://appr.tc"><img src="../../../../res/apprtc.ico" width="28" height="28"><strong>&nbsp;AppRTC</strong></a>
+        <div class="navbar-item">
+          <iframe src="https://github.com/sponsors/webrtc-rs/button" title="Sponsor webrtc-rs" height="35" width="116"
+            style="border: 0;"></iframe>
+        </div>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item" href="../../../index.html"><strong>📝&nbsp; Blog &nbsp;</strong></a>
+          <a class="navbar-item" href="../../../../index.html"><img src="../../../../res/home.png" width="28" height="28"><strong>&nbsp; Home &nbsp;</strong></a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <dev class="section">
+    <div class="container">
+      <article class="message is-success">
+        <div class="message-body">
+          <div class="blog-content">
+            <h1>Announcing <code>webrtc</code> and <code>rtc</code> v0.21.0: The 1.0 Release Candidate</h1>
+            <div class="blog-meta">
+              <span>September 19, 2026</span>
+              <img src="https://hits.sh/webrtc-rs.github.io/blog/2026/09/19/announcing-webrtc-v0.21.0.svg?style=flat-square&label=views&color=777" alt="views" style="vertical-align: middle;"/>
+            </div>
+            <p>We're happy to announce <strong><code>webrtc</code> v0.21.0</strong> and <strong><code>rtc</code> v0.21.0</strong>.</p>
+            <p>Treat this release as <strong>1.0.0-rc.1</strong> in everything but its version number. The next release is intended to be <strong>1.0.0</strong>. Between here and there, the public API of both crates is meant to stay where it is. The only thing that would justify a breaking change is a significant bug that cannot be fixed any other way.</p>
+            <p>That is a change of plan, and it deserves an explanation first.</p>
+            <hr />
+            <h2 id="why-there-is-a-021-at-all">Why there is a 0.21 at all</h2>
+            <p>Seven weeks ago, <a href="/blog/2026/08/01/the-path-to-webrtc-1.0">The Path to <code>webrtc</code> 1.0</a> said the number after 0.20.0 would be 1.0. It named three gating items and said 1.0 would ship when they were done.</p>
+            <p>All three were done within four days. ULPFEC left the default codecs on August 1, the extensibility audit merged the same day, and the crypto-provider rewrite landed on August 4.</p>
+            <p>Going straight to 1.0 would have kept that promise to the letter and missed its point. The same post listed a set of <strong>candidates</strong>: work that would not hold 1.0 back but could ship in it if finished in time. Congestion control, transport objects, jitter buffering, and FEC recovery were all on that list. Once the gating work was out of the way, most of the candidates were finished too, and several of them changed public API:</p>
+            <ul>
+            <li>Congestion control needed a new interceptor chain. The chain type parameter disappeared from <code>RTCPeerConnection</code>, and <code>Registry::with</code> now takes a <code>Slot</code>.</li>
+            <li>The crypto provider replaced every default-resolving constructor across DTLS, SRTP, STUN, ICE, and TURN.</li>
+            <li>Transport objects added three new handle traits to the async crate.</li>
+            <li>One data-channel fix required changing the type of <code>RTCDataChannelId</code>.</li>
+            </ul>
+            <p>Freezing an API the week it was written is exactly what the 1.0 post warned against: <strong>1.0 is a commitment to API stability</strong>, and you can only make that commitment for an API that people have had time to use. So we inserted one more release. v0.21.0 is the API we intend to freeze. It went through alpha, beta, and two release candidates in August and September, and it now needs time with real applications before we put a 1 in front of it.</p>
+            <p>The rule until 1.0:</p>
+            <blockquote>
+            <p><strong>v0.21.x → v1.0.0 keeps the public API of <code>webrtc</code> and <code>rtc</code> stable.</strong> Bug fixes and additive changes are fine. A breaking change needs a significant bug that cannot be fixed compatibly, and if one is needed it will be called out as such.</p>
+            </blockquote>
+            <p>The extensibility work described below is what makes that rule realistic. Most of the changes we can foresee can now be made without breaking anyone.</p>
+            <hr />
+            <h2 id="the-scorecard">The scorecard</h2>
+            <p>A roadmap post is only useful if someone later checks it against what shipped. Here is everything <a href="/blog/2026/08/01/the-path-to-webrtc-1.0">The Path to 1.0</a> promised or named, and where each item ended up.</p>
+            <h3 id="what-had-to-land-before-10-gating">What had to land before 1.0 (gating)</h3>
+            <table>
+            <thead>
+            <tr>
+            <th>Item</th>
+            <th>Status in 0.21.0</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>Stop advertising ULPFEC by default</td>
+            <td>✅ Done (<a href="https://github.com/webrtc-rs/webrtc/issues/837">#837</a>)</td>
+            </tr>
+            <tr>
+            <td>Make the API extensible before freezing it</td>
+            <td>✅ Done (<a href="https://github.com/webrtc-rs/webrtc/issues/838">#838</a>)</td>
+            </tr>
+            <tr>
+            <td>Crypto provider unification (<a href="https://github.com/webrtc-rs/rtc/issues/128"><code>rtc</code> #128</a>)</td>
+            <td>✅ Done (<a href="https://github.com/webrtc-rs/webrtc/issues/839">#839</a>)</td>
+            </tr>
+            </tbody>
+            </table>
+            <h3 id="what-did-not-gate-10-candidates">What did not gate 1.0 (candidates)</h3>
+            <table>
+            <thead>
+            <tr>
+            <th>Item</th>
+            <th>Status in 0.21.0</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>Congestion control: bandwidth estimator + pacer</td>
+            <td>✅ Shipped: GCC estimator, pacer, RFC 8888 feedback</td>
+            </tr>
+            <tr>
+            <td>Transport objects (<code>sctp</code>, <code>transport</code>, <code>IceTransport</code>)</td>
+            <td>✅ Shipped in both crates</td>
+            </tr>
+            <tr>
+            <td>Jitter buffering</td>
+            <td>✅ Shipped as an interceptor</td>
+            </tr>
+            <tr>
+            <td>FEC recovery</td>
+            <td>✅ FlexFEC (draft-03) end to end. ULPFEC recovery is not supported, by design</td>
+            </tr>
+            <tr>
+            <td>FFI C API, embedded / <code>no_std</code></td>
+            <td>Out of scope, as planned</td>
+            </tr>
+            <tr>
+            <td><code>RTCDTMFSender</code>, identity provider</td>
+            <td>Out of scope, as planned</td>
+            </tr>
+            </tbody>
+            </table>
+            <h3 id="where-we-asked-for-help">Where we asked for help</h3>
+            <table>
+            <thead>
+            <tr>
+            <th>Item</th>
+            <th>Status in 0.21.0</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>Live-browser interop in CI</td>
+            <td>✗ Not yet. Browser interop was fixed by hand this cycle (see below), but no CI job runs a real browser</td>
+            </tr>
+            <tr>
+            <td>Continuous fuzzing</td>
+            <td>✗ Not yet. The fuzz targets exist, but nothing runs them on a schedule</td>
+            </tr>
+            <tr>
+            <td>Refresh the W3C compliance table</td>
+            <td>✗ Not yet. The "95%+" figure is still the January analysis of <code>rtc</code></td>
+            </tr>
+            </tbody>
+            </table>
+            <p>The last two tables need an honest reading. The API work is ahead of what we said. The <strong>validation work is behind</strong>: browser interop in CI, continuous fuzzing, and the refreshed compliance table did not happen. None of them changes the API, which is why they do not block the freeze. They are also a big part of why this is a release candidate and not 1.0, and they are where help is most valuable. See <a href="#what-we-are-asking-for">What we are asking for</a>.</p>
+            <hr />
+            <h2 id="the-three-gating-items">The three gating items</h2>
+            <h3 id="1-ulpfec-is-no-longer-offered-by-default">1. ULPFEC is no longer offered by default</h3>
+            <p><code>MediaEngine::register_default_codecs</code> no longer registers <code>video/ulpfec</code>. The receive path cannot recover media from ULPFEC packets, so offering the codec invited peers to send repair packets we then threw away. <code>MIME_TYPE_ULP_FEC</code> is still public for applications that register it deliberately.</p>
+            <p><strong>This changes the default offer's SDP:</strong> payload type 116 is gone. ULPFEC recovery is not supported by design, so ULPFEC will not come back to the defaults. FlexFEC is the FEC scheme we support, with recovery on the receive path (see below).</p>
+            <h3 id="2-the-api-can-now-evolve-without-breaking-you">2. The API can now evolve without breaking you</h3>
+            <p><code>#[non_exhaustive]</code> and sealed traits have one awkward property: <strong>adding either one after 1.0 is itself a breaking change.</strong> So this audit had to happen before the freeze. That is why it was on the gating list even though it was not glamorous work.</p>
+            <p>The 1.0 post counted 40 public enums across the two top-level crates, with none marked <code>#[non_exhaustive]</code> and no sealed traits. It also warned that the enums re-exported from the protocol subcrates had to be included. They were, because <code>rtc</code> re-exports all fifteen of those subcrates wholesale, which puts their public surface in <code>rtc</code>'s public API. The result:</p>
+            <table>
+            <thead>
+            <tr>
+            <th></th>
+            <th style="text-align: right;"><code>#[non_exhaustive]</code></th>
+            <th style="text-align: right;">Kept exhaustive</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td><code>rtc</code> top-level enums</td>
+            <td style="text-align: right;">34</td>
+            <td style="text-align: right;">0</td>
+            </tr>
+            <tr>
+            <td><code>rtc</code> protocol subcrate enums</td>
+            <td style="text-align: right;">69</td>
+            <td style="text-align: right;">19</td>
+            </tr>
+            <tr>
+            <td><code>webrtc</code> enums</td>
+            <td style="text-align: right;">3</td>
+            <td style="text-align: right;">3</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>The rule behind every decision is written down in <code>docs/semver.md</code> in both repositories. <strong>An enum is <code>#[non_exhaustive]</code> when something outside this codebase defines its variants and can add more</strong>: an IANA registry, a W3C enum, a protocol state machine, an event stream. <strong>It stays exhaustive when the set of variants is closed by construction</strong>: <code>Controlling</code>/<code>Controlled</code>, a CCM tag of 8 or 16 bytes, "full" and "closed" as the only ways a non-blocking send can fail. For an enum like that, being able to match every variant is worth more to callers than room for a variant that cannot exist.</p>
+            <p>Traits follow the same logic. <strong>Library-implemented traits are sealed</strong>: <code>PeerConnection</code>, <code>DataChannel</code>, <code>RtpSender</code>, <code>RtpReceiver</code>, <code>RtpTransceiver</code>, and the new <code>SctpTransport</code>, <code>DtlsTransport</code>, and <code>IceTransport</code>. Sealing lets us add required methods in a minor release. <strong>Extension points stay open</strong>: <code>Runtime</code> and its socket and timer traits, <code>PeerConnectionEventHandler</code>, the <code>Track</code> traits, and the new <code>RTCCryptoProvider</code>. These exist so that you can implement them. The trade-off is that a new method on one of them has to come with a default body.</p>
+            <p>Both repositories now run <code>cargo-semver-checks</code> in CI, so from here on an accidental break fails the build instead of reaching a release.</p>
+            <h3 id="3-crypto-provider-unification">3. Crypto provider unification</h3>
+            <p>We covered this in detail in <a href="/blog/2026/09/01/pluggable-crypto-provider">Bring Your Own Crypto Provider</a>. The short version:</p>
+            <ul>
+            <li><strong>All cryptography in the stack goes through one provider-neutral crate, <code>rtc-crypto</code>.</strong> No protocol crate depends on <code>ring</code>, <code>aws-lc-rs</code>, or a RustCrypto primitive crate any more. <code>webrtc</code> depends on no crypto implementation at all, and a CI check keeps it that way.</li>
+            <li><strong>A provider is a value, not a global.</strong> <code>RTCCryptoProvider</code> bundles an <code>RTCCrypto</code> operations trait and an <code>RTCRandom</code> CSPRNG. You pass it per peer connection, so two connections in one process can use different providers. There is nothing to install at startup.</li>
+            <li><strong>Bring your own.</strong> OpenSSL, a FIPS-validated module, an HSM, a platform API, or a deterministic test double: implement three traits, then run <code>rtc_crypto::conformance::assert_provider</code> against your implementation. It is the same RFC-vector suite the built-in providers pass.</li>
+            <li><strong>The <code>crypto-ring</code> and <code>crypto-aws-lc-rs</code> features are now additive.</strong> The four <code>compile_error!</code> guards that broke builds under Cargo feature unification are gone. <code>ring</code> remains the default when both are enabled.</li>
+            <li><strong>No performance regression.</strong> Every per-packet and per-record benchmark on the default provider is at parity with the pre-migration baseline or faster. Keyed <code>Mac</code> objects moved the HMAC key schedule off the per-packet path, which made SRTCP about 40% faster per packet.</li>
+            </ul>
+            <p>Selecting a provider for a peer connection is one line on the setting engine:</p>
+<pre><code class="language-rust">let setting_engine = SettingEngineBuilder::new()
+    .with_crypto_provider(Arc::new(MyProvider::new()))
+    .build();
+</code></pre>
+            <p>This was the most expensive item to do after 1.0, and it is also where most of 0.21's breaking changes come from. The migration table is in the "Breaking changes" section of <a href="/blog/2026/09/01/pluggable-crypto-provider">that post</a>, and <code>rtc/docs/crypto-provider-migration.md</code> has before/after examples.</p>
+            <hr />
+            <h2 id="the-candidates-that-made-it">The candidates that made it</h2>
+            <h3 id="congestion-control-and-the-chain-that-holds-it">Congestion control, and the chain that holds it</h3>
+            <p>The 1.0 post called this "the honest one": TWCC feedback was generated and received, but nothing estimated bandwidth and nothing paced. <code>target_bitrate</code> appeared in our stats structures and nowhere in any control path.</p>
+            <p>That has changed. We covered it in detail in <a href="/blog/2026/09/01/interceptor-chain-list-not-tower">The Interceptor Chain Is a List, Not a Tower</a>. The short version:</p>
+            <ul>
+            <li><strong>The built-in interceptors went from six to thirteen.</strong> The new ones are a congestion controller, a pacer, a FlexFEC encoder and decoder, a jitter buffer, an RFC 8888 feedback recorder, and interval PLI.</li>
+            <li><strong>The estimator is pluggable.</strong> <code>BandwidthEstimator</code> is the extension point. <code>Gcc</code> is a full Google Congestion Control implementation (Kalman filter, adaptive overuse threshold, loss controller, AIMD rate control), and <code>ConstantBitrate</code> is a real option for when you already know the path. The estimate appears as <code>targetBitrate</code> on each outbound RTP stream's stats, so an application can drive its encoder from it.</li>
+            <li><strong>TWCC or RFC 8888, one or the other.</strong> Both are turned into the same per-packet reports before the estimator sees them.</li>
+            <li><strong>The chain is now a flat list, not a nested generic tower.</strong> The new interceptors act in both directions and need to share information across directions. They also have to see every packet that leaves, including retransmissions that other interceptors generate. A nested <code>A&lt;B&lt;C&gt;&gt;</code> could do none of these things. The flat list walks one way for reads and the other way for writes, and packets carry <code>Attribute</code>s that let one interceptor tell another something without either holding a reference to the other.</li>
+            <li><strong>Order is data.</strong> Each interceptor sits at a <code>Slot</code>. The named slots are 1,000 apart, and the gaps are there for your own interceptors: <code>Slot::from(3_500)</code> means "above the pacer" and keeps meaning that across upgrades.</li>
+            <li><strong><code>RTCPeerConnection</code> has no type parameter any more.</strong> It costs one virtual call per interceptor per packet, which is small next to SRTP, and in exchange there is no chain type for your code to name.</li>
+            </ul>
+            <p>Congestion control is opt-in, because pacing adds queueing delay and an application should not get that without asking:</p>
+<pre><code class="language-rust">let registry = configure_congestion_control(
+    registry,
+    Gcc::default(),
+    CongestionFeedback::Twcc,
+    &amp;mut media_engine,
+)?;
+</code></pre>
+            <p>Three new examples cover this: <code>bandwidth-estimation-from-disk</code>, <code>play-from-disk-fec</code>, and <code>save-to-disk-fec</code>.</p>
+            <h3 id="jitter-buffer-and-flexfec">Jitter buffer and FlexFEC</h3>
+            <p>Both ship as interceptors, so both are opt-in and neither needed a change to the peer-connection API.</p>
+            <p>The <strong>jitter buffer</strong> releases packets on <code>handle_timeout</code>, in the caller's time base. That was an open design question in July, and the deterministic-time work below answered it. The buffer also sits in the right place relative to NACK: it is what creates the window in which a retransmission is still useful.</p>
+            <p><strong>FlexFEC (draft-03)</strong> now works end to end: the encoder protects, packets are lost on the path, and the decoder rebuilds them. It is tested with induced loss, not just on loopback. A recovered packet reaches the NACK generator like any other arrival, so we do not ask the remote to resend a packet we have already rebuilt.</p>
+            <h3 id="transport-objects">Transport objects</h3>
+            <p>The 1.0 post moved these out of the gating list because they were "a design job rather than a patch". The design took a few weeks, and it followed the W3C spec closely:</p>
+<pre><code class="language-rust">// Data: the only transport the spec puts on RTCPeerConnection.
+let sctp = pc.sctp().await.expect(&quot;SCTP negotiated&quot;);
+let dtls = sctp.transport();
+let ice  = dtls.ice_transport();
+let pair = ice.get_selected_candidate_pair().await?;
+
+// Media: through a sender or receiver. This is the only way in on a
+// connection without a data channel.
+let dtls = sender.transport().await?.expect(&quot;sender is associated&quot;);
+</code></pre>
+            <p>There is deliberately no <code>pc.dtls_transport()</code> or <code>pc.ice_transport()</code>, because the spec does not have them. An earlier draft added lookup by id, and we removed it as unfaithful to the spec. Transports are compared by <code>id()</code> rather than by reference. State is read, not delivered: there are no <code>onstatechange</code> events. <code>max_message_size</code> is always a finite number, because the value we report is the value we enforce.</p>
+            <p>Every place where the Rust API differs from the W3C Recommendation is listed with its reason in <code>docs/transport-objects.md</code>. One of those differences is a known deviation we have not fixed yet: <code>sctp()</code> does not go back to <code>None</code> after a renegotiation removes the data channel. Check <code>state()</code> if that matters to you.</p>
+            <hr />
+            <h2 id="more-than-we-promised">More than we promised</h2>
+            <p>Several pieces of work were not on the 1.0 list at all.</p>
+            <h3 id="deterministic-time-the-core-is-told-the-time-it-never-asks">Deterministic time: the core is told the time, it never asks</h3>
+            <blockquote>
+            <p><strong>Sans-I/O protocol code is told the time. It does not ask.</strong></p>
+            </blockquote>
+            <p>A Sans-I/O core that calls <code>Instant::now()</code> is only partly Sans-I/O: you cannot replay it, and you cannot test a 30-second timeout without waiting 30 seconds. In 0.21 every protocol object in <code>rtc</code> makes its decisions against an instant its caller supplied, through <code>handle_timeout(now)</code>, the timestamps on inbound messages, or <code>now</code> fields in constructor configs. The only wall-clock reads left are the ones that are actually about the wall clock:</p>
+            <ul>
+            <li>the NTP timestamp in an RTCP sender report</li>
+            <li>DTLS <code>gmt_unix_time</code></li>
+            <li>the SDP session version</li>
+            <li>X.509 validity windows. A virtual instant would happily accept an expired certificate.</li>
+            </ul>
+            <p>A CI script treats the remaining clock reads as a ratchet. The allow-list can only shrink, and a new <code>Instant::now()</code> in protocol code fails the build.</p>
+            <p>On the async side, <code>Runtime</code> gained a defaulted <code>now()</code>, and the driver takes its time from there. The new <code>runtime-mock</code> feature provides a <code>MockRuntime</code> whose virtual clock reaches ICE timeouts, DTLS retransmits, and SCTP RTO. An end-to-end test drives a whole connection on virtual time. Existing <code>Runtime</code> implementations keep working unchanged, because the default is the wall clock.</p>
+            <h3 id="no-silent-drops-on-internal-channels">No silent drops on internal channels</h3>
+            <p>In 0.20, a slow consumer on a <strong>reliable</strong> data channel could lose messages: the driver used <code>try_send</code> on a bounded channel, logged an error when it was full, and dropped the message (<a href="https://github.com/webrtc-rs/webrtc/issues/858">#858</a>).</p>
+            <p>The fix makes the driver keep the message instead of dropping it. It also doesn't wait for the consumer, because the driver loop also runs ICE consent, DTLS retransmits, and SCTP timers, and blocking it would drop the connection. Instead, the driver <strong>stops pulling</strong> data-channel messages from the core while any are waiting to be delivered. The backlog then builds up in SCTP's reassembly queue, <code>a_rwnd</code> shrinks, and the remote peer slows down. SCTP already had the flow control needed for this. The old code bypassed it by draining the queue immediately. Media keeps flowing while this happens, which a dedicated test checks.</p>
+            <p>All four internal channels now have a written overflow policy (<code>docs/internal-channel-overflow-policy.md</code>), and a CI check fails any send site that doesn't declare one. Media can still be dropped when its queue is full, because UDP has no flow control to push back on, but those drops are now counted.</p>
+            <h3 id="browser-interop-fixed-by-hand">Browser interop, fixed by hand</h3>
+            <p>Without a browser in CI, these were found the slow way, and each one is worth knowing about if you ran 0.20 against Chrome:</p>
+            <ul>
+            <li><strong>TWCC feedback left out packets on unbound SSRCs</strong>, so Chrome read its own probe clusters as lost and its bandwidth estimate never ramped up (<a href="https://github.com/webrtc-rs/rtc/issues/211">rtc#211</a>).</li>
+            <li><strong>Answers renumbered the offer's payload types</strong> (a violation of RFC 3264 §6.1) and could reorder codecs, so Chrome fell back from simulcast to single-stream VP9 (<a href="https://github.com/webrtc-rs/rtc/issues/213">rtc#213</a>).</li>
+            <li><strong>A send-direction transceiver without a sender</strong> made <code>check_negotiation_needed</code> return true forever, which caused a renegotiation storm (<a href="https://github.com/webrtc-rs/rtc/issues/212">rtc#212</a>).</li>
+            <li><strong>RTX retransmissions</strong> were not always RTP version 2, and their ordering was nondeterministic (<a href="https://github.com/webrtc-rs/rtc/issues/214">rtc#214</a>).</li>
+            <li><strong>The first RTP packet of a stream</strong> went through the interceptor chain before its stream was bound (<a href="https://github.com/webrtc-rs/rtc/issues/207">rtc#207</a>).</li>
+            <li><strong>Answers duplicated <code>a=rid</code> lines and doubled the direction in <code>a=simulcast</code></strong> (<a href="https://github.com/webrtc-rs/rtc/pull/181">rtc#181</a>).</li>
+            <li><strong>When STUN and TURN shared a server address,</strong> the TURN relay consumed the STUN Binding responses, so no server-reflexive candidates were gathered (<a href="https://github.com/webrtc-rs/webrtc/issues/890">#890</a>).</li>
+            </ul>
+            <h3 id="data-channels-done-by-the-rfc">Data channels, done by the RFC</h3>
+            <ul>
+            <li><strong>SCTP stream ids are assigned only after the DTLS role is known</strong> (<a href="https://github.com/webrtc-rs/rtc/issues/199">rtc#199</a>). RFC 8832 §6 says the stream-id parity depends on the DTLS role, and a channel created before the remote description is applied cannot know that role yet. So <code>RTCDataChannelId</code> is now a connection-local handle (<code>usize</code>), and the id on the wire is a separate <code>stream_id() -&gt; Option&lt;StreamId&gt;</code>. <strong>This is a breaking change</strong>, and the kind we wanted to make before 1.0 rather than after.</li>
+            <li><strong>A data channel opens only after the DCEP handshake completes</strong> (<a href="https://github.com/webrtc-rs/rtc/issues/171">rtc#171</a>), and an inbound channel is exposed only once SCTP is ready.</li>
+            <li><strong>SCTP fixes</strong>:</li>
+            <li>A permanent zero-window deadlock is fixed (<a href="https://github.com/webrtc-rs/rtc/issues/217">rtc#217</a>).</li>
+            <li>The initial retransmission timeout now follows RFC 9260.</li>
+            <li><code>maxPacketLifeTime</code> is now measured from when a message is queued, not when it is first sent.</li>
+            <li>Timed reliability is refreshed before retransmission.</li>
+            <li>A new <code>SettingEngineBuilder::with_sctp_mtu</code> supports paths with a non-default MTU.</li>
+            </ul>
+            <h3 id="surviving-the-network-changing-underneath-you">Surviving the network changing underneath you</h3>
+            <ul>
+            <li><strong>ICE restart rebinds its UDP sockets</strong> (<a href="https://github.com/webrtc-rs/webrtc/issues/868">#868</a>). This fixes Android connections that stalled after about 10 seconds in the background.</li>
+            <li><strong>Bind addresses are resolved again on every bind</strong> (<a href="https://github.com/webrtc-rs/webrtc/issues/874">#874</a>). A wildcard like <code>0.0.0.0</code> now means "every interface", with one socket per interface address, so an ICE restart after a Wi-Fi-to-cellular handover picks up the interfaces the device has now. An address that can't be bound is logged and skipped instead of stopping the driver.</li>
+            <li><strong>The driver no longer hot-loops</strong> on an expired timeout that doesn't advance (<a href="https://github.com/webrtc-rs/webrtc/issues/862">#862</a>).</li>
+            <li><strong>TURN allocation refresh</strong> can be capped (<code>with_turn_allocation_refresh_interval_cap</code>), overdue refresh deadlines are rebased, and a zero-lifetime relay no longer breaks.</li>
+            </ul>
+            <h3 id="smaller-things">Smaller things</h3>
+            <ul>
+            <li><code>SettingEngine</code> is now built with <code>SettingEngineBuilder</code>.</li>
+            <li>DTLS server configs can hold both a PSK callback and certificates.</li>
+            <li>RSA is accepted as a DTLS private key type.</li>
+            <li><code>nix</code> was upgraded to a version that supports building for <code>ohos</code> (OpenHarmony).</li>
+            </ul>
+            <hr />
+            <h2 id="upgrading-from-020">Upgrading from 0.20</h2>
+            <p>The 0.21 breaking changes you are most likely to hit:</p>
+            <table>
+            <thead>
+            <tr>
+            <th>Area</th>
+            <th>Change</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+            <td>Settings</td>
+            <td><code>SettingEngine</code> is built with <code>SettingEngineBuilder::new()…build()</code></td>
+            </tr>
+            <tr>
+            <td>Crypto</td>
+            <td>Constructors take an <code>Arc&lt;dyn RTCCryptoProvider&gt;</code>. <code>CustomSigner</code> → implement <code>SigningKey</code>. <code>RTCCertificate::from_key_pair</code> → <code>RTCCertificate::generate</code>. The <code>openssl</code> features were removed. <a href="/blog/2026/09/01/pluggable-crypto-provider">Full table</a></td>
+            </tr>
+            <tr>
+            <td>Interceptors</td>
+            <td><code>RTCPeerConnection</code> has no chain type parameter. <code>Registry::with(Slot, …)</code>. Custom interceptors lose their <code>inner</code> field and forward packets through a queue</td>
+            </tr>
+            <tr>
+            <td>Data channels</td>
+            <td><code>RTCDataChannelId</code> is a <code>usize</code> handle. The wire id is <code>stream_id() -&gt; Option&lt;StreamId&gt;</code></td>
+            </tr>
+            <tr>
+            <td>Enums</td>
+            <td>Many public enums are now <code>#[non_exhaustive]</code>, so add a <code>_</code> arm to your <code>match</code></td>
+            </tr>
+            <tr>
+            <td>Codecs</td>
+            <td>The default offer no longer includes ULPFEC (PT 116)</td>
+            </tr>
+            <tr>
+            <td>Bind addresses</td>
+            <td><code>PeerConnectionBuilder::build</code> requires <code>A: Send + 'static</code> for configured addresses</td>
+            </tr>
+            </tbody>
+            </table>
+            <p>The last row only affects you if you pass borrowed, non-<code>'static</code> address strings. <code>String</code>, <code>SocketAddr</code>, and <code>&amp;'static str</code> all still work.</p>
+            <hr />
+            <h2 id="what-did-not-make-it">What did not make it</h2>
+            <p>To keep the gaps visible, and to separate them from what is out of scope:</p>
+            <ul>
+            <li><strong>Live-browser CI, continuous fuzzing, and a refreshed compliance table.</strong> See the scorecard. None of them affects the API, so none of them blocks 1.0 on its own. But they are how we would <em>find</em> the kind of significant bug that could justify breaking it, which is why this release is a release candidate.</li>
+            <li><strong>Out of scope, as planned:</strong> an FFI C API, embedded / <code>no_std</code>, <code>RTCDTMFSender</code>, and the identity provider. ULPFEC recovery is also not supported by design. FlexFEC is the supported FEC scheme.</li>
+            </ul>
+            <p>The trade we described in the 1.0 post is also still in place: <code>webrtc::runtime</code> re-exports <code>quinn-udp</code> types in its public API. We are keeping that trade on purpose.</p>
+            <hr />
+            <h2 id="what-we-are-asking-for">What we are asking for</h2>
+            <p><strong>This is the last point at which feedback can reshape the API cheaply.</strong> After 1.0, a mistake can be deprecated and routed around, but fixing it properly means a new major version.</p>
+            <p>Especially valuable right now:</p>
+            <ul>
+            <li><strong>Upgrade reports from 0.20 to 0.21.</strong> Tell us which changes were mechanical and which forced you to redesign something.</li>
+            <li><strong>Anything you had to work around</strong> instead of expressing it directly, especially in the new transport handles, the <code>Slot</code>/<code>Attribute</code> interceptor contract, and the crypto traits.</li>
+            <li><strong>Congestion control on real networks.</strong> The estimator has been tested against a deterministic path simulator with induced loss and jitter. Real networks will find problems that a simulator can't.</li>
+            <li><strong>Browser interop CI and fuzzing.</strong> If you have set up either for another project, these are the most useful things you could contribute before 1.0.</li>
+            </ul>
+            <p>Open a <a href="https://github.com/webrtc-rs/webrtc/issues">GitHub issue</a>, or come to <a href="https://discord.gg/4Ju8UHdXMs">Discord</a>.</p>
+            <hr />
+            <h2 id="try-it">Try it</h2>
+<pre><code class="language-toml">[dependencies]
+webrtc = &quot;0.21.0&quot;   # async, runtime-agnostic
+# or
+rtc = &quot;0.21.0&quot;      # Sans-I/O core
+</code></pre>
+            <hr />
+            <h2 id="links">Links</h2>
+            <ul>
+            <li><strong>Repo</strong>: <a href="https://github.com/webrtc-rs/webrtc">github.com/webrtc-rs/webrtc</a></li>
+            <li><strong>Sans-I/O core (<code>rtc</code>)</strong>: <a href="https://github.com/webrtc-rs/rtc">github.com/webrtc-rs/rtc</a></li>
+            <li><strong>Docs</strong>: <a href="https://docs.rs/webrtc">docs.rs/webrtc</a> · <a href="https://docs.rs/rtc">docs.rs/rtc</a></li>
+            <li><strong>Discord</strong>: <a href="https://discord.gg/4Ju8UHdXMs">discord.gg/4Ju8UHdXMs</a></li>
+            </ul>
+            <hr />
+            <h2 id="further-reading">Further Reading</h2>
+            <ul>
+            <li><a href="/blog/2026/08/01/the-path-to-webrtc-1.0">The Path to <code>webrtc</code> 1.0</a>: the plan this release is checked against</li>
+            <li><a href="/blog/2026/09/01/pluggable-crypto-provider">Bring Your Own Crypto Provider</a></li>
+            <li><a href="/blog/2026/09/01/interceptor-chain-list-not-tower">The Interceptor Chain Is a List, Not a Tower</a></li>
+            <li><a href="/blog/2026/07/31/announcing-webrtc-v0.20.0">Announcing <code>webrtc</code> v0.20.0</a></li>
+            <li><a href="/blog/2026/07/30/pluggable-async-runtime">Bring Your Own Async Runtime</a></li>
+            </ul>
+            <p style="text-align: center;">
+              <a href="../../../index.html">&larr; Back to Blog</a> | <a href="../../../../index.html">Home</a>
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </dev>
+  <div class="container has-text-centered">
+      <img src="../../../../res/animated_ferris_white.gif">
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+<script>hljs.highlightAll();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BHTZSJEX72"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BHTZSJEX72');
+</script>
+</html>

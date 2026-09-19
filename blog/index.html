@@ -77,6 +77,15 @@
             <h1 style="text-align: center; margin-bottom: 2rem;">Latest Posts</h1>
 
             <div class="blog-post">
+              <h2><a href="./2026/09/19/announcing-webrtc-v0.21.0.html">Announcing <code>webrtc</code> and <code>rtc</code> v0.21.0: The 1.0 Release Candidate</a></h2>
+              <div class="date">September 19, 2026</div>
+              <div class="excerpt">
+                <p><strong>Treat v0.21.0 as 1.0.0-rc.1: the next release is 1.0.0, and until then the public API of <code>webrtc</code> and <code>rtc</code> stays stable unless a significant bug forces a change.</strong> The three items that had to land before 1.0 were done within four days: ULPFEC left the default codecs, the API was made extensible with <code>#[non_exhaustive]</code> and sealed traits, and crypto was unified behind a pluggable <code>RTCCryptoProvider</code>. Most of the optional work then landed too, and several pieces changed the public API: congestion control with a GCC estimator and pacer, transport objects, FlexFEC, and a jitter buffer. So we inserted one more release to test them before the freeze. The post checks every item from <em>The Path to 1.0</em> against what shipped and covers the work that wasn't planned: the core now takes the time from its caller, slow consumers no longer drop data-channel messages, and several Chrome interop bugs are fixed. It also lists what didn't make it: browser interop in CI, continuous fuzzing, and a refreshed compliance table.</p>
+              </div>
+              <a href="./2026/09/19/announcing-webrtc-v0.21.0.html">Read more →</a>
+            </div>
+
+            <div class="blog-post">
               <h2><a href="./2026/09/01/interceptor-chain-list-not-tower.html">The Interceptor Chain Is a List, Not a Tower</a></h2>
               <div class="date">September 1, 2026</div>
               <div class="excerpt">
